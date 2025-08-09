@@ -5,19 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Spese</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
   <h1>Dashboard Spese</h1>
+  <a href="aggiungi.html">➕ Aggiungi Spesa</a> | 
+  <a href="archivio.html">📜 Archivio</a>
 
-  <div id="kpi"></div>
+  <section id="kpi">
+    <h2>KPI Principali</h2>
+    <p>Totale ultima settimana: <span id="totaleSettimana">0€</span></p>
+    <p><i class="fa-solid fa-arrow-up"></i> Spesa massima: <span id="spesaMax">0€</span></p>
+    <p><i class="fa-solid fa-arrow-down"></i> Spesa minima: <span id="spesaMin">0€</span></p>
+  </section>
 
-  <h2>Ultime spese</h2>
-  <div id="ultimeSpese"></div>
+  <section>
+    <h2>Andamento spese</h2>
+    <canvas id="graficoAndamento"></canvas>
+  </section>
 
-  <p>
-    <a href="aggiungi.html">➕ Aggiungi Spesa</a> |
-    <a href="archivio.html">📂 Archivio</a>
-  </p>
+  <section>
+    <h2>Supermercati più frequentati</h2>
+    <canvas id="graficoSupermercati"></canvas>
+  </section>
+
+  <section>
+    <h2>Tipologia prodotti acquistati</h2>
+    <canvas id="graficoTipologia"></canvas>
+  </section>
 
   <script src="dashboard.js"></script>
 </body>
