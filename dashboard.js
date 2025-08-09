@@ -1,28 +1,45 @@
 document.addEventListener("DOMContentLoaded", () => {
   const spese = JSON.parse(localStorage.getItem("spese")) || [];
 
-  // KPI Totale ultima settimana
   const oggi = new Date();
   const unaSettimanaFa = new Date(oggi);
-  unaSettimanaFa.setDate(oggi.getDate() - 7);
+  unaSettimanaFa.setDate(oggi.getDate() - 6);
 
-  const speseSettimana = spese.filter(s => new Date(s.data) >= unaSettimanaFa);
-  const totaleSettimana = speseSettimana.reduce((sum, s) => sum + s.prezzo, 0);
+  // Funzione helper per sommare prezzi prodotti in una spesa
+  function totaleSpesaProdotti(spesa) {
+    return spesa.prodotti.reduce((sum, p) => sum + p.prezzo, 0);
+  }
+
+  // Filtra spese ultimi 7 giorni
+  const speseSettimana = spese.filter(s => {
+    const dataSpesa = new Date(s.data);
+    return dataSpesa >= unaSettimanaFa && dataSpesa <= oggi;
+  });
+
+  // Totale settimana
+  const totaleSettimana = speseSettimana.reduce((sum, s) => sum + totaleSpesaProdotti(s), 0);
   document.getElementById("totaleSettimana").textContent = totaleSettimana.toFixed(2) + "€";
 
-  // Spesa max e min (pesata per numero prodotti)
+  // Spesa max e min (basata su totale prodotti per spesa)
   if (spese.length > 0) {
-    let spesaMax = Math.max(...spese.map(s => s.prezzo));
-    let spesaMin = Math.min(...spese.map(s => s.prezzo));
+    const totali = spese.map(s => totaleSpesaProdotti(s));
+    const spesaMax = Math.max(...totali);
+    const spesaMin = Math.min(...totali);
     document.getElementById("spesaMax").textContent = spesaMax.toFixed(2) + "€";
     document.getElementById("spesaMin").textContent = spesaMin.toFixed(2) + "€";
   }
 
   // Grafico andamento (ultimi 7 giorni)
   const spesePerGiorno = {};
+  for (let i = 0; i < 7; i++) {
+    const giorno = new Date(unaSettimanaFa);
+    giorno.setDate(unaSettimanaFa.getDate() + i);
+    const key = giorno.toLocaleDateString('it-IT');
+    spesePerGiorno[key] = 0;
+  }
   speseSettimana.forEach(s => {
     const giorno = new Date(s.data).toLocaleDateString('it-IT');
-    spesePerGiorno[giorno] = (spesePerGiorno[giorno] || 0) + s.prezzo;
+    spesePerGiorno[giorno] += totaleSpesaProdotti(s);
   });
 
   new Chart(document.getElementById("graficoAndamento"), {
@@ -34,13 +51,16 @@ document.addEventListener("DOMContentLoaded", () => {
         data: Object.values(spesePerGiorno),
         backgroundColor: '#3498db'
       }]
-    }
+    },
+    options: { scales: { y: { beginAtZero: true } } }
   });
 
-  // Grafico a torta supermercati
+  // Grafico supermercati
   const perSupermercato = {};
   spese.forEach(s => {
-    perSupermercato[s.supermercato] = (perSupermercato[s.supermercato] || 0) + s.prezzo;
+    if (s.supermercato) {
+      perSupermercato[s.supermercato] = (perSupermercato[s.supermercato] || 0) + totaleSpesaProdotti(s);
+    }
   });
 
   new Chart(document.getElementById("graficoSupermercati"), {
@@ -54,10 +74,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Grafico a torta tipologia prodotto
+  // Grafico tipologia (somma prezzi di prodotti per tipologia)
   const perTipologia = {};
   spese.forEach(s => {
-    perTipologia[s.tipologia] = (perTipologia[s.tipologia] || 0) + s.prezzo;
+    s.prodotti.forEach(p => {
+      if (p.tipologia) {
+        perTipologia[p.tipologia] = (perTipologia[p.tipologia] || 0) + p.prezzo;
+      }
+    });
   });
 
   new Chart(document.getElementById("graficoTipologia"), {
