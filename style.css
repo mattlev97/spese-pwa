@@ -1,10 +1,36 @@
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:#f8f9fa; }
-.container { max-width:900px; }
-.page { padding-bottom: 30px; }
-.card { margin-bottom: 12px; }
-#chat { } /* non usato ma lasciato per compatibilità futura */
-.product-row { display:flex; gap:8px; margin-bottom:6px; }
-.product-row input { flex:1; }
-.product-row .small { flex:0 0 120px; }
-.kpi { font-size:1.2rem; font-weight:600; }
-.btn-floating { position: fixed; right: 20px; bottom: 30px; z-index:1000; border-radius:50%; width:56px; height:56px; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+body {
+  font-family: sans-serif;
+  margin: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+}
+
+label {
+  margin-top: 10px;
+}
+
+input, select, textarea, button {
+  padding: 8px;
+  font-size: 16px;
+  margin-top: 5px;
+}
+
+button {
+  margin-top: 15px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #084298;
+}
+
+#archivio {
+  margin-top: 20px;
+}
