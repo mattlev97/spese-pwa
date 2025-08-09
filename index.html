@@ -1,43 +1,99 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tracker Spese - PWA</title>
-  <link rel="manifest" href="manifest.json" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>App Monitoraggio Spesa - Aggiungi Spesa</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea, button {
+      width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;
+    }
+    button { margin-top: 15px; }
+  </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand bg-light mb-3">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Tracker Spese</a>
-      <div>
-        <button id="nav-dashboard" class="btn btn-sm btn-outline-primary">Dashboard</button>
-        <button id="nav-archive" class="btn btn-sm btn-outline-secondary">Archivio</button>
-        <button id="nav-add" class="btn btn-sm btn-outline-success">+ Aggiungi</button>
-        <button id="nav-settings" class="btn btn-sm btn-outline-dark">Impostazioni</button>
-      </div>
-    </div>
-  </nav>
 
-  <main class="container" id="app">
-    <!-- Sezioni dinamiche -->
-    <section id="section-dashboard" class="page"></section>
-    <section id="section-archive" class="page d-none"></section>
-    <section id="section-add" class="page d-none"></section>
-    <section id="section-settings" class="page d-none"></section>
-  </main>
+  <h1>Aggiungi una nuova spesa</h1>
 
-  <footer class="text-center py-3"><small>App personale - Dati salvati sul dispositivo</small></footer>
+  <form id="addExpenseForm">
+    <label for="supermarket">Supermercato:</label>
+    <select id="supermarket" name="supermarket" required>
+      <option value="" disabled selected>Seleziona supermercato</option>
+      <option value="esselunga">Esselunga</option>
+      <option value="coop">Coop</option>
+      <option value="carrefour">Carrefour</option>
+      <option value="conad">Conad</option>
+    </select>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="script.js"></script>
+    <label for="productType">Tipologia di prodotto:</label>
+    <select id="productType" name="productType" required>
+      <option value="" disabled selected>Seleziona tipologia</option>
+      <option value="carne">Carne</option>
+      <option value="pesce">Pesce</option>
+      <option value="verdura">Verdura</option>
+      <option value="frutta">Frutta</option>
+      <option value="latte">Latte e derivati</option>
+      <option value="pane">Pane e farine</option>
+      <option value="bevande">Bevande</option>
+      <option value="altro">Altro</option>
+    </select>
+
+    <label for="productName">Nome prodotto:</label>
+    <input type="text" id="productName" name="productName" required />
+
+    <label for="price">Prezzo (€):</label>
+    <input type="number" id="price" name="price" step="0.01" min="0" required />
+
+    <label for="pricePerKg">Prezzo al kg (€):</label>
+    <input type="number" id="pricePerKg" name="pricePerKg" step="0.01" min="0" />
+
+    <label for="notes">Note:</label>
+    <textarea id="notes" name="notes" rows="3"></textarea>
+
+    <button type="submit">Aggiungi prodotto</button>
+  </form>
 
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(e=>console.warn("SW:", e));
-    }
+    // Al submit del form, salva i dati localmente
+    document.getElementById('addExpenseForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      // Preleva i valori
+      const supermarket = document.getElementById('supermarket').value;
+      const productType = document.getElementById('productType').value;
+      const productName = document.getElementById('productName').value.trim();
+      const price = parseFloat(document.getElementById('price').value);
+      const pricePerKgInput = document.getElementById('pricePerKg').value;
+      const pricePerKg = pricePerKgInput ? parseFloat(pricePerKgInput) : null;
+      const notes = document.getElementById('notes').value.trim();
+
+      // Crea oggetto spesa
+      const expense = {
+        supermarket,
+        productType,
+        productName,
+        price,
+        pricePerKg,
+        notes,
+        date: new Date().toISOString()
+      };
+
+      // Recupera lista spese dal localStorage (o crea nuova)
+      const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+
+      // Aggiunge nuova spesa
+      expenses.push(expense);
+
+      // Salva aggiornato
+      localStorage.setItem('expenses', JSON.stringify(expenses));
+
+      // Reset form
+      this.reset();
+      alert('Prodotto aggiunto correttamente.');
+    });
   </script>
+
 </body>
 </html>
