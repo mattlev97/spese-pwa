@@ -1,36 +1,96 @@
+/* Font e reset base */
 body {
-  font-family: sans-serif;
-  margin: 20px;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #f8f9fa;
+  color: #333;
 }
 
+h1, h2 {
+  color: #2c3e50;
+}
+
+a {
+  color: #3498db;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Contenitori principali */
+#kpi, #ultimeSpese, #listaSpese {
+  background: #fff;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* Form */
 form {
-  display: flex;
-  flex-direction: column;
-  max-width: 400px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 label {
+  display: block;
   margin-top: 10px;
+  font-weight: bold;
 }
 
-input, select, textarea, button {
+input, select, textarea {
+  width: 100%;
   padding: 8px;
-  font-size: 16px;
-  margin-top: 5px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 
+textarea {
+  min-height: 60px;
+}
+
+/* Bottoni */
 button {
   margin-top: 15px;
-  background-color: #0d6efd;
+  padding: 10px 15px;
+  background-color: #3498db;
   color: white;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
-
 button:hover {
-  background-color: #084298;
+  background-color: #2980b9;
 }
 
-#archivio {
-  margin-top: 20px;
+/* Archivio - righe spesa */
+#listaSpese div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+#listaSpese div:last-child {
+  border-bottom: none;
+}
+
+#listaSpese button {
+  background-color: #e74c3c;
+}
+#listaSpese button:hover {
+  background-color: #c0392b;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
 }
