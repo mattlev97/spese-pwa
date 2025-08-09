@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aggiungi Spesa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Aggiungi Nuova Spesa</h1>
+
+  <form id="spesaForm">
+    <label for="supermercato">Supermercato:</label>
+    <input type="text" id="supermercato" placeholder="Inserisci supermercato" required>
+
+    <label for="tipologia">Tipologia prodotto:</label>
+    <select id="tipologia" required>
+      <option value="">-- Seleziona tipologia --</option>
+      <option value="Carne">Carne</option>
+      <option value="Pesce">Pesce</option>
+      <option value="Verdura">Verdura</option>
+      <option value="Frutta">Frutta</option>
+      <option value="Bevande">Bevande</option>
+      <option value="Altro">Altro</option>
+    </select>
+
+    <label for="nome">Nome prodotto:</label>
+    <input type="text" id="nome" placeholder="Inserisci nome prodotto" required>
+
+    <label for="prezzo">Prezzo (€):</label>
+    <input type="number" id="prezzo" step="0.01" placeholder="0.00" required>
+
+    <label for="prezzoKg">Prezzo al Kg (€):</label>
+    <input type="number" id="prezzoKg" step="0.01" placeholder="0.00">
+
+    <label for="note">Note:</label>
+    <textarea id="note" placeholder="Aggiungi eventuali note..."></textarea>
+
+    <button type="submit">Salva Spesa</button>
+  </form>
+
+  <p><a href="index.html">⬅ Torna alla Dashboard</a></p>
+
+  <script src="aggiungi.js"></script>
+</body>
+</html>
