@@ -3,97 +3,95 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>App Monitoraggio Spesa - Aggiungi Spesa</title>
+  <title>App Monitoraggio Spesa</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    label { display: block; margin-top: 10px; }
-    input, select, textarea, button {
-      width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
     }
-    button { margin-top: 15px; }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    .prodotto-item {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+      position: relative;
+    }
+    .rimuovi-prodotto-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding: 3px 7px;
+      border-radius: 3px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 8px 15px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Aggiungi una nuova spesa</h1>
+  <h1>App Monitoraggio Spesa</h1>
 
-  <form id="addExpenseForm">
-    <label for="supermarket">Supermercato:</label>
-    <select id="supermarket" name="supermarket" required>
-      <option value="" disabled selected>Seleziona supermercato</option>
-      <option value="esselunga">Esselunga</option>
-      <option value="coop">Coop</option>
-      <option value="carrefour">Carrefour</option>
-      <option value="conad">Conad</option>
+  <div id="aggiungi-spesa">
+    <h2>Aggiungi nuova spesa</h2>
+    
+    <label for="supermercato">Seleziona supermercato:</label>
+    <select id="supermercato">
+      <option value="">--Seleziona supermercato--</option>
+      <option value="Coop">Coop</option>
+      <option value="Esselunga">Esselunga</option>
+      <option value="Carrefour">Carrefour</option>
+      <option value="Lidl">Lidl</option>
+      <option value="Conad">Conad</option>
     </select>
+    
+    <h3>Prodotti</h3>
+    <div id="lista-prodotti"></div>
+    
+    <button id="aggiungi-prodotto-btn">+ Aggiungi prodotto</button>
+    <br><br>
+    <button id="salva-spesa-btn">Salva spesa</button>
+  </div>
 
-    <label for="productType">Tipologia di prodotto:</label>
-    <select id="productType" name="productType" required>
-      <option value="" disabled selected>Seleziona tipologia</option>
-      <option value="carne">Carne</option>
-      <option value="pesce">Pesce</option>
-      <option value="verdura">Verdura</option>
-      <option value="frutta">Frutta</option>
-      <option value="latte">Latte e derivati</option>
-      <option value="pane">Pane e farine</option>
-      <option value="bevande">Bevande</option>
-      <option value="altro">Altro</option>
-    </select>
+  <!-- Template prodotto da clonare -->
+  <template id="template-prodotto">
+    <div class="prodotto-item">
+      <label>Tipologia prodotto:</label>
+      <select class="tipologia-prodotto">
+        <option value="">--Seleziona tipologia--</option>
+        <option value="Carne">Carne</option>
+        <option value="Pesce">Pesce</option>
+        <option value="Verdura">Verdura</option>
+        <option value="Frutta">Frutta</option>
+        <option value="Latticini">Latticini</option>
+        <option value="Pane">Pane</option>
+      </select>
+      
+      <label>Nome prodotto:</label>
+      <input type="text" class="nome-prodotto" placeholder="Nome prodotto" />
 
-    <label for="productName">Nome prodotto:</label>
-    <input type="text" id="productName" name="productName" required />
+      <label>Prezzo (€):</label>
+      <input type="number" step="0.01" class="prezzo-prodotto" placeholder="0.00" />
 
-    <label for="price">Prezzo (€):</label>
-    <input type="number" id="price" name="price" step="0.01" min="0" required />
+      <label>Prezzo al kg (€):</label>
+      <input type="number" step="0.01" class="prezzo-al-kg" placeholder="0.00" />
 
-    <label for="pricePerKg">Prezzo al kg (€):</label>
-    <input type="number" id="pricePerKg" name="pricePerKg" step="0.01" min="0" />
+      <label>Note:</label>
+      <input type="text" class="note-prodotto" placeholder="Note" />
 
-    <label for="notes">Note:</label>
-    <textarea id="notes" name="notes" rows="3"></textarea>
+      <button class="rimuovi-prodotto-btn">Rimuovi</button>
+    </div>
+  </template>
 
-    <button type="submit">Aggiungi prodotto</button>
-  </form>
-
-  <script>
-    // Al submit del form, salva i dati localmente
-    document.getElementById('addExpenseForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-
-      // Preleva i valori
-      const supermarket = document.getElementById('supermarket').value;
-      const productType = document.getElementById('productType').value;
-      const productName = document.getElementById('productName').value.trim();
-      const price = parseFloat(document.getElementById('price').value);
-      const pricePerKgInput = document.getElementById('pricePerKg').value;
-      const pricePerKg = pricePerKgInput ? parseFloat(pricePerKgInput) : null;
-      const notes = document.getElementById('notes').value.trim();
-
-      // Crea oggetto spesa
-      const expense = {
-        supermarket,
-        productType,
-        productName,
-        price,
-        pricePerKg,
-        notes,
-        date: new Date().toISOString()
-      };
-
-      // Recupera lista spese dal localStorage (o crea nuova)
-      const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-
-      // Aggiunge nuova spesa
-      expenses.push(expense);
-
-      // Salva aggiornato
-      localStorage.setItem('expenses', JSON.stringify(expenses));
-
-      // Reset form
-      this.reset();
-      alert('Prodotto aggiunto correttamente.');
-    });
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
