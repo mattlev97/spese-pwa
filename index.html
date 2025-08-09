@@ -1,40 +1,85 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Spese</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aggiungi Spesa</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Dashboard Spese</h1>
-  <a href="aggiungi.html">➕ Aggiungi Spesa</a> | 
-  <a href="archivio.html">📜 Archivio</a>
+  <h1>Aggiungi Nuova Spesa</h1>
+  <a href="index.html">⬅️ Torna alla Dashboard</a>
 
-  <section id="kpi">
-    <h2>KPI Principali</h2>
-    <p>Totale ultima settimana: <span id="totaleSettimana">0€</span></p>
-    <p><i class="fa-solid fa-arrow-up"></i> Spesa massima: <span id="spesaMax">0€</span></p>
-    <p><i class="fa-solid fa-arrow-down"></i> Spesa minima: <span id="spesaMin">0€</span></p>
-  </section>
+  <form id="formSpesa">
 
-  <section>
-    <h2>Andamento spese</h2>
-    <canvas id="graficoAndamento"></canvas>
-  </section>
+    <label for="supermercato">Supermercato:</label>
+    <select id="supermercato" required>
+      <option value="">Seleziona un supermercato</option>
+      <option>Esselunga</option>
+      <option>Coop</option>
+      <option>Carrefour</option>
+      <option>Conad</option>
+      <option>Eurospin</option>
+      <option>Simply</option>
+      <!-- puoi aggiungere altri qui o tramite sezione impostazioni -->
+    </select>
+    <button type="button" id="aggiungiSupermercatoBtn">➕ Aggiungi supermercato</button>
 
-  <section>
-    <h2>Supermercati più frequentati</h2>
-    <canvas id="graficoSupermercati"></canvas>
-  </section>
+    <div id="aggiungiSupermercatoDiv" style="display:none; margin-top:10px;">
+      <input type="text" id="nuovoSupermercato" placeholder="Nome nuovo supermercato" />
+      <button type="button" id="salvaSupermercatoBtn">Salva supermercato</button>
+    </div>
 
-  <section>
-    <h2>Tipologia prodotti acquistati</h2>
-    <canvas id="graficoTipologia"></canvas>
-  </section>
+    <hr />
 
-  <script src="dashboard.js"></script>
+    <h2>Prodotti nel carrello</h2>
+    <table border="1" id="tabellaCarrello" style="width:100%; margin-bottom:10px;">
+      <thead>
+        <tr>
+          <th>Tipologia</th>
+          <th>Nome</th>
+          <th>Prezzo (€)</th>
+          <th>Prezzo/kg (€)</th>
+          <th>Note</th>
+          <th>Rimuovi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h3>Aggiungi prodotto</h3>
+
+    <label for="tipologia">Tipologia:</label>
+    <select id="tipologia" required>
+      <option value="">Seleziona tipologia</option>
+      <option>Carne</option>
+      <option>Pesce</option>
+      <option>Verdura</option>
+      <option>Frutta</option>
+      <option>Bevande</option>
+      <option>Altro</option>
+    </select>
+
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" required />
+
+    <label for="prezzo">Prezzo (€):</label>
+    <input type="number" step="0.01" id="prezzo" required />
+
+    <label for="prezzoKg">Prezzo/kg (€):</label>
+    <input type="number" step="0.01" id="prezzoKg" />
+
+    <label for="note">Note:</label>
+    <input type="text" id="note" />
+
+    <button type="button" id="aggiungiProdottoBtn">Aggiungi prodotto al carrello</button>
+
+    <hr />
+
+    <button type="submit">Salva Spesa Completa</button>
+
+  </form>
+
+  <script src="aggiungi.js"></script>
 </body>
 </html>
