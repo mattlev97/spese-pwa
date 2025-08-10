@@ -1,51 +1,54 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoraggio Spesa - Dashboard</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Dashboard - Gestione Spese</title>
+    <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="style.css">
-
-    <!-- Manifest PWA -->
-    <link rel="manifest" href="manifest.json">
-
-    <!-- Icona per i dispositivi -->
-    <link rel="icon" sizes="192x192" href="icon-192.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
-
-    <meta name="theme-color" content="#007bff">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1>📊 Dashboard Spesa</h1>
-
+    <header>
+        <h1>Dashboard</h1>
         <nav>
-            <a href="aggiungi.html">➕ Aggiungi Spesa</a> |
-            <a href="archivio.html">📂 Archivio</a>
+            <a href="aggiungi.html">Aggiungi Spesa</a>
+            <a href="archivio.html">Archivio</a>
         </nav>
-
-        <section>
-            <canvas id="weeklyChart"></canvas>
-            <div class="stats">
-                <p>💰 Spesa massima: <span id="maxSpesa"></span></p>
-                <p>💸 Spesa minima: <span id="minSpesa"></span></p>
-            </div>
-            <canvas id="supermercatiChart"></canvas>
-            <canvas id="tipologiaChart"></canvas>
+    </header>
+    <main>
+        <section id="statistiche">
+            <h2>Statistiche</h2>
+            <label for="periodo">Seleziona periodo:</label>
+            <select id="periodo" onchange="aggiornaStatistiche()">
+                <option value="settimana">Ultima settimana</option>
+                <option value="mese">Ultimo mese</option>
+                <option value="anno">Ultimo anno</option>
+            </select>
+            <p>Totale spese: <span id="totale">0 €</span></p>
+            <p>Spesa massima: <span id="max">0 €</span> ↑</p>
+            <p>Spesa minima: <span id="min">0 €</span> ↓</p>
         </section>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="dashboard.js"></script>
-
-    <!-- Registrazione Service Worker -->
+        <section id="grafici">
+            <h2>Grafici</h2>
+            <div class="grafico">
+                <canvas id="graficoSupermercati"></canvas>
+                <p>Supermercati più usati</p>
+            </div>
+            <div class="grafico">
+                <canvas id="graficoTipologie"></canvas>
+                <p>Tipologie di prodotto</p>
+            </div>
+        </section>
+    </main>
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log("Service Worker registrato:", reg))
-                .catch(err => console.error("Errore Service Worker:", err));
-        }
+        window.onload = function() {
+            aggiornaStatistiche();
+        };
     </script>
 </body>
 </html>
