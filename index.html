@@ -1,66 +1,18 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tracker Spese - Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Spese</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
-    <h1>Tracker Spese</h1>
-    <nav>
-      <a class="nav-link" href="index.html">Dashboard</a>
-      <a class="nav-link" href="aggiungi.html">+ Aggiungi</a>
-      <a class="nav-link" href="archivio.html">Archivio</a>
-    </nav>
-  </header>
-
-  <main class="container">
-    <section class="card" id="kpi">
-      <h2>KPI Principali</h2>
-      <div class="kpi-grid">
-        <div class="kpi-box">
-          <div class="kpi-label">Totale (ultimi 7 giorni)</div>
-          <div class="kpi-value" id="totaleSettimana">0€</div>
-        </div>
-        <div class="kpi-box">
-          <div class="kpi-label">Spesa massima</div>
-          <div class="kpi-value" id="spesaMax">0€</div>
-        </div>
-        <div class="kpi-box">
-          <div class="kpi-label">Spesa minima</div>
-          <div class="kpi-value" id="spesaMin">0€</div>
-        </div>
-        <div class="kpi-box">
-          <div class="kpi-label">Numero spese</div>
-          <div class="kpi-value" id="numSpese">0</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Andamento spese (ultimi 7 giorni)</h2>
-      <canvas id="graficoAndamento"></canvas>
-    </section>
-
-    <div class="row">
-      <section class="card half">
-        <h3>Supermercati più frequentati</h3>
-        <canvas id="graficoSupermercati"></canvas>
-      </section>
-
-      <section class="card half">
-        <h3>Tipologia prodotti</h3>
-        <canvas id="graficoTipologia"></canvas>
-      </section>
-    </div>
-  </main>
-
-  <footer class="footer">Dati salvati solo sul dispositivo — PWA personale</footer>
-
-  <script src="dashboard.js"></script>
+<div class="container">
+    <h1>Dashboard Spese</h1>
+    <a href="aggiungi.html"><button>Aggiungi nuova spesa</button></a>
+    <a href="archivio.html"><button class="btn-secondary">Archivio spese</button></a>
+    <div id="dashboard"></div>
+</div>
+<script src="dashboard.js"></script>
 </body>
 </html>
