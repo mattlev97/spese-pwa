@@ -3,16 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Spese</title>
+    <title>Monitoraggio Spesa - Dashboard</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Icona per i dispositivi -->
+    <link rel="icon" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+
+    <meta name="theme-color" content="#007bff">
 </head>
 <body>
-<div class="container">
-    <h1>Dashboard Spese</h1>
-    <a href="aggiungi.html"><button>Aggiungi nuova spesa</button></a>
-    <a href="archivio.html"><button class="btn-secondary">Archivio spese</button></a>
-    <div id="dashboard"></div>
-</div>
-<script src="dashboard.js"></script>
+    <div class="container">
+        <h1>📊 Dashboard Spesa</h1>
+
+        <nav>
+            <a href="aggiungi.html">➕ Aggiungi Spesa</a> |
+            <a href="archivio.html">📂 Archivio</a>
+        </nav>
+
+        <section>
+            <canvas id="weeklyChart"></canvas>
+            <div class="stats">
+                <p>💰 Spesa massima: <span id="maxSpesa"></span></p>
+                <p>💸 Spesa minima: <span id="minSpesa"></span></p>
+            </div>
+            <canvas id="supermercatiChart"></canvas>
+            <canvas id="tipologiaChart"></canvas>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="dashboard.js"></script>
+
+    <!-- Registrazione Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log("Service Worker registrato:", reg))
+                .catch(err => console.error("Errore Service Worker:", err));
+        }
+    </script>
 </body>
 </html>
