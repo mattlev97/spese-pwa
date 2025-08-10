@@ -284,12 +284,17 @@ recentList.innerHTML = recent.map(expense => `
 
 // === AGGIUNGI SPESA ===
 function initAddExpense() {
-const today = new Date().toISOString().split(‘T’)[0];
-const dateInput = document.getElementById(‘expenseDate’);
-if (dateInput) dateInput.value = today;
+console.log(‘🚀 Inizializzazione pagina aggiungi spesa…’);
 
 ```
-// Event listeners
+const today = new Date().toISOString().split('T')[0];
+const dateInput = document.getElementById('expenseDate');
+if (dateInput) {
+    dateInput.value = today;
+    console.log('📅 Data impostata:', today);
+}
+
+// Event listeners con controllo errori
 const storeSelect = document.getElementById('storeSelect');
 const addProductBtn = document.getElementById('addProductBtn');
 const saveExpenseBtn = document.getElementById('saveExpenseBtn');
@@ -298,30 +303,70 @@ const expenseForm = document.getElementById('expenseForm');
 
 if (storeSelect) {
     storeSelect.addEventListener('change', toggleCustomStore);
+    console.log('✅ Event listener supermercato aggiunto');
+} else {
+    console.warn('⚠️ Elemento storeSelect non trovato');
 }
 
 if (addProductBtn) {
-    addProductBtn.addEventListener('click', addProductToCart);
+    // Rimuovi listener esistenti e aggiungine uno nuovo
+    addProductBtn.removeEventListener('click', addProductToCart);
+    addProductBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('🖱️ Click su aggiungi prodotto');
+        addProductToCart();
+    });
+    console.log('✅ Event listener aggiungi prodotto aggiunto');
+} else {
+    console.warn('⚠️ Elemento addProductBtn non trovato');
 }
 
 if (saveExpenseBtn) {
-    saveExpenseBtn.addEventListener('click', saveExpense);
+    saveExpenseBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('🖱️ Click su salva spesa');
+        saveExpense();
+    });
+    console.log('✅ Event listener salva spesa aggiunto');
 }
 
 if (clearCartBtn) {
-    clearCartBtn.addEventListener('click', clearCart);
+    clearCartBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('🖱️ Click su pulisci carrello');
+        clearCart();
+    });
+    console.log('✅ Event listener pulisci carrello aggiunto');
 }
 
 if (expenseForm) {
-    expenseForm.addEventListener('submit', (e) => {
+    expenseForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        console.log('📝 Submit form spesa');
         saveExpense();
     });
+    console.log('✅ Event listener form aggiunto');
 }
 
 // Reset carrello
 app.currentCart = [];
 updateCartDisplay();
+console.log('🛒 Carrello resettato');
+
+// Verifica elementi critici
+const criticalElements = [
+    'productCategory', 'productName', 'productPrice', 
+    'cartSection', 'cartBody', 'cartTotal'
+];
+
+criticalElements.forEach(id => {
+    const element = document.getElementById(id);
+    if (!element) {
+        console.warn(`⚠️ Elemento critico mancante: ${id}`);
+    }
+});
+
+console.log('✅ Inizializzazione completata');
 ```
 
 }
@@ -345,81 +390,164 @@ if (storeSelect && customStoreGroup) {
 }
 
 function addProductToCart() {
-const category = document.getElementById(‘productCategory’).value;
-const name = document.getElementById(‘productName’).value;
-const price = parseFloat(document.getElementById(‘productPrice’).value);
-const priceKg = parseFloat(document.getElementById(‘productPriceKg’).value) || null;
-const notes = document.getElementById(‘productNotes’).value;
+console.log(‘🛒 Tentativo aggiunta prodotto al carrello…’);
 
 ```
-// Validazione
-if (!category || !name || !price || price <= 0) {
-    alert('⚠️ Compila tutti i campi obbligatori con valori validi');
+// Ottieni elementi
+const categoryEl = document.getElementById('productCategory');
+const nameEl = document.getElementById('productName');
+const priceEl = document.getElementById('productPrice');
+const priceKgEl = document.getElementById('productPriceKg');
+const notesEl = document.getElementById('productNotes');
+
+// Verifica che gli elementi esistano
+if (!categoryEl || !nameEl || !priceEl) {
+    console.error('❌ Elementi form non trovati');
+    alert('❌ Errore: elementi del form non trovati');
     return;
 }
 
+// Ottieni valori
+const category = categoryEl.value.trim();
+const name = nameEl.value.trim();
+const priceValue = priceEl.value.trim();
+const price = parseFloat(priceValue);
+const priceKg = priceKgEl ? (parseFloat(priceKgEl.value) || null) : null;
+const notes = notesEl ? notesEl.value.trim() : '';
+
+console.log('📝 Dati prodotto:', { category, name, priceValue, price, priceKg, notes });
+
+// Validazione dettagliata
+if (!category) {
+    alert('⚠️ Seleziona una tipologia di prodotto');
+    categoryEl.focus();
+    return;
+}
+
+if (!name) {
+    alert('⚠️ Inserisci il nome del prodotto');
+    nameEl.focus();
+    return;
+}
+
+if (!priceValue || isNaN(price) || price <= 0) {
+    alert('⚠️ Inserisci un prezzo valido maggiore di 0');
+    priceEl.focus();
+    return;
+}
+
+// Crea prodotto
 const product = {
     id: app.generateId(),
     category,
     name,
-    price,
-    priceKg,
-    notes
+    price: price,
+    priceKg: priceKg,
+    notes: notes
 };
 
+console.log('✅ Prodotto creato:', product);
+
+// Aggiungi al carrello
 app.currentCart.push(product);
+console.log('🛒 Carrello aggiornato:', app.currentCart);
+
+// Aggiorna display
 updateCartDisplay();
 clearProductForm();
 
 // Feedback visivo
 const addBtn = document.getElementById('addProductBtn');
-addBtn.classList.add('pulse');
-setTimeout(() => addBtn.classList.remove('pulse'), 300);
+if (addBtn) {
+    addBtn.classList.add('pulse');
+    setTimeout(() => addBtn.classList.remove('pulse'), 300);
+}
+
+// Feedback utente
+console.log('✅ Prodotto aggiunto con successo al carrello');
+
+// Scroll al carrello se è la prima aggiunta
+if (app.currentCart.length === 1) {
+    const cartSection = document.getElementById('cartSection');
+    if (cartSection) {
+        cartSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
 ```
 
 }
 
 function updateCartDisplay() {
-const cartSection = document.getElementById(‘cartSection’);
-const cartBody = document.getElementById(‘cartBody’);
-const cartTotal = document.getElementById(‘cartTotal’);
-const saveBtn = document.getElementById(‘saveExpenseBtn’);
+console.log(‘🔄 Aggiornamento display carrello…’);
 
 ```
-if (!cartSection || !cartBody || !cartTotal || !saveBtn) return;
+const cartSection = document.getElementById('cartSection');
+const cartBody = document.getElementById('cartBody');
+const cartTotal = document.getElementById('cartTotal');
+const saveBtn = document.getElementById('saveExpenseBtn');
+
+if (!cartSection || !cartBody || !cartTotal || !saveBtn) {
+    console.error('❌ Elementi carrello non trovati:', {
+        cartSection: !!cartSection,
+        cartBody: !!cartBody,
+        cartTotal: !!cartTotal,
+        saveBtn: !!saveBtn
+    });
+    return;
+}
+
+console.log('🛒 Prodotti nel carrello:', app.currentCart.length);
 
 if (app.currentCart.length === 0) {
     cartSection.style.display = 'none';
     saveBtn.disabled = true;
+    saveBtn.style.opacity = '0.5';
+    console.log('📦 Carrello vuoto - sezione nascosta');
     return;
 }
 
 cartSection.style.display = 'block';
 saveBtn.disabled = false;
+saveBtn.style.opacity = '1';
 
 // Aggiorna tabella prodotti
-cartBody.innerHTML = app.currentCart.map(product => `
-    <tr>
-        <td>
-            <strong>${product.name}</strong><br>
-            <small style="color: #666;">${product.category}</small>
-            ${product.notes ? `<br><small style="color: #888;">📝 ${product.notes}</small>` : ''}
-            ${product.priceKg ? `<br><small style="color: #666;">💰 ${app.formatCurrency(product.priceKg)}/kg</small>` : ''}
-        </td>
-        <td><strong>${app.formatCurrency(product.price)}</strong></td>
-        <td>
-            <button type="button" class="remove-btn" onclick="removeFromCart('${product.id}')">
-                🗑️
-            </button>
-        </td>
-    </tr>
-`).join('');
+cartBody.innerHTML = app.currentCart.map((product, index) => {
+    console.log(`📦 Rendering prodotto ${index + 1}:`, product);
+    return `
+        <tr>
+            <td>
+                <strong>${escapeHtml(product.name)}</strong><br>
+                <small style="color: #666;">${escapeHtml(product.category)}</small>
+                ${product.notes ? `<br><small style="color: #888;">📝 ${escapeHtml(product.notes)}</small>` : ''}
+                ${product.priceKg ? `<br><small style="color: #666;">💰 ${app.formatCurrency(product.priceKg)}/kg</small>` : ''}
+            </td>
+            <td><strong>${app.formatCurrency(product.price)}</strong></td>
+            <td>
+                <button type="button" class="remove-btn" onclick="removeFromCart('${product.id}')" title="Rimuovi prodotto">
+                    🗑️
+                </button>
+            </td>
+        </tr>
+    `;
+}).join('');
 
 // Aggiorna totale
 const total = app.currentCart.reduce((sum, product) => sum + product.price, 0);
 cartTotal.textContent = app.formatCurrency(total);
+
+console.log('✅ Display carrello aggiornato - Totale:', app.formatCurrency(total));
+
+// Aggiungi animazione fade-in
+cartSection.classList.add('fade-in');
 ```
 
+}
+
+// Funzione helper per escape HTML
+function escapeHtml(text) {
+const div = document.createElement(‘div’);
+div.textContent = text || ‘’;
+return div.innerHTML;
 }
 
 function removeFromCart(productId) {
