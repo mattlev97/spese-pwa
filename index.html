@@ -1,54 +1,91 @@
-<!-- index.html -->
 <!DOCTYPE html>
+
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Spese - Dashboard</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>Dashboard - Gestione Spese</title>
-    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#4CAF50">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js" defer></script>
 </head>
 <body>
     <header>
-        <h1>Dashboard</h1>
+        <h1>📊 Gestione Spese</h1>
         <nav>
-            <a href="aggiungi.html">Aggiungi Spesa</a>
+            <a href="index.html" class="nav-active">Dashboard</a>
+            <a href="aggiungi.html">Aggiungi</a>
             <a href="archivio.html">Archivio</a>
         </nav>
     </header>
-    <main>
-        <section id="statistiche">
-            <h2>Statistiche</h2>
-            <label for="periodo">Seleziona periodo:</label>
-            <select id="periodo" onchange="aggiornaStatistiche()">
-                <option value="settimana">Ultima settimana</option>
-                <option value="mese">Ultimo mese</option>
-                <option value="anno">Ultimo anno</option>
-            </select>
-            <p>Totale spese: <span id="totale">0 €</span></p>
-            <p>Spesa massima: <span id="max">0 €</span> ↑</p>
-            <p>Spesa minima: <span id="min">0 €</span> ↓</p>
-        </section>
-        <section id="grafici">
-            <h2>Grafici</h2>
-            <div class="grafico">
-                <canvas id="graficoSupermercati"></canvas>
-                <p>Supermercati più usati</p>
-            </div>
-            <div class="grafico">
-                <canvas id="graficoTipologie"></canvas>
-                <p>Tipologie di prodotto</p>
-            </div>
-        </section>
-    </main>
-    <script>
-        window.onload = function() {
-            aggiornaStatistiche();
-        };
-    </script>
+
+```
+<main class="dashboard">
+    <section class="period-selector">
+        <h2>📈 Statistiche</h2>
+        <select id="periodSelect">
+            <option value="settimana">Ultima Settimana</option>
+            <option value="mese" selected>Ultimo Mese</option>
+            <option value="anno">Ultimo Anno</option>
+        </select>
+    </section>
+
+    <section class="stats-grid">
+        <div class="stat-card">
+            <h3>💰 Totale Spese</h3>
+            <span id="totalAmount" class="amount">€0.00</span>
+        </div>
+        <div class="stat-card">
+            <h3>📈 Spesa Massima</h3>
+            <span id="maxAmount" class="amount">€0.00</span>
+            <small id="maxStore" class="store-info"></small>
+        </div>
+        <div class="stat-card">
+            <h3>📉 Spesa Minima</h3>
+            <span id="minAmount" class="amount">€0.00</span>
+            <small id="minStore" class="store-info"></small>
+        </div>
+        <div class="stat-card">
+            <h3>🛍️ Numero Spese</h3>
+            <span id="totalExpenses" class="amount">0</span>
+        </div>
+    </section>
+
+    <section class="charts-section">
+        <div class="chart-container">
+            <h3>🏪 Supermercati Più Usati</h3>
+            <canvas id="storeChart" width="300" height="300"></canvas>
+            <div id="storeStats" class="stats-list"></div>
+        </div>
+
+        <div class="chart-container">
+            <h3>🛒 Tipologie Prodotti</h3>
+            <canvas id="categoryChart" width="300" height="300"></canvas>
+            <div id="categoryStats" class="stats-list"></div>
+        </div>
+    </section>
+
+    <section class="recent-expenses">
+        <h3>🕐 Ultime Spese</h3>
+        <div id="recentList" class="recent-list"></div>
+    </section>
+</main>
+
+<script src="app.js"></script>
+<script>
+    // Registra service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+
+    // Carica dashboard
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+    document.getElementById('periodSelect').addEventListener('change', loadDashboard);
+</script>
+```
+
 </body>
 </html>
