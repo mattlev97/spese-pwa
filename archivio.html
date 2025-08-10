@@ -1,70 +1,29 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Archivio Spese</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archivio Spese</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
+<div class="container">
     <h1>Archivio Spese</h1>
-    <nav>
-      <a class="nav-link" href="index.html">Dashboard</a>
-      <a class="nav-link" href="aggiungi.html">Aggiungi</a>
-      <a class="nav-link" href="archivio.html">Archivio</a>
-    </nav>
-  </header>
+    <a href="index.html">⬅ Torna alla Dashboard</a>
 
-  <main class="container">
-    <div class="card">
-      <div class="filter-row">
-        <div>
-          <label>Data</label>
-          <input type="date" id="filtroData" />
-        </div>
-        <div>
-          <label>Supermercato</label>
-          <input type="text" id="filtroSupermercato" placeholder="Es. Coop" />
-        </div>
-        <div class="hstack">
-          <button id="btnFiltra" class="btn">Filtra</button>
-          <button id="btnReset" class="btn btn-ghost">Reset</button>
-        </div>
-      </div>
-    </div>
+    <input type="text" id="filtro" placeholder="Filtra per supermercato o prodotto...">
 
-    <div class="card">
-      <table>
+    <table id="archivio">
         <thead>
-          <tr>
+        <tr>
             <th>Data</th>
             <th>Supermercato</th>
-            <th>Totale (€)</th>
-            <th>Dettagli</th>
-            <th>Rimuovi</th>
-          </tr>
+            <th>Prodotti</th>
+        </tr>
         </thead>
-        <tbody id="archivioTableBody"></tbody>
-      </table>
-    </div>
-  </main>
-
-  <!-- modale dettagli -->
-  <div id="modalDettagli" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Dettagli spesa</h2>
-      <table>
-        <thead>
-          <tr><th>Tipologia</th><th>Nome</th><th>Prezzo</th><th>€/kg</th><th>Note</th></tr>
-        </thead>
-        <tbody id="modalTableBody"></tbody>
-      </table>
-      <p id="totaleModal"></p>
-    </div>
-  </div>
-
-  <script src="archivio.js"></script>
+        <tbody></tbody>
+    </table>
+</div>
+<script src="archivio.js"></script>
 </body>
 </html>
