@@ -1,87 +1,152 @@
-<!-- aggiungi.html -->
 <!DOCTYPE html>
+
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Spesa</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>Aggiungi Spesa - Gestione Spese</title>
-    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#4CAF50">
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
 </head>
 <body>
     <header>
-        <h1>Aggiungi Nuova Spesa</h1>
+        <h1>🛍️ Aggiungi Spesa</h1>
         <nav>
             <a href="index.html">Dashboard</a>
+            <a href="aggiungi.html" class="nav-active">Aggiungi</a>
             <a href="archivio.html">Archivio</a>
         </nav>
     </header>
-    <main>
-        <form id="formSpesa">
-            <label for="supermercato">Supermercato:</label>
-            <select id="supermercato">
-                <option value="Esselunga">Esselunga</option>
-                <option value="Coop">Coop</option>
-                <option value="Conad">Conad</option>
-                <option value="Carrefour">Carrefour</option>
-                <option value="Lidl">Lidl</option>
-                <option value="Aldi">Aldi</option>
-                <option value="Altro">Altro (aggiungi nuovo)</option>
-            </select>
-            <input type="text" id="nuovoSupermercato" placeholder="Nome nuovo supermercato" style="display: none;">
+
+```
+<main class="add-expense">
+    <form id="expenseForm" class="expense-form">
+        <div class="form-section">
+            <h2>🏪 Informazioni Generali</h2>
             
-            <h3>Aggiungi Prodotto</h3>
-            <label for="tipologia">Tipologia:</label>
-            <select id="tipologia">
-                <option value="Carne">Carne</option>
-                <option value="Pesce">Pesce</option>
-                <option value="Verdura">Verdura</option>
-                <option value="Frutta">Frutta</option>
-                <option value="Latticini">Latticini</option>
-                <option value="Pane">Pane</option>
-                <option value="Bevande">Bevande</option>
-                <option value="Altro">Altro</option>
-            </select>
-            <label for="nome">Nome prodotto:</label>
-            <input type="text" id="nome">
-            <label for="prezzo">Prezzo (€):</label>
-            <input type="number" id="prezzo" step="0.01">
-            <label for="prezzoKg">Prezzo/kg (€):</label>
-            <input type="number" id="prezzoKg" step="0.01">
-            <label for="note">Note:</label>
-            <input type="text" id="note">
-            <button type="button" onclick="aggiungiProdottoAlCarrello()">Aggiungi al carrello</button>
-        </form>
-        <section id="carrello">
-            <h2>Carrello</h2>
-            <table id="tabellaCarrello">
-                <thead>
-                    <tr>
-                        <th>Tipologia</th>
-                        <th>Nome</th>
-                        <th>Prezzo</th>
-                        <th>Prezzo/kg</th>
-                        <th>Note</th>
-                        <th>Azione</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-            <p>Totale: <span id="totaleCarrello">0 €</span></p>
-            <button onclick="salvaSpesa()">Salva Spesa Completa</button>
-        </section>
-    </main>
-    <script>
-        document.getElementById('supermercato').addEventListener('change', function() {
-            if (this.value === 'Altro') {
-                document.getElementById('nuovoSupermercato').style.display = 'block';
-            } else {
-                document.getElementById('nuovoSupermercato').style.display = 'none';
-            }
-        });
-    </script>
+            <div class="form-group">
+                <label for="storeSelect">Supermercato:</label>
+                <select id="storeSelect" required>
+                    <option value="">Seleziona supermercato</option>
+                    <option value="Conad">Conad</option>
+                    <option value="Coop">Coop</option>
+                    <option value="Esselunga">Esselunga</option>
+                    <option value="Eurospin">Eurospin</option>
+                    <option value="Carrefour">Carrefour</option>
+                    <option value="Lidl">Lidl</option>
+                    <option value="MD">MD</option>
+                    <option value="Pam">Pam</option>
+                    <option value="Simply">Simply</option>
+                    <option value="Iper">Iper</option>
+                    <option value="Altro">Altro (specificare sotto)</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="customStoreGroup" style="display: none;">
+                <label for="customStore">Nome supermercato:</label>
+                <input type="text" id="customStore" placeholder="Inserisci nome supermercato">
+            </div>
+
+            <div class="form-group">
+                <label for="expenseDate">Data:</label>
+                <input type="date" id="expenseDate" required>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>🛒 Aggiungi Prodotti</h2>
+            
+            <div class="product-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productCategory">Tipologia:</label>
+                        <select id="productCategory" required>
+                            <option value="">Seleziona tipologia</option>
+                            <option value="Carne">🥩 Carne</option>
+                            <option value="Pesce">🐟 Pesce</option>
+                            <option value="Verdura">🥬 Verdura</option>
+                            <option value="Frutta">🍎 Frutta</option>
+                            <option value="Latticini">🧀 Latticini</option>
+                            <option value="Pane">🍞 Pane e Cereali</option>
+                            <option value="Bevande">🥤 Bevande</option>
+                            <option value="Surgelati">🧊 Surgelati</option>
+                            <option value="Dolci">🍰 Dolci</option>
+                            <option value="Pulizia">🧽 Prodotti Pulizia</option>
+                            <option value="Igiene">🧴 Igiene Personale</option>
+                            <option value="Altro">📦 Altro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productName">Nome prodotto:</label>
+                        <input type="text" id="productName" placeholder="Es. Pomodori" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productPrice">Prezzo (€):</label>
+                        <input type="number" id="productPrice" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productPriceKg">Prezzo/kg (€):</label>
+                        <input type="number" id="productPriceKg" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="productNotes">Note:</label>
+                    <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)">
+                </div>
+
+                <button type="button" id="addProductBtn" class="btn btn-secondary">
+                    ➕ Aggiungi Prodotto al Carrello
+                </button>
+            </div>
+        </div>
+
+        <div class="cart-section" id="cartSection" style="display: none;">
+            <h2>🛒 Carrello</h2>
+            <div class="cart-table-container">
+                <table id="cartTable">
+                    <thead>
+                        <tr>
+                            <th>Prodotto</th>
+                            <th>Prezzo</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="cart-total">
+                <strong>Totale: €<span id="cartTotal">0.00</span></strong>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" id="saveExpenseBtn" class="btn btn-primary" disabled>
+                💾 Salva Spesa Completa
+            </button>
+            <button type="button" id="clearCartBtn" class="btn btn-danger">
+                🗑️ Svuota Carrello
+            </button>
+        </div>
+    </form>
+</main>
+
+<script src="app.js"></script>
+<script>
+    // Inizializza pagina aggiungi spesa
+    document.addEventListener('DOMContentLoaded', initAddExpense);
+</script>
+```
+
 </body>
 </html>
