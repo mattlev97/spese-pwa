@@ -1,12 +1,21 @@
+// aggiungi.js (versione aggiornata)
 document.addEventListener("DOMContentLoaded", () => {
   const formSpesa = document.getElementById("formSpesa");
   const tabellaCarrelloBody = document.querySelector("#tabellaCarrello tbody");
   const supermercatoSelect = document.getElementById("supermercato");
 
-  const totaleSpesaEl = document.createElement("div");
-  totaleSpesaEl.style.fontWeight = "bold";
-  totaleSpesaEl.style.marginTop = "10px";
-  document.getElementById("tabellaCarrello").after(totaleSpesaEl);
+  // crea/div per totale (usa id per diagnostica facile)
+  let totaleSpesaEl = document.getElementById("totaleSpesaEl");
+  if (!totaleSpesaEl) {
+    totaleSpesaEl = document.createElement("div");
+    totaleSpesaEl.id = "totaleSpesaEl";
+    totaleSpesaEl.style.fontWeight = "bold";
+    totaleSpesaEl.style.marginTop = "10px";
+    // inserisce dopo la tabella se esiste
+    const table = document.getElementById("tabellaCarrello");
+    if (table && table.parentNode) table.parentNode.insertBefore(totaleSpesaEl, table.nextSibling);
+    else document.body.appendChild(totaleSpesaEl);
+  }
 
   let carrello = [];
 
@@ -23,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Inserisci un nome valido per il supermercato.");
       return;
     }
-    // Evita duplicati
     for (let i = 0; i < supermercatoSelect.options.length; i++) {
       if (supermercatoSelect.options[i].value.toLowerCase() === nuovoNome.toLowerCase()) {
         alert("Supermercato già presente.");
@@ -84,14 +92,14 @@ document.addEventListener("DOMContentLoaded", () => {
       tabellaCarrelloBody.appendChild(tr);
     });
 
-    // Aggiorna totale
+    // Aggiorna totale e mostra
     const totale = carrello.reduce((sum, p) => sum + p.prezzo, 0);
     totaleSpesaEl.textContent = `Totale spesa: € ${totale.toFixed(2)}`;
 
     // Eventi rimozione prodotto
     document.querySelectorAll(".rimuoviBtn").forEach(btn => {
       btn.addEventListener("click", (e) => {
-        const index = parseInt(e.target.getAttribute("data-index"));
+        const index = parseInt(e.target.getAttribute("data-index"), 10);
         carrello.splice(index, 1);
         aggiornaTabellaCarrello();
       });
@@ -117,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
       prodotti: carrello
     };
 
-    // Salva su "spese" (per dashboard)
+    // Salva su "spese"
     let spese = JSON.parse(localStorage.getItem("spese")) || [];
     spese.push(nuovaSpesa);
     localStorage.setItem("spese", JSON.stringify(spese));
