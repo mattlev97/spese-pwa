@@ -1,96 +1,99 @@
-/* Font e reset base */
+/* Stile generale */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 20px;
-  background-color: #f8f9fa;
-  color: #333;
+  background-color: #f9f9f9;
 }
 
 h1, h2 {
-  color: #2c3e50;
+  text-align: center;
+  color: #333;
 }
 
-a {
-  color: #3498db;
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
-
-/* Contenitori principali */
-#kpi, #ultimeSpese, #listaSpese {
-  background: #fff;
-  padding: 15px;
-  margin-top: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
 }
 
-/* Form */
-form {
-  background: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+table, th, td {
+  border: 1px solid #ddd;
 }
 
-label {
-  display: block;
-  margin-top: 10px;
+th, td {
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background-color: #4CAF50;
+  color: white;
+}
+
+button {
+  padding: 5px 10px;
+  margin: 2px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+.dettagliBtn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.rimuoviBtn {
+  background-color: #f44336;
+  color: white;
+}
+
+/* Modale */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  padding-top: 80px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: auto;
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%;
+  max-width: 700px;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
   font-weight: bold;
 }
 
-input, select, textarea {
-  width: 100%;
-  padding: 8px;
-  margin-top: 4px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-textarea {
-  min-height: 60px;
-}
-
-/* Bottoni */
-button {
-  margin-top: 15px;
-  padding: 10px 15px;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
   cursor: pointer;
 }
-button:hover {
-  background-color: #2980b9;
-}
 
-/* Archivio - righe spesa */
-#listaSpese div {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid #eee;
-}
-#listaSpese div:last-child {
-  border-bottom: none;
-}
-
-#listaSpese button {
-  background-color: #e74c3c;
-}
-#listaSpese button:hover {
-  background-color: #c0392b;
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-  body {
-    padding: 10px;
-  }
+/* Totale nel modale */
+#totaleModal {
+  font-weight: bold;
+  margin-top: 10px;
+  font-size: 1.2em;
 }
