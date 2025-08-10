@@ -1,47 +1,59 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Archivio Spese</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Archivio Spese</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Archivio Spese</h1>
-  <table id="tabellaArchivio">
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Supermercato</th>
-        <th>Totale (€)</th>
-        <th>Prodotti</th>
-        <th>Azioni</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <h1>Archivio Spese</h1>
 
-  <!-- Modale dettagli spesa -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <span id="chiudiModal" class="close">&times;</span>
-      <h2>Dettagli Spesa</h2>
-      <table id="tabellaDettagli">
-        <thead>
-          <tr>
-            <th>Tipologia</th>
-            <th>Nome</th>
-            <th>Prezzo (€)</th>
-            <th>Prezzo al Kg (€)</th>
-            <th>Note</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div id="totaleModal" style="font-weight:bold; margin-top:10px;"></div>
+    <!-- Filtro -->
+    <div style="margin-bottom: 15px;">
+        <label for="filtroData">Filtra per data:</label>
+        <input type="date" id="filtroData">
+
+        <label for="filtroSupermercato">Filtra per supermercato:</label>
+        <input type="text" id="filtroSupermercato" placeholder="Es. Coop">
+
+        <button id="btnFiltra">Filtra</button>
+        <button id="btnReset">Reset</button>
     </div>
-  </div>
 
-  <script src="archivio.js"></script>
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Supermercato</th>
+                <th>Totale (€)</th>
+                <th>Dettagli</th>
+                <th>Rimuovi</th>
+            </tr>
+        </thead>
+        <tbody id="archivioTableBody"></tbody>
+    </table>
+
+    <!-- Modale -->
+    <div id="modalDettagli" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Dettagli Spesa</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipologia</th>
+                        <th>Nome</th>
+                        <th>Prezzo</th>
+                        <th>Prezzo/kg</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody id="modalTableBody"></tbody>
+            </table>
+            <p id="totaleModal"></p>
+        </div>
+    </div>
+
+    <script src="archivio.js"></script>
 </body>
 </html>
