@@ -1,42 +1,65 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dashboard Spese</title>
+  <title>Tracker Spese - Dashboard</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 <body>
-  <h1>Dashboard Spese</h1>
-  <a href="aggiungi.html">➕ Aggiungi Spesa</a> |
-  <a href="archivio.html">📜 Archivio</a>
+  <header class="topbar">
+    <h1>Tracker Spese</h1>
+    <nav>
+      <a class="nav-link" href="index.html">Dashboard</a>
+      <a class="nav-link" href="aggiungi.html">+ Aggiungi</a>
+      <a class="nav-link" href="archivio.html">Archivio</a>
+    </nav>
+  </header>
 
-  <section id="kpi">
-    <h2>KPI Principali</h2>
-    <p>Totale ultima settimana: <span id="totaleSettimana">0€</span></p>
-    <p><i class="fa-solid fa-arrow-up"></i> Spesa massima: <span id="spesaMax">0€</span></p>
-    <p><i class="fa-solid fa-arrow-down"></i> Spesa minima: <span id="spesaMin">0€</span></p>
-  </section>
+  <main class="container">
+    <section class="card" id="kpi">
+      <h2>KPI Principali</h2>
+      <div class="kpi-grid">
+        <div class="kpi-box">
+          <div class="kpi-label">Totale (ultimi 7 giorni)</div>
+          <div class="kpi-value" id="totaleSettimana">0€</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">Spesa massima</div>
+          <div class="kpi-value" id="spesaMax">0€</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">Spesa minima</div>
+          <div class="kpi-value" id="spesaMin">0€</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">Numero spese</div>
+          <div class="kpi-value" id="numSpese">0</div>
+        </div>
+      </div>
+    </section>
 
-  <section>
-    <h2>Andamento spese (ultimi 7 giorni)</h2>
-    <canvas id="graficoAndamento" width="400" height="200"></canvas>
-  </section>
+    <section class="card">
+      <h2>Andamento spese (ultimi 7 giorni)</h2>
+      <canvas id="graficoAndamento"></canvas>
+    </section>
 
-  <section>
-    <h2>Supermercati più frequentati</h2>
-    <canvas id="graficoSupermercati" width="400" height="200"></canvas>
-  </section>
+    <div class="row">
+      <section class="card half">
+        <h3>Supermercati più frequentati</h3>
+        <canvas id="graficoSupermercati"></canvas>
+      </section>
 
-  <section>
-    <h2>Tipologia prodotti acquistati</h2>
-    <canvas id="graficoTipologia" width="400" height="200"></canvas>
-  </section>
+      <section class="card half">
+        <h3>Tipologia prodotti</h3>
+        <canvas id="graficoTipologia"></canvas>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">Dati salvati solo sul dispositivo — PWA personale</footer>
 
   <script src="dashboard.js"></script>
 </body>
