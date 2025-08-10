@@ -1,85 +1,107 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Aggiungi Spesa</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Aggiungi Nuova Spesa</h1>
-  <a href="index.html">⬅️ Torna alla Dashboard</a>
+  <header class="topbar">
+    <h1>Aggiungi Nuova Spesa</h1>
+    <nav>
+      <a class="nav-link" href="index.html">Dashboard</a>
+      <a class="nav-link" href="aggiungi.html">Aggiungi</a>
+      <a class="nav-link" href="archivio.html">Archivio</a>
+    </nav>
+  </header>
 
-  <form id="formSpesa">
+  <main class="container">
+    <div class="card">
+      <label for="supermercato">Supermercato</label>
+      <div class="hstack">
+        <select id="supermercato">
+          <option value="">Seleziona un supermercato</option>
+          <option>Esselunga</option>
+          <option>Coop</option>
+          <option>Carrefour</option>
+          <option>Conad</option>
+          <option>Lidl</option>
+          <option>Eurospin</option>
+        </select>
+        <button id="aggiungiSupermercatoBtn" class="btn-ghost">➕ Aggiungi</button>
+      </div>
 
-    <label for="supermercato">Supermercato:</label>
-    <select id="supermercato" required>
-      <option value="">Seleziona un supermercato</option>
-      <option>Esselunga</option>
-      <option>Coop</option>
-      <option>Carrefour</option>
-      <option>Conad</option>
-      <option>Eurospin</option>
-      <option>Simply</option>
-      <!-- puoi aggiungere altri qui o tramite sezione impostazioni -->
-    </select>
-    <button type="button" id="aggiungiSupermercatoBtn">➕ Aggiungi supermercato</button>
-
-    <div id="aggiungiSupermercatoDiv" style="display:none; margin-top:10px;">
-      <input type="text" id="nuovoSupermercato" placeholder="Nome nuovo supermercato" />
-      <button type="button" id="salvaSupermercatoBtn">Salva supermercato</button>
+      <div id="aggiungiSupermercatoDiv" class="hidden card-inline">
+        <input id="nuovoSupermercato" placeholder="Nome nuovo supermercato" />
+        <button id="salvaSupermercatoBtn" class="btn">Salva</button>
+      </div>
     </div>
 
-    <hr />
+    <div class="card">
+      <h2>Prodotti nel carrello</h2>
+      <table id="tabellaCarrello" class="table">
+        <thead>
+          <tr>
+            <th>Tipologia</th>
+            <th>Nome</th>
+            <th>Prezzo (€)</th>
+            <th>Prezzo/kg (€)</th>
+            <th>Note</th>
+            <th>Rimuovi</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="totaleSpesaEl" class="totale">Totale spesa: € 0.00</div>
+    </div>
 
-    <h2>Prodotti nel carrello</h2>
-    <table border="1" id="tabellaCarrello" style="width:100%; margin-bottom:10px;">
-      <thead>
-        <tr>
-          <th>Tipologia</th>
-          <th>Nome</th>
-          <th>Prezzo (€)</th>
-          <th>Prezzo/kg (€)</th>
-          <th>Note</th>
-          <th>Rimuovi</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="card">
+      <h2>Aggiungi prodotto</h2>
+      <form id="formProdotto" onsubmit="return false;">
+        <div class="form-row">
+          <label for="tipologia">Tipologia</label>
+          <select id="tipologia" required>
+            <option value="">Seleziona tipologia</option>
+            <option>Carne</option>
+            <option>Pesce</option>
+            <option>Verdura</option>
+            <option>Frutta</option>
+            <option>Bevande</option>
+            <option>Altro</option>
+          </select>
+        </div>
 
-    <h3>Aggiungi prodotto</h3>
+        <div class="form-row">
+          <label for="nome">Nome</label>
+          <input id="nome" required />
+        </div>
 
-    <label for="tipologia">Tipologia:</label>
-    <select id="tipologia" required>
-      <option value="">Seleziona tipologia</option>
-      <option>Carne</option>
-      <option>Pesce</option>
-      <option>Verdura</option>
-      <option>Frutta</option>
-      <option>Bevande</option>
-      <option>Altro</option>
-    </select>
+        <div class="form-row">
+          <label for="prezzo">Prezzo (€)</label>
+          <input id="prezzo" type="number" step="0.01" required />
+        </div>
 
-    <label for="nome">Nome:</label>
-    <input type="text" id="nome" required />
+        <div class="form-row">
+          <label for="prezzoKg">Prezzo/kg (€) (opz.)</label>
+          <input id="prezzoKg" type="number" step="0.01" />
+        </div>
 
-    <label for="prezzo">Prezzo (€):</label>
-    <input type="number" step="0.01" id="prezzo" required />
+        <div class="form-row">
+          <label for="note">Note</label>
+          <input id="note" />
+        </div>
 
-    <label for="prezzoKg">Prezzo/kg (€):</label>
-    <input type="number" step="0.01" id="prezzoKg" />
+        <div class="hstack">
+          <button id="aggiungiProdottoBtn" class="btn">Aggiungi prodotto al carrello</button>
+          <button id="salvaSpesaBtn" class="btn primary">Salva Spesa Completa</button>
+        </div>
+      </form>
+    </div>
+  </main>
 
-    <label for="note">Note:</label>
-    <input type="text" id="note" />
-
-    <button type="button" id="aggiungiProdottoBtn">Aggiungi prodotto al carrello</button>
-
-    <hr />
-
-    <button type="submit">Salva Spesa Completa</button>
-
-  </form>
+  <footer class="footer">Salvataggio locale (localStorage)</footer>
 
   <script src="aggiungi.js"></script>
 </body>
-</html> 
+</html>
