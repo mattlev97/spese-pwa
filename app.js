@@ -284,15 +284,25 @@ recentList.innerHTML = recent.map(expense => `
 
 // === AGGIUNGI SPESA ===
 function initAddExpense() {
-console.log(‘🚀 Inizializzazione pagina aggiungi spesa…’);
+alert(‘🚀 INIZIO INIZIALIZZAZIONE: initAddExpense chiamata’);
 
 ```
 const today = new Date().toISOString().split('T')[0];
 const dateInput = document.getElementById('expenseDate');
 if (dateInput) {
     dateInput.value = today;
-    console.log('📅 Data impostata:', today);
+    alert('📅 Data impostata: ' + today);
+} else {
+    alert('⚠️ Campo data non trovato');
 }
+
+// Verifica che app esista
+if (!app) {
+    alert('❌ ERRORE CRITICO: Oggetto app non trovato durante inizializzazione!');
+    return;
+}
+
+alert('✅ Oggetto app trovato: ' + typeof app);
 
 // Event listeners con controllo errori
 const storeSelect = document.getElementById('storeSelect');
@@ -301,11 +311,19 @@ const saveExpenseBtn = document.getElementById('saveExpenseBtn');
 const clearCartBtn = document.getElementById('clearCartBtn');
 const expenseForm = document.getElementById('expenseForm');
 
+// Verifica elementi critici
+const elementsStatus = 'Elementi trovati:\n' +
+    'storeSelect: ' + !!storeSelect + '\n' +
+    'addProductBtn: ' + !!addProductBtn + '\n' +
+    'saveExpenseBtn: ' + !!saveExpenseBtn + '\n' +
+    'clearCartBtn: ' + !!clearCartBtn + '\n' +
+    'expenseForm: ' + !!expenseForm;
+
+alert('🔍 ' + elementsStatus);
+
 if (storeSelect) {
     storeSelect.addEventListener('change', toggleCustomStore);
-    console.log('✅ Event listener supermercato aggiunto');
-} else {
-    console.warn('⚠️ Elemento storeSelect non trovato');
+    alert('✅ Event listener supermercato aggiunto');
 }
 
 if (addProductBtn) {
@@ -313,60 +331,64 @@ if (addProductBtn) {
     addProductBtn.removeEventListener('click', addProductToCart);
     addProductBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('🖱️ Click su aggiungi prodotto');
+        alert('🖱️ CLICK RILEVATO: Bottone "Aggiungi Prodotto" cliccato!');
         addProductToCart();
     });
-    console.log('✅ Event listener aggiungi prodotto aggiunto');
+    alert('✅ Event listener PRINCIPALE aggiunto al bottone');
 } else {
-    console.warn('⚠️ Elemento addProductBtn non trovato');
+    alert('❌ ERRORE GRAVE: Bottone addProductBtn NON TROVATO!');
 }
 
 if (saveExpenseBtn) {
     saveExpenseBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('🖱️ Click su salva spesa');
+        alert('🖱️ Click su salva spesa');
         saveExpense();
     });
-    console.log('✅ Event listener salva spesa aggiunto');
 }
 
 if (clearCartBtn) {
     clearCartBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('🖱️ Click su pulisci carrello');
+        alert('🖱️ Click su pulisci carrello');
         clearCart();
     });
-    console.log('✅ Event listener pulisci carrello aggiunto');
 }
 
 if (expenseForm) {
     expenseForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        console.log('📝 Submit form spesa');
+        alert('📝 Submit form spesa');
         saveExpense();
     });
-    console.log('✅ Event listener form aggiunto');
 }
 
 // Reset carrello
 app.currentCart = [];
 updateCartDisplay();
-console.log('🛒 Carrello resettato');
+alert('🛒 Carrello resettato e display aggiornato');
 
-// Verifica elementi critici
-const criticalElements = [
+// Verifica elementi critici per form prodotto
+const formElements = [
     'productCategory', 'productName', 'productPrice', 
     'cartSection', 'cartBody', 'cartTotal'
 ];
 
-criticalElements.forEach(id => {
+let missingElements = [];
+formElements.forEach(id => {
     const element = document.getElementById(id);
     if (!element) {
-        console.warn(`⚠️ Elemento critico mancante: ${id}`);
+        missingElements.push(id);
     }
 });
 
-console.log('✅ Inizializzazione completata');
+if (missingElements.length > 0) {
+    alert('⚠️ ELEMENTI MANCANTI: ' + missingElements.join(', '));
+} else {
+    alert('✅ Tutti gli elementi critici trovati');
+}
+
+alert('🎉 INIZIALIZZAZIONE COMPLETATA! L\'app è pronta per l\'uso.');
 ```
 
 }
@@ -390,7 +412,7 @@ if (storeSelect && customStoreGroup) {
 }
 
 function addProductToCart() {
-console.log(‘🛒 Tentativo aggiunta prodotto al carrello…’);
+alert(‘🛒 INIZIO: Funzione addProductToCart chiamata’);
 
 ```
 // Ottieni elementi
@@ -402,37 +424,51 @@ const notesEl = document.getElementById('productNotes');
 
 // Verifica che gli elementi esistano
 if (!categoryEl || !nameEl || !priceEl) {
-    console.error('❌ Elementi form non trovati');
-    alert('❌ Errore: elementi del form non trovati');
+    alert('❌ ERRORE: Elementi form non trovati!\nCategory: ' + !!categoryEl + '\nName: ' + !!nameEl + '\nPrice: ' + !!priceEl);
     return;
 }
 
+alert('✅ ELEMENTI TROVATI: Tutti gli elementi del form esistono');
+
 // Ottieni valori
-const category = categoryEl.value.trim();
-const name = nameEl.value.trim();
-const priceValue = priceEl.value.trim();
+const category = categoryEl.value ? categoryEl.value.trim() : '';
+const name = nameEl.value ? nameEl.value.trim() : '';
+const priceValue = priceEl.value ? priceEl.value.trim() : '';
 const price = parseFloat(priceValue);
 const priceKg = priceKgEl ? (parseFloat(priceKgEl.value) || null) : null;
-const notes = notesEl ? notesEl.value.trim() : '';
+const notes = notesEl ? (notesEl.value ? notesEl.value.trim() : '') : '';
 
-console.log('📝 Dati prodotto:', { category, name, priceValue, price, priceKg, notes });
+alert('📝 VALORI LETTI:\nCategoria: "' + category + '"\nNome: "' + name + '"\nPrezzo testo: "' + priceValue + '"\nPrezzo numero: ' + price);
 
 // Validazione dettagliata
 if (!category) {
-    alert('⚠️ Seleziona una tipologia di prodotto');
+    alert('⚠️ VALIDAZIONE FALLITA: Categoria vuota\nSeleziona una tipologia di prodotto');
     categoryEl.focus();
     return;
 }
 
 if (!name) {
-    alert('⚠️ Inserisci il nome del prodotto');
+    alert('⚠️ VALIDAZIONE FALLITA: Nome vuoto\nInserisci il nome del prodotto');
     nameEl.focus();
     return;
 }
 
 if (!priceValue || isNaN(price) || price <= 0) {
-    alert('⚠️ Inserisci un prezzo valido maggiore di 0');
+    alert('⚠️ VALIDAZIONE FALLITA: Prezzo non valido\nPrezzo inserito: "' + priceValue + '"\nPrezzo convertito: ' + price + '\nInserisci un prezzo valido maggiore di 0');
     priceEl.focus();
+    return;
+}
+
+alert('✅ VALIDAZIONE SUPERATA: Tutti i campi sono validi');
+
+// Verifica che app esista
+if (!app) {
+    alert('❌ ERRORE CRITICO: Oggetto app non trovato!');
+    return;
+}
+
+if (!app.currentCart) {
+    alert('❌ ERRORE CRITICO: app.currentCart non esiste!');
     return;
 }
 
@@ -446,14 +482,20 @@ const product = {
     notes: notes
 };
 
-console.log('✅ Prodotto creato:', product);
+alert('✅ PRODOTTO CREATO:\n' + JSON.stringify(product, null, 2));
 
 // Aggiungi al carrello
+const cartLengthBefore = app.currentCart.length;
 app.currentCart.push(product);
-console.log('🛒 Carrello aggiornato:', app.currentCart);
+const cartLengthAfter = app.currentCart.length;
+
+alert('🛒 CARRELLO AGGIORNATO:\nPrima: ' + cartLengthBefore + ' prodotti\nDopo: ' + cartLengthAfter + ' prodotti');
 
 // Aggiorna display
+alert('🔄 Chiamando updateCartDisplay...');
 updateCartDisplay();
+
+alert('🧹 Chiamando clearProductForm...');
 clearProductForm();
 
 // Feedback visivo
@@ -461,24 +503,27 @@ const addBtn = document.getElementById('addProductBtn');
 if (addBtn) {
     addBtn.classList.add('pulse');
     setTimeout(() => addBtn.classList.remove('pulse'), 300);
+    alert('✨ Animazione pulsante applicata');
+} else {
+    alert('⚠️ Bottone addProductBtn non trovato per animazione');
 }
-
-// Feedback utente
-console.log('✅ Prodotto aggiunto con successo al carrello');
 
 // Scroll al carrello se è la prima aggiunta
 if (app.currentCart.length === 1) {
     const cartSection = document.getElementById('cartSection');
     if (cartSection) {
         cartSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        alert('📜 Scroll al carrello eseguito');
     }
 }
+
+alert('🎉 SUCCESSO COMPLETO: Prodotto aggiunto al carrello!\nTotale prodotti nel carrello: ' + app.currentCart.length);
 ```
 
 }
 
 function updateCartDisplay() {
-console.log(‘🔄 Aggiornamento display carrello…’);
+alert(’🔄 INIZIO updateCartDisplay - Prodotti nel carrello: ’ + (app.currentCart ? app.currentCart.length : ‘UNDEFINED’));
 
 ```
 const cartSection = document.getElementById('cartSection');
@@ -487,33 +532,30 @@ const cartTotal = document.getElementById('cartTotal');
 const saveBtn = document.getElementById('saveExpenseBtn');
 
 if (!cartSection || !cartBody || !cartTotal || !saveBtn) {
-    console.error('❌ Elementi carrello non trovati:', {
-        cartSection: !!cartSection,
-        cartBody: !!cartBody,
-        cartTotal: !!cartTotal,
-        saveBtn: !!saveBtn
-    });
+    alert('❌ ERRORE updateCartDisplay - Elementi mancanti:\ncartSection: ' + !!cartSection + '\ncartBody: ' + !!cartBody + '\ncartTotal: ' + !!cartTotal + '\nsaveBtn: ' + !!saveBtn);
     return;
 }
 
-console.log('🛒 Prodotti nel carrello:', app.currentCart.length);
+alert('✅ Tutti gli elementi del carrello trovati');
 
 if (app.currentCart.length === 0) {
     cartSection.style.display = 'none';
     saveBtn.disabled = true;
     saveBtn.style.opacity = '0.5';
-    console.log('📦 Carrello vuoto - sezione nascosta');
+    alert('📦 Carrello vuoto - sezione nascosta');
     return;
 }
+
+alert('📦 Mostrando carrello con ' + app.currentCart.length + ' prodotti');
 
 cartSection.style.display = 'block';
 saveBtn.disabled = false;
 saveBtn.style.opacity = '1';
 
 // Aggiorna tabella prodotti
-cartBody.innerHTML = app.currentCart.map((product, index) => {
-    console.log(`📦 Rendering prodotto ${index + 1}:`, product);
-    return `
+let htmlContent = '';
+app.currentCart.forEach((product, index) => {
+    htmlContent += `
         <tr>
             <td>
                 <strong>${escapeHtml(product.name)}</strong><br>
@@ -529,13 +571,15 @@ cartBody.innerHTML = app.currentCart.map((product, index) => {
             </td>
         </tr>
     `;
-}).join('');
+});
+
+cartBody.innerHTML = htmlContent;
 
 // Aggiorna totale
 const total = app.currentCart.reduce((sum, product) => sum + product.price, 0);
 cartTotal.textContent = app.formatCurrency(total);
 
-console.log('✅ Display carrello aggiornato - Totale:', app.formatCurrency(total));
+alert('✅ CARRELLO VISUALIZZATO!\nProdotti: ' + app.currentCart.length + '\nTotale: ' + app.formatCurrency(total) + '\nSezione visibile: ' + (cartSection.style.display !== 'none'));
 
 // Aggiungi animazione fade-in
 cartSection.classList.add('fade-in');
