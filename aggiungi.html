@@ -1,107 +1,70 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Aggiungi Spesa</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Nuova Spesa</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
+<div class="container">
     <h1>Aggiungi Nuova Spesa</h1>
-    <nav>
-      <a class="nav-link" href="index.html">Dashboard</a>
-      <a class="nav-link" href="aggiungi.html">Aggiungi</a>
-      <a class="nav-link" href="archivio.html">Archivio</a>
-    </nav>
-  </header>
+    <a href="index.html">⬅ Torna alla Dashboard</a>
 
-  <main class="container">
-    <div class="card">
-      <label for="supermercato">Supermercato</label>
-      <div class="hstack">
-        <select id="supermercato">
-          <option value="">Seleziona un supermercato</option>
-          <option>Esselunga</option>
-          <option>Coop</option>
-          <option>Carrefour</option>
-          <option>Conad</option>
-          <option>Lidl</option>
-          <option>Eurospin</option>
-        </select>
-        <button id="aggiungiSupermercatoBtn" class="btn-ghost">➕ Aggiungi</button>
-      </div>
+    <label for="supermercato">Supermercato:</label>
+    <select id="supermercato">
+        <option value="">Seleziona un supermercato</option>
+        <option>Esselunga</option>
+        <option>Coop</option>
+        <option>Conad</option>
+        <option>Carrefour</option>
+        <option>Lidl</option>
+        <option>Eurospin</option>
+    </select>
 
-      <div id="aggiungiSupermercatoDiv" class="hidden card-inline">
-        <input id="nuovoSupermercato" placeholder="Nome nuovo supermercato" />
-        <button id="salvaSupermercatoBtn" class="btn">Salva</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Prodotti nel carrello</h2>
-      <table id="tabellaCarrello" class="table">
+    <hr>
+    <h2>Prodotti nel carrello</h2>
+    <table id="carrello">
         <thead>
-          <tr>
+        <tr>
             <th>Tipologia</th>
             <th>Nome</th>
             <th>Prezzo (€)</th>
             <th>Prezzo/kg (€)</th>
             <th>Note</th>
             <th>Rimuovi</th>
-          </tr>
+        </tr>
         </thead>
         <tbody></tbody>
-      </table>
-      <div id="totaleSpesaEl" class="totale">Totale spesa: € 0.00</div>
-    </div>
+    </table>
+    <div id="totaleCarrello" class="cart-total">Totale: €0.00</div>
 
-    <div class="card">
-      <h2>Aggiungi prodotto</h2>
-      <form id="formProdotto" onsubmit="return false;">
-        <div class="form-row">
-          <label for="tipologia">Tipologia</label>
-          <select id="tipologia" required>
-            <option value="">Seleziona tipologia</option>
-            <option>Carne</option>
-            <option>Pesce</option>
-            <option>Verdura</option>
-            <option>Frutta</option>
-            <option>Bevande</option>
-            <option>Altro</option>
-          </select>
-        </div>
+    <h2>Aggiungi prodotto</h2>
+    <label>Tipologia:</label>
+    <select id="tipologia">
+        <option value="">Seleziona tipologia</option>
+        <option>Frutta</option>
+        <option>Verdura</option>
+        <option>Carne</option>
+        <option>Pesce</option>
+        <option>Latticini</option>
+        <option>Pane</option>
+        <option>Bevande</option>
+        <option>Altro</option>
+    </select>
+    <label>Nome:</label>
+    <input type="text" id="nome">
+    <label>Prezzo (€):</label>
+    <input type="number" id="prezzo" step="0.01">
+    <label>Prezzo/kg (€):</label>
+    <input type="number" id="prezzoKg" step="0.01">
+    <label>Note:</label>
+    <input type="text" id="note">
+    <button id="aggiungiProdotto">Aggiungi prodotto al carrello</button>
 
-        <div class="form-row">
-          <label for="nome">Nome</label>
-          <input id="nome" required />
-        </div>
-
-        <div class="form-row">
-          <label for="prezzo">Prezzo (€)</label>
-          <input id="prezzo" type="number" step="0.01" required />
-        </div>
-
-        <div class="form-row">
-          <label for="prezzoKg">Prezzo/kg (€) (opz.)</label>
-          <input id="prezzoKg" type="number" step="0.01" />
-        </div>
-
-        <div class="form-row">
-          <label for="note">Note</label>
-          <input id="note" />
-        </div>
-
-        <div class="hstack">
-          <button id="aggiungiProdottoBtn" class="btn">Aggiungi prodotto al carrello</button>
-          <button id="salvaSpesaBtn" class="btn primary">Salva Spesa Completa</button>
-        </div>
-      </form>
-    </div>
-  </main>
-
-  <footer class="footer">Salvataggio locale (localStorage)</footer>
-
-  <script src="aggiungi.js"></script>
+    <hr>
+    <button id="salvaSpesa">Salva Spesa Completa</button>
+</div>
+<script src="aggiungi.js"></script>
 </body>
 </html>
