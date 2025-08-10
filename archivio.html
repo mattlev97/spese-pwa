@@ -1,29 +1,48 @@
+<!-- archivio.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archivio Spese</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Archivio - Gestione Spese</title>
+    <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
-<div class="container">
-    <h1>Archivio Spese</h1>
-    <a href="index.html">⬅ Torna alla Dashboard</a>
-
-    <input type="text" id="filtro" placeholder="Filtra per supermercato o prodotto...">
-
-    <table id="archivio">
-        <thead>
-        <tr>
-            <th>Data</th>
-            <th>Supermercato</th>
-            <th>Prodotti</th>
-        </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
-<script src="archivio.js"></script>
+    <header>
+        <h1>Archivio</h1>
+        <nav>
+            <a href="index.html">Dashboard</a>
+            <a href="aggiungi.html">Aggiungi Spesa</a>
+        </nav>
+    </header>
+    <main>
+        <section id="filtri">
+            <h2>Filtri</h2>
+            <label for="filtroPeriodo">Periodo:</label>
+            <select id="filtroPeriodo" onchange="filtraSpese()">
+                <option value="">Tutti</option>
+                <option value="settimana">Ultima settimana</option>
+                <option value="mese">Ultimo mese</option>
+                <option value="anno">Ultimo anno</option>
+            </select>
+            <label for="filtroSupermercato">Supermercato:</label>
+            <input type="text" id="filtroSupermercato" oninput="filtraSpese()">
+            <label for="filtroTipologia">Tipologia:</label>
+            <input type="text" id="filtroTipologia" oninput="filtraSpese()">
+        </section>
+        <section id="elencoSpese">
+            <h2>Elenco Spese</h2>
+            <div id="listaSpese"></div>
+        </section>
+    </main>
+    <script>
+        window.onload = function() {
+            filtraSpese();
+        };
+    </script>
 </body>
 </html>
