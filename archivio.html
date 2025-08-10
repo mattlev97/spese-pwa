@@ -1,48 +1,108 @@
-<!-- archivio.html -->
 <!DOCTYPE html>
+
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archivio Spese</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>Archivio - Gestione Spese</title>
-    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#4CAF50">
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
 </head>
 <body>
     <header>
-        <h1>Archivio</h1>
+        <h1>📚 Archivio Spese</h1>
         <nav>
             <a href="index.html">Dashboard</a>
-            <a href="aggiungi.html">Aggiungi Spesa</a>
+            <a href="aggiungi.html">Aggiungi</a>
+            <a href="archivio.html" class="nav-active">Archivio</a>
         </nav>
     </header>
-    <main>
-        <section id="filtri">
-            <h2>Filtri</h2>
-            <label for="filtroPeriodo">Periodo:</label>
-            <select id="filtroPeriodo" onchange="filtraSpese()">
-                <option value="">Tutti</option>
-                <option value="settimana">Ultima settimana</option>
-                <option value="mese">Ultimo mese</option>
-                <option value="anno">Ultimo anno</option>
-            </select>
-            <label for="filtroSupermercato">Supermercato:</label>
-            <input type="text" id="filtroSupermercato" oninput="filtraSpese()">
-            <label for="filtroTipologia">Tipologia:</label>
-            <input type="text" id="filtroTipologia" oninput="filtraSpese()">
-        </section>
-        <section id="elencoSpese">
-            <h2>Elenco Spese</h2>
-            <div id="listaSpese"></div>
-        </section>
-    </main>
-    <script>
-        window.onload = function() {
-            filtraSpese();
-        };
-    </script>
+
+```
+<main class="archive">
+    <section class="filters">
+        <h2>🔍 Filtri</h2>
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label for="periodFilter">Periodo:</label>
+                <select id="periodFilter">
+                    <option value="">Tutti i periodi</option>
+                    <option value="settimana">Ultima settimana</option>
+                    <option value="mese">Ultimo mese</option>
+                    <option value="anno">Ultimo anno</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="storeFilter">Supermercato:</label>
+                <select id="storeFilter">
+                    <option value="">Tutti i supermercati</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="categoryFilter">Tipologia:</label>
+                <select id="categoryFilter">
+                    <option value="">Tutte le tipologie</option>
+                    <option value="Carne">🥩 Carne</option>
+                    <option value="Pesce">🐟 Pesce</option>
+                    <option value="Verdura">🥬 Verdura</option>
+                    <option value="Frutta">🍎 Frutta</option>
+                    <option value="Latticini">🧀 Latticini</option>
+                    <option value="Pane">🍞 Pane e Cereali</option>
+                    <option value="Bevande">🥤 Bevande</option>
+                    <option value="Surgelati">🧊 Surgelati</option>
+                    <option value="Dolci">🍰 Dolci</option>
+                    <option value="Pulizia">🧽 Prodotti Pulizia</option>
+                    <option value="Igiene">🧴 Igiene Personale</option>
+                    <option value="Altro">📦 Altro</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <button id="clearFiltersBtn" class="btn btn-secondary">🗑️ Pulisci Filtri</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="archive-stats">
+        <div class="stats-summary">
+            <span id="filteredCount">0 spese trovate</span>
+            <span id="filteredTotal">Totale: €0.00</span>
+        </div>
+    </section>
+
+    <section class="expenses-list">
+        <div id="expensesList" class="expenses-container">
+            <div class="no-expenses" id="noExpenses">
+                📝 Nessuna spesa trovata con i filtri selezionati
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Modal per conferma eliminazione -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h3>⚠️ Conferma Eliminazione</h3>
+        <p>Sei sicuro di voler eliminare questa spesa?</p>
+        <div class="modal-actions">
+            <button id="confirmDelete" class="btn btn-danger">Elimina</button>
+            <button id="cancelDelete" class="btn btn-secondary">Annulla</button>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    // Inizializza archivio
+    document.addEventListener('DOMContentLoaded', initArchive);
+</script>
+```
+
 </body>
 </html>
