@@ -1,59 +1,70 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <title>Archivio Spese</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Archivio Spese</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <header class="topbar">
     <h1>Archivio Spese</h1>
+    <nav>
+      <a class="nav-link" href="index.html">Dashboard</a>
+      <a class="nav-link" href="aggiungi.html">Aggiungi</a>
+      <a class="nav-link" href="archivio.html">Archivio</a>
+    </nav>
+  </header>
 
-    <!-- Filtro -->
-    <div style="margin-bottom: 15px;">
-        <label for="filtroData">Filtra per data:</label>
-        <input type="date" id="filtroData">
-
-        <label for="filtroSupermercato">Filtra per supermercato:</label>
-        <input type="text" id="filtroSupermercato" placeholder="Es. Coop">
-
-        <button id="btnFiltra">Filtra</button>
-        <button id="btnReset">Reset</button>
+  <main class="container">
+    <div class="card">
+      <div class="filter-row">
+        <div>
+          <label>Data</label>
+          <input type="date" id="filtroData" />
+        </div>
+        <div>
+          <label>Supermercato</label>
+          <input type="text" id="filtroSupermercato" placeholder="Es. Coop" />
+        </div>
+        <div class="hstack">
+          <button id="btnFiltra" class="btn">Filtra</button>
+          <button id="btnReset" class="btn btn-ghost">Reset</button>
+        </div>
+      </div>
     </div>
 
-    <table>
+    <div class="card">
+      <table>
         <thead>
-            <tr>
-                <th>Data</th>
-                <th>Supermercato</th>
-                <th>Totale (€)</th>
-                <th>Dettagli</th>
-                <th>Rimuovi</th>
-            </tr>
+          <tr>
+            <th>Data</th>
+            <th>Supermercato</th>
+            <th>Totale (€)</th>
+            <th>Dettagli</th>
+            <th>Rimuovi</th>
+          </tr>
         </thead>
         <tbody id="archivioTableBody"></tbody>
-    </table>
-
-    <!-- Modale -->
-    <div id="modalDettagli" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Dettagli Spesa</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tipologia</th>
-                        <th>Nome</th>
-                        <th>Prezzo</th>
-                        <th>Prezzo/kg</th>
-                        <th>Note</th>
-                    </tr>
-                </thead>
-                <tbody id="modalTableBody"></tbody>
-            </table>
-            <p id="totaleModal"></p>
-        </div>
+      </table>
     </div>
+  </main>
 
-    <script src="archivio.js"></script>
+  <!-- modale dettagli -->
+  <div id="modalDettagli" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Dettagli spesa</h2>
+      <table>
+        <thead>
+          <tr><th>Tipologia</th><th>Nome</th><th>Prezzo</th><th>€/kg</th><th>Note</th></tr>
+        </thead>
+        <tbody id="modalTableBody"></tbody>
+      </table>
+      <p id="totaleModal"></p>
+    </div>
+  </div>
+
+  <script src="archivio.js"></script>
 </body>
 </html>
