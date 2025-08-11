@@ -1,15 +1,16 @@
 <!DOCTYPE html>
+
 <html lang="it">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aggiungi Spesa</title>
-    <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="icon-192.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#4CAF50" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
@@ -21,157 +22,268 @@
         </nav>
     </header>
 
-    <main class="add-expense">
-        <form id="expenseForm" class="expense-form" novalidate>
-            <div class="form-section">
-                <h2>🏪 Informazioni Generali</h2>
-                
-                <div class="form-group">
-                    <label for="storeSelect">Supermercato:</label>
-                    <select id="storeSelect" required>
-                        <option value="">Seleziona supermercato</option>
-                        <option value="Conad">Conad</option>
-                        <option value="Coop">Coop</option>
-                        <option value="Esselunga">Esselunga</option>
-                        <option value="Eurospin">Eurospin</option>
-                        <option value="Carrefour">Carrefour</option>
-                        <option value="Lidl">Lidl</option>
-                        <option value="MD">MD</option>
-                        <option value="Pam">Pam</option>
-                        <option value="Simply">Simply</option>
-                        <option value="Iper">Iper</option>
-                        <option value="Altro">Altro (specificare sotto)</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="customStoreGroup" style="display: none;">
-                    <label for="customStore">Nome supermercato:</label>
-                    <input type="text" id="customStore" placeholder="Inserisci nome supermercato" />
-                </div>
-
-                <div class="form-group">
-                    <label for="expenseDate">Data:</label>
-                    <input type="date" id="expenseDate" required />
-                </div>
+```
+<main class="add-expense">
+    <form id="expenseForm" class="expense-form">
+        <div class="form-section">
+            <h2>🏪 Informazioni Generali</h2>
+            
+            <div class="form-group">
+                <label for="storeSelect">Supermercato:</label>
+                <select id="storeSelect" required>
+                    <option value="">Seleziona supermercato</option>
+                    <option value="Conad">Conad</option>
+                    <option value="Coop">Coop</option>
+                    <option value="Esselunga">Esselunga</option>
+                    <option value="Eurospin">Eurospin</option>
+                    <option value="Carrefour">Carrefour</option>
+                    <option value="Lidl">Lidl</option>
+                    <option value="MD">MD</option>
+                    <option value="Pam">Pam</option>
+                    <option value="Simply">Simply</option>
+                    <option value="Iper">Iper</option>
+                    <option value="Altro">Altro (specificare sotto)</option>
+                </select>
             </div>
 
-            <div class="form-section">
-                <h2>🛒 Aggiungi Prodotti</h2>
-                
-                <div class="product-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productCategory">Tipologia:</label>
-                            <select id="productCategory" required>
-                                <option value="">Seleziona tipologia</option>
-                                <option value="Carne">🥩 Carne</option>
-                                <option value="Pesce">🐟 Pesce</option>
-                                <option value="Verdura">🥬 Verdura</option>
-                                <option value="Frutta">🍎 Frutta</option>
-                                <option value="Latticini">🧀 Latticini</option>
-                                <option value="Pane">🍞 Pane e Cereali</option>
-                                <option value="Bevande">🥤 Bevande</option>
-                                <option value="Surgelati">🧊 Surgelati</option>
-                                <option value="Dolci">🍰 Dolci</option>
-                                <option value="Pulizia">🧽 Prodotti Pulizia</option>
-                                <option value="Igiene">🧴 Igiene Personale</option>
-                                <option value="Altro">📦 Altro</option>
-                            </select>
-                        </div>
+            <div class="form-group" id="customStoreGroup" style="display: none;">
+                <label for="customStore">Nome supermercato:</label>
+                <input type="text" id="customStore" placeholder="Inserisci nome supermercato">
+            </div>
 
-                        <div class="form-group">
-                            <label for="productName">Nome prodotto:</label>
-                            <input type="text" id="productName" placeholder="Es. Pomodori" required />
-                        </div>
-                    </div>
+            <div class="form-group">
+                <label for="expenseDate">Data:</label>
+                <input type="date" id="expenseDate" required>
+            </div>
+        </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productPrice">Prezzo (€):</label>
-                            <input type="number" id="productPrice" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required />
-                        </div>
-
-                        <div class="form-group">
-                            <label for="productPriceKg">Prezzo/kg (€):</label>
-                            <input type="number" id="productPriceKg" step="0.01" min="0" inputmode="decimal" placeholder="0.00" />
-                        </div>
+        <div class="form-section">
+            <h2>🛒 Aggiungi Prodotti</h2>
+            
+            <div class="product-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productCategory">Tipologia:</label>
+                        <select id="productCategory" required>
+                            <option value="">Seleziona tipologia</option>
+                            <option value="Carne">🥩 Carne</option>
+                            <option value="Pesce">🐟 Pesce</option>
+                            <option value="Verdura">🥬 Verdura</option>
+                            <option value="Frutta">🍎 Frutta</option>
+                            <option value="Latticini">🧀 Latticini</option>
+                            <option value="Pane">🍞 Pane e Cereali</option>
+                            <option value="Bevande">🥤 Bevande</option>
+                            <option value="Surgelati">🧊 Surgelati</option>
+                            <option value="Dolci">🍰 Dolci</option>
+                            <option value="Pulizia">🧽 Prodotti Pulizia</option>
+                            <option value="Igiene">🧴 Igiene Personale</option>
+                            <option value="Altro">📦 Altro</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="productNotes">Note:</label>
-                        <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)" />
+                        <label for="productName">Nome prodotto:</label>
+                        <input type="text" id="productName" placeholder="Es. Pomodori" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productPrice">Prezzo (€):</label>
+                        <input type="number" id="productPrice" step="0.01" min="0" placeholder="0.00" required>
                     </div>
 
-                    <button type="button" id="addProductBtn" class="btn btn-secondary">
-                        ➕ Aggiungi Prodotto al Carrello
-                    </button>
+                    <div class="form-group">
+                        <label for="productPriceKg">Prezzo/kg (€):</label>
+                        <input type="number" id="productPriceKg" step="0.01" min="0" placeholder="0.00">
+                    </div>
                 </div>
-            </div>
 
-            <div class="cart-section" id="cartSection" style="display: none;">
-                <h2>🛒 Carrello</h2>
-                <div class="cart-table-container">
-                    <table id="cartTable">
-                        <thead>
-                            <tr>
-                                <th>Prodotto</th>
-                                <th>Prezzo</th>
-                                <th>Azioni</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cartBody"></tbody>
-                    </table>
+                <div class="form-group">
+                    <label for="productNotes">Note:</label>
+                    <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)">
                 </div>
-                <div class="cart-total">
-                    <strong>Totale: <span id="cartTotal">€0.00</span></strong>
-                </div>
-            </div>
 
-            <div class="form-actions">
-                <button type="submit" id="saveExpenseBtn" class="btn btn-primary" disabled>
-                    💾 Salva Spesa Completa
-                </button>
-                <button type="button" id="clearCartBtn" class="btn btn-danger">
-                    🗑️ Svuota Carrello
+                <button type="button" id="addProductBtn" class="btn btn-secondary">
+                    ➕ Aggiungi Prodotto al Carrello
                 </button>
             </div>
-        </form>
-    </main>
+        </div>
 
-    <!-- Includi la classe condivisa e l'istanza globale -->
-    <script src="app.js"></script>
+        <div class="cart-section" id="cartSection" style="display: none;">
+            <h2>🛒 Carrello</h2>
+            <div class="cart-table-container">
+                <table id="cartTable">
+                    <thead>
+                        <tr>
+                            <th>Prodotto</th>
+                            <th>Prezzo</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="cart-total">
+                <strong>Totale: €<span id="cartTotal">0.00</span></strong>
+            </div>
+        </div>
 
-    <!-- Script specifico per la pagina Aggiungi -->
-    <script>
-    // Verifica che l'istanza globale app esista
-    if (typeof app === 'undefined') {
-        console.error('ERRORE: oggetto globale "app" non trovato. Controlla che app.js sia incluso e valido.');
+        <div class="form-actions">
+            <button type="submit" id="saveExpenseBtn" class="btn btn-primary" disabled>
+                💾 Salva Spesa Completa
+            </button>
+            <button type="button" id="clearCartBtn" class="btn btn-danger">
+                🗑️ Svuota Carrello
+            </button>
+        </div>
+    </form>
+</main>
+
+<!-- JavaScript incorporato -->
+<script>
+    // Gestione spese - App principale
+    class ExpenseTracker {
+        constructor() {
+            this.expenses = this.loadExpenses();
+            this.currentCart = [];
+            this.deleteExpenseId = null;
+        }
+
+        loadExpenses() {
+            const stored = localStorage.getItem('expenses');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        saveExpenses() {
+            localStorage.setItem('expenses', JSON.stringify(this.expenses));
+        }
+
+        generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        addExpense(store, date, products) {
+            const expense = {
+                id: this.generateId(),
+                store,
+                date,
+                products: [...products],
+                total: products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0),
+                createdAt: new Date().toISOString()
+            };
+            
+            this.expenses.push(expense);
+            this.saveExpenses();
+            return expense;
+        }
+
+        formatCurrency(amount) {
+            return new Intl.NumberFormat('it-IT', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(amount || 0);
+        }
+
+        formatDate(dateString) {
+            return new Intl.DateTimeFormat('it-IT', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }).format(new Date(dateString));
+        }
+
+        filterByPeriod(period) {
+            const now = new Date();
+            const startDate = new Date();
+
+            switch(period) {
+                case 'settimana':
+                    startDate.setDate(now.getDate() - 7);
+                    break;
+                case 'mese':
+                    startDate.setMonth(now.getMonth() - 1);
+                    break;
+                case 'anno':
+                    startDate.setFullYear(now.getFullYear() - 1);
+                    break;
+                default:
+                    return this.expenses;
+            }
+
+            return this.expenses.filter(expense => 
+                new Date(expense.date) >= startDate
+            );
+        }
+
+        getStats(expenses = this.expenses) {
+            if (!expenses.length) {
+                return {
+                    total: 0,
+                    count: 0,
+                    max: { amount: 0, store: '' },
+                    min: { amount: 0, store: '' },
+                    avgPerExpense: 0,
+                    storeStats: {},
+                    categoryStats: {}
+                };
+            }
+
+            const total = expenses.reduce((sum, exp) => sum + exp.total, 0);
+            const amounts = expenses.map(exp => exp.total);
+            const maxAmount = Math.max(...amounts);
+            const minAmount = Math.min(...amounts);
+            
+            const maxExpense = expenses.find(exp => exp.total === maxAmount);
+            const minExpense = expenses.find(exp => exp.total === minAmount);
+
+            // Statistiche per supermercato
+            const storeStats = {};
+            expenses.forEach(expense => {
+                if (!storeStats[expense.store]) {
+                    storeStats[expense.store] = { count: 0, total: 0 };
+                }
+                storeStats[expense.store].count++;
+                storeStats[expense.store].total += expense.total;
+            });
+
+            // Statistiche per categoria
+            const categoryStats = {};
+            expenses.forEach(expense => {
+                expense.products.forEach(product => {
+                    if (!categoryStats[product.category]) {
+                        categoryStats[product.category] = { count: 0, total: 0 };
+                    }
+                    categoryStats[product.category].count++;
+                    categoryStats[product.category].total += parseFloat(product.price || 0);
+                });
+            });
+
+            return {
+                total,
+                count: expenses.length,
+                max: { amount: maxAmount, store: maxExpense.store },
+                min: { amount: minAmount, store: minExpense.store },
+                avgPerExpense: total / expenses.length,
+                storeStats,
+                categoryStats
+            };
+        }
     }
 
-    // Helper: escape HTML
+    // Istanza globale
+    const app = new ExpenseTracker();
+
+    // Funzione helper per escape HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text || '';
         return div.innerHTML;
     }
 
-    // Funzioni UI / logica carrello (usano l'istanza globale `app`)
-    function toggleCustomStore() {
-        const storeSelect = document.getElementById('storeSelect');
-        const customStoreGroup = document.getElementById('customStoreGroup');
-        const customStore = document.getElementById('customStore');
-
-        if (!storeSelect || !customStoreGroup) return;
-        if (storeSelect.value === 'Altro') {
-            customStoreGroup.style.display = 'block';
-            if (customStore) customStore.required = true;
-        } else {
-            customStoreGroup.style.display = 'none';
-            if (customStore) customStore.required = false;
-        }
-    }
-
     function addProductToCart() {
+        // Ottieni elementi
         const categoryEl = document.getElementById('productCategory');
         const nameEl = document.getElementById('productName');
         const priceEl = document.getElementById('productPrice');
@@ -179,47 +291,68 @@
         const notesEl = document.getElementById('productNotes');
 
         if (!categoryEl || !nameEl || !priceEl) {
-            console.error('Elementi form non trovati');
+            alert('❌ Errore: elementi del form non trovati');
             return;
         }
 
-        const category = categoryEl.value.trim();
-        const name = nameEl.value.trim();
-        const priceRaw = priceEl.value.trim();
-        const price = parseFloat(priceRaw);
-        const priceKg = priceKgEl && priceKgEl.value ? parseFloat(priceKgEl.value) : null;
-        const notes = notesEl && notesEl.value ? notesEl.value.trim() : '';
+        // Ottieni valori
+        const category = categoryEl.value ? categoryEl.value.trim() : '';
+        const name = nameEl.value ? nameEl.value.trim() : '';
+        const priceValue = priceEl.value ? priceEl.value.trim() : '';
+        const price = parseFloat(priceValue);
+        const priceKg = priceKgEl ? (parseFloat(priceKgEl.value) || null) : null;
+        const notes = notesEl ? (notesEl.value ? notesEl.value.trim() : '') : '';
 
-        if (!category) { categoryEl.focus(); return; }
-        if (!name) { nameEl.focus(); return; }
-        if (!priceRaw || isNaN(price) || price <= 0) { priceEl.focus(); return; }
-
-        if (typeof app === 'undefined') {
-            console.error('Oggetto app non disponibile');
+        // Validazione
+        if (!category) {
+            alert('⚠️ Seleziona una tipologia di prodotto');
+            categoryEl.focus();
             return;
         }
 
+        if (!name) {
+            alert('⚠️ Inserisci il nome del prodotto');
+            nameEl.focus();
+            return;
+        }
+
+        if (!priceValue || isNaN(price) || price <= 0) {
+            alert('⚠️ Inserisci un prezzo valido maggiore di 0');
+            priceEl.focus();
+            return;
+        }
+
+        // Crea prodotto
         const product = {
             id: app.generateId(),
             category,
             name,
-            price,
-            priceKg,
-            notes
+            price: price,
+            priceKg: priceKg,
+            notes: notes
         };
 
+        // Aggiungi al carrello
         app.currentCart.push(product);
+
+        // Aggiorna display
         updateCartDisplay();
         clearProductForm();
-
+        
+        // Feedback visivo
         const addBtn = document.getElementById('addProductBtn');
         if (addBtn) {
             addBtn.classList.add('pulse');
             setTimeout(() => addBtn.classList.remove('pulse'), 300);
         }
 
-        // focus su nome prodotto per inserimento rapido
-        nameEl.focus();
+        // Scroll al carrello se è la prima aggiunta
+        if (app.currentCart.length === 1) {
+            const cartSection = document.getElementById('cartSection');
+            if (cartSection) {
+                cartSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
     }
 
     function updateCartDisplay() {
@@ -230,12 +363,10 @@
 
         if (!cartSection || !cartBody || !cartTotal || !saveBtn) return;
 
-        if (!app.currentCart || app.currentCart.length === 0) {
+        if (app.currentCart.length === 0) {
             cartSection.style.display = 'none';
             saveBtn.disabled = true;
             saveBtn.style.opacity = '0.5';
-            cartBody.innerHTML = '';
-            cartTotal.textContent = app.formatCurrency(0);
             return;
         }
 
@@ -243,6 +374,7 @@
         saveBtn.disabled = false;
         saveBtn.style.opacity = '1';
 
+        // Aggiorna tabella prodotti
         cartBody.innerHTML = app.currentCart.map(product => `
             <tr>
                 <td>
@@ -260,32 +392,45 @@
             </tr>
         `).join('');
 
-        const total = app.currentCart.reduce((sum, p) => sum + (parseFloat(p.price) || 0), 0);
+        // Aggiorna totale
+        const total = app.currentCart.reduce((sum, product) => sum + product.price, 0);
         cartTotal.textContent = app.formatCurrency(total);
+
+        // Aggiungi animazione fade-in
+        cartSection.classList.add('fade-in');
     }
 
     function clearProductForm() {
-        const category = document.getElementById('productCategory');
-        const name = document.getElementById('productName');
-        const price = document.getElementById('productPrice');
-        const priceKg = document.getElementById('productPriceKg');
-        const notes = document.getElementById('productNotes');
+        document.getElementById('productCategory').value = '';
+        document.getElementById('productName').value = '';
+        document.getElementById('productPrice').value = '';
+        if (document.getElementById('productPriceKg')) document.getElementById('productPriceKg').value = '';
+        if (document.getElementById('productNotes')) document.getElementById('productNotes').value = '';
+    }
 
-        if (category) category.value = '';
-        if (name) name.value = '';
-        if (price) price.value = '';
-        if (priceKg) priceKg.value = '';
-        if (notes) notes.value = '';
+    function toggleCustomStore() {
+        const storeSelect = document.getElementById('storeSelect');
+        const customStoreGroup = document.getElementById('customStoreGroup');
+        
+        if (storeSelect && customStoreGroup) {
+            if (storeSelect.value === 'Altro') {
+                customStoreGroup.style.display = 'block';
+                document.getElementById('customStore').required = true;
+            } else {
+                customStoreGroup.style.display = 'none';
+                document.getElementById('customStore').required = false;
+            }
+        }
     }
 
     function removeFromCart(productId) {
-        if (!app.currentCart) return;
-        app.currentCart = app.currentCart.filter(p => p.id !== productId);
+        app.currentCart = app.currentCart.filter(product => product.id !== productId);
         updateCartDisplay();
     }
 
     function clearCart() {
-        if (!app.currentCart || app.currentCart.length === 0) return;
+        if (app.currentCart.length === 0) return;
+        
         if (confirm('🗑️ Sei sicuro di voler svuotare il carrello?')) {
             app.currentCart = [];
             updateCartDisplay();
@@ -299,69 +444,72 @@
 
         if (!storeSelect || !expenseDate) return;
 
-        const store = storeSelect.value === 'Altro' ? (customStore ? customStore.value.trim() : '') : storeSelect.value;
+        const store = storeSelect.value === 'Altro' ? customStore.value : storeSelect.value;
         const date = expenseDate.value;
 
-        // validazione base
-        if (!store) { alert('⚠️ Inserisci il supermercato.'); return; }
-        if (!date) { alert('⚠️ Inserisci la data.'); return; }
-        if (!app.currentCart || app.currentCart.length === 0) { alert('⚠️ Aggiungi almeno un prodotto.'); return; }
-
-        // prevenire date future
-        const today = new Date().toISOString().split('T')[0];
-        if (date > today) { alert('⚠️ La data non può essere futura.'); return; }
+        // Validazione
+        if (!store || !date || app.currentCart.length === 0) {
+            alert('⚠️ Compila tutti i campi e aggiungi almeno un prodotto');
+            return;
+        }
 
         try {
             app.addExpense(store, date, app.currentCart);
-
-            // feedback non bloccante
-            // preferibile sostituire con toast UI in futuro
+            
+            // Feedback successo
             alert('✅ Spesa salvata con successo!');
-
-            // reset form
+            
+            // Reset form
             document.getElementById('expenseForm').reset();
             app.currentCart = [];
             updateCartDisplay();
             toggleCustomStore();
-
-            // reimposta data odierna
+            
+            // Imposta data odierna
+            const today = new Date().toISOString().split('T')[0];
             expenseDate.value = today;
-        } catch (err) {
-            console.error('Errore salvataggio spesa:', err);
-            alert('❌ Errore nel salvataggio. Riprova.');
+            
+        } catch (error) {
+            console.error('Errore nel salvare la spesa:', error);
+            alert('❌ Errore nel salvare la spesa. Riprova.');
         }
     }
 
-    // Inizializzazione pagina
-    document.addEventListener('DOMContentLoaded', function () {
+    // Inizializzazione
+    document.addEventListener('DOMContentLoaded', function() {
         // Imposta data odierna
         const today = new Date().toISOString().split('T')[0];
-        const dateInput = document.getElementById('expenseDate');
-        if (dateInput) dateInput.value = today;
-
+        document.getElementById('expenseDate').value = today;
+        
         // Event listeners
-        const storeSelect = document.getElementById('storeSelect');
-        const addProductBtn = document.getElementById('addProductBtn');
-        const saveExpenseBtn = document.getElementById('saveExpenseBtn');
-        const clearCartBtn = document.getElementById('clearCartBtn');
-        const expenseForm = document.getElementById('expenseForm');
+        document.getElementById('storeSelect').addEventListener('change', toggleCustomStore);
+        
+        document.getElementById('addProductBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            addProductToCart();
+        });
 
-        if (storeSelect) storeSelect.addEventListener('change', toggleCustomStore);
-        if (addProductBtn) addProductBtn.addEventListener('click', function(e) { e.preventDefault(); addProductToCart(); });
-        if (saveExpenseBtn) saveExpenseBtn.addEventListener('click', function(e) { e.preventDefault(); saveExpense(); });
-        if (clearCartBtn) clearCartBtn.addEventListener('click', function(e) { e.preventDefault(); clearCart(); });
-        if (expenseForm) expenseForm.addEventListener('submit', function(e) { e.preventDefault(); saveExpense(); });
+        document.getElementById('saveExpenseBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            saveExpense();
+        });
 
-        // inizializza carrello vuoto
-        if (app && Array.isArray(app.currentCart)) {
-            app.currentCart = [];
-        } else if (app) {
-            app.currentCart = [];
-        }
+        document.getElementById('clearCartBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            clearCart();
+        });
 
+        document.getElementById('expenseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveExpense();
+        });
+
+        // Reset carrello
+        app.currentCart = [];
         updateCartDisplay();
-        toggleCustomStore();
     });
-    </script>
+</script>
+```
+
 </body>
 </html>
