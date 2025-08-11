@@ -97,8 +97,255 @@
     </div>
 </div>
 
-<script src="app.js"></script>
 <script>
+    // Gestione spese - App principale
+    class ExpenseTracker {
+        constructor() {
+            this.expenses = this.loadExpenses();
+            this.currentCart = [];
+            this.deleteExpenseId = null;
+        }
+
+        loadExpenses() {
+            const stored = localStorage.getItem('expenses');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        saveExpenses() {
+            localStorage.setItem('expenses', JSON.stringify(this.expenses));
+        }
+
+        deleteExpense(id) {
+            this.expenses = this.expenses.filter(expense => expense.id !== id);
+            this.saveExpenses();
+        }
+
+        filterByPeriod(period) {
+            const now = new Date();
+            const startDate = new Date();
+
+            switch(period) {
+                case 'settimana':
+                    startDate.setDate(now.getDate() - 7);
+                    break;
+                case 'mese':
+                    startDate.setMonth(now.getMonth() - 1);
+                    break;
+                case 'anno':
+                    startDate.setFullYear(now.getFullYear() - 1);
+                    break;
+                default:
+                    return this.expenses;
+            }
+
+            return this.expenses.filter(expense => 
+                new Date(expense.date) >= startDate
+            );
+        }
+
+        formatCurrency(amount) {
+            return new Intl.NumberFormat('it-IT', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(amount || 0);
+        }
+
+        formatDate(dateString) {
+            return new Intl.DateTimeFormat('it-IT', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }).format(new Date(dateString));
+        }
+    }
+
+    // Istanza globale
+    const app = new ExpenseTracker();
+
+    // Funzione helper per escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+
+    // === ARCHIVIO ===
+    function initArchive() {
+        loadStoreFilter();
+        loadExpensesList();
+        
+        // Event listeners per filtri
+        const filters = ['periodFilter', 'storeFilter', 'categoryFilter'];
+        filters.forEach(filterId => {
+            const element = document.getElementById(filterId);
+            if (element) {
+                element.addEventListener('change', loadExpensesList);
+            }
+        });
+
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', clearFilters);
+        }
+
+        // Modal gestione
+        const deleteModal = document.getElementById('deleteModal');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const cancelDelete = document.getElementById('cancelDelete');
+
+        if (confirmDelete) {
+            confirmDelete.addEventListener('click', () => {
+                if (app.deleteExpenseId) {
+                    app.deleteExpense(app.deleteExpenseId);
+                    app.deleteExpenseId = null;
+                    loadExpensesList();
+                    closeModal();
+                    alert('✅ Spesa eliminata');
+                }
+            });
+        }
+
+        if (cancelDelete) {
+            cancelDelete.addEventListener('click', closeModal);
+        }
+
+        // Chiudi modal cliccando fuori
+        if (deleteModal) {
+            deleteModal.addEventListener('click', (e) => {
+                if (e.target === deleteModal) closeModal();
+            });
+        }
+    }
+
+    function loadStoreFilter() {
+        const storeFilter = document.getElementById('storeFilter');
+        if (!storeFilter) return;
+
+        // Ottieni tutti i supermercati unici
+        const stores = [...new Set(app.expenses.map(expense => expense.store))].sort();
+        
+        // Mantieni le opzioni di base e aggiungi quelle personalizzate
+        const defaultOption = storeFilter.querySelector('option[value=""]');
+        storeFilter.innerHTML = '';
+        storeFilter.appendChild(defaultOption);
+
+        stores.forEach(store => {
+            const option = document.createElement('option');
+            option.value = store;
+            option.textContent = store;
+            storeFilter.appendChild(option);
+        });
+    }
+
+    function loadExpensesList() {
+        const expensesList = document.getElementById('expensesList');
+        const noExpenses = document.getElementById('noExpenses');
+        const filteredCount = document.getElementById('filteredCount');
+        const filteredTotal = document.getElementById('filteredTotal');
+        
+        if (!expensesList) return;
+
+        // Applica filtri
+        let expenses = [...app.expenses];
+        
+        // Filtro periodo
+        const period = document.getElementById('periodFilter')?.value;
+        if (period) {
+            expenses = app.filterByPeriod(period);
+        }
+
+        // Filtro supermercato
+        const store = document.getElementById('storeFilter')?.value;
+        if (store) {
+            expenses = expenses.filter(expense => expense.store === store);
+        }
+
+        // Filtro categoria
+        const category = document.getElementById('categoryFilter')?.value;
+        if (category) {
+            expenses = expenses.filter(expense => 
+                expense.products.some(product => product.category === category)
+            );
+        }
+
+        // Ordina per data (più recenti prima)
+        expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Aggiorna statistiche filtrate
+        if (filteredCount) {
+            filteredCount.textContent = `${expenses.length} spese trovate`;
+        }
+        if (filteredTotal) {
+            const total = expenses.reduce((sum, exp) => sum + exp.total, 0);
+            filteredTotal.textContent = `Totale: ${app.formatCurrency(total)}`;
+        }
+
+        // Mostra/nascondi messaggio vuoto
+        if (expenses.length === 0) {
+            expensesList.innerHTML = '';
+            if (noExpenses) noExpenses.style.display = 'block';
+            return;
+        }
+
+        if (noExpenses) noExpenses.style.display = 'none';
+
+        // Genera lista spese
+        expensesList.innerHTML = expenses.map(expense => `
+            <div class="expense-item fade-in">
+                <div class="expense-header">
+                    <div class="expense-info">
+                        <h4>🏪 ${escapeHtml(expense.store)}</h4>
+                        <small>📅 ${app.formatDate(expense.date)}</small>
+                    </div>
+                    <div class="expense-total">${app.formatCurrency(expense.total)}</div>
+                </div>
+                
+                <div class="expense-products">
+                    <h5>🛒 Prodotti (${expense.products.length}):</h5>
+                    <div class="product-list">
+                        ${expense.products.map(product => `
+                            <div class="product-item">
+                                <div class="product-info">
+                                    <strong>${escapeHtml(product.name)}</strong>
+                                    <div class="category">${escapeHtml(product.category)}</div>
+                                    ${product.notes ? `<div class="category">📝 ${escapeHtml(product.notes)}</div>` : ''}
+                                </div>
+                                <div class="product-price">${app.formatCurrency(product.price)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="expense-actions">
+                    <button class="delete-btn" onclick="confirmDeleteExpense('${expense.id}')">
+                        🗑️ Elimina
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function clearFilters() {
+        const filters = ['periodFilter', 'storeFilter', 'categoryFilter'];
+        filters.forEach(filterId => {
+            const element = document.getElementById(filterId);
+            if (element) element.value = '';
+        });
+        loadExpensesList();
+    }
+
+    function confirmDeleteExpense(expenseId) {
+        app.deleteExpenseId = expenseId;
+        const modal = document.getElementById('deleteModal');
+        if (modal) modal.style.display = 'block';
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('deleteModal');
+        if (modal) modal.style.display = 'none';
+        app.deleteExpenseId = null;
+    }
+
     // Inizializza archivio
     document.addEventListener('DOMContentLoaded', initArchive);
 </script>
