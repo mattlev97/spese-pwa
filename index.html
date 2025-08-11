@@ -74,8 +74,236 @@
     </section>
 </main>
 
-<script src="app.js"></script>
 <script>
+    // Gestione spese - App principale
+    class ExpenseTracker {
+        constructor() {
+            this.expenses = this.loadExpenses();
+            this.currentCart = [];
+        }
+
+        loadExpenses() {
+            const stored = localStorage.getItem('expenses');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        filterByPeriod(period) {
+            const now = new Date();
+            const startDate = new Date();
+
+            switch(period) {
+                case 'settimana':
+                    startDate.setDate(now.getDate() - 7);
+                    break;
+                case 'mese':
+                    startDate.setMonth(now.getMonth() - 1);
+                    break;
+                case 'anno':
+                    startDate.setFullYear(now.getFullYear() - 1);
+                    break;
+                default:
+                    return this.expenses;
+            }
+
+            return this.expenses.filter(expense => 
+                new Date(expense.date) >= startDate
+            );
+        }
+
+        getStats(expenses = this.expenses) {
+            if (!expenses.length) {
+                return {
+                    total: 0,
+                    count: 0,
+                    max: { amount: 0, store: '' },
+                    min: { amount: 0, store: '' },
+                    storeStats: {},
+                    categoryStats: {}
+                };
+            }
+
+            const total = expenses.reduce((sum, exp) => sum + exp.total, 0);
+            const amounts = expenses.map(exp => exp.total);
+            const maxAmount = Math.max(...amounts);
+            const minAmount = Math.min(...amounts);
+            
+            const maxExpense = expenses.find(exp => exp.total === maxAmount);
+            const minExpense = expenses.find(exp => exp.total === minAmount);
+
+            // Statistiche per supermercato
+            const storeStats = {};
+            expenses.forEach(expense => {
+                if (!storeStats[expense.store]) {
+                    storeStats[expense.store] = { count: 0, total: 0 };
+                }
+                storeStats[expense.store].count++;
+                storeStats[expense.store].total += expense.total;
+            });
+
+            // Statistiche per categoria
+            const categoryStats = {};
+            expenses.forEach(expense => {
+                expense.products.forEach(product => {
+                    if (!categoryStats[product.category]) {
+                        categoryStats[product.category] = { count: 0, total: 0 };
+                    }
+                    categoryStats[product.category].count++;
+                    categoryStats[product.category].total += parseFloat(product.price || 0);
+                });
+            });
+
+            return {
+                total,
+                count: expenses.length,
+                max: { amount: maxAmount, store: maxExpense.store },
+                min: { amount: minAmount, store: minExpense.store },
+                storeStats,
+                categoryStats
+            };
+        }
+
+        formatCurrency(amount) {
+            return new Intl.NumberFormat('it-IT', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(amount || 0);
+        }
+
+        formatDate(dateString) {
+            return new Intl.DateTimeFormat('it-IT', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }).format(new Date(dateString));
+        }
+    }
+
+    // Istanza globale
+    const app = new ExpenseTracker();
+
+    // === DASHBOARD ===
+    function loadDashboard() {
+        const period = document.getElementById('periodSelect')?.value || 'mese';
+        const filteredExpenses = app.filterByPeriod(period);
+        const stats = app.getStats(filteredExpenses);
+
+        // Aggiorna statistiche
+        updateStatsDisplay(stats);
+        
+        // Carica grafici
+        loadCharts(stats);
+        
+        // Carica spese recenti
+        loadRecentExpenses(filteredExpenses);
+    }
+
+    function updateStatsDisplay(stats) {
+        const elements = {
+            totalAmount: document.getElementById('totalAmount'),
+            maxAmount: document.getElementById('maxAmount'),
+            minAmount: document.getElementById('minAmount'),
+            totalExpenses: document.getElementById('totalExpenses'),
+            maxStore: document.getElementById('maxStore'),
+            minStore: document.getElementById('minStore')
+        };
+
+        if (elements.totalAmount) elements.totalAmount.textContent = app.formatCurrency(stats.total);
+        if (elements.maxAmount) elements.maxAmount.textContent = app.formatCurrency(stats.max.amount);
+        if (elements.minAmount) elements.minAmount.textContent = app.formatCurrency(stats.min.amount);
+        if (elements.totalExpenses) elements.totalExpenses.textContent = stats.count;
+        if (elements.maxStore) elements.maxStore.textContent = stats.max.store;
+        if (elements.minStore) elements.minStore.textContent = stats.min.store;
+    }
+
+    function loadCharts(stats) {
+        drawPieChart('storeChart', stats.storeStats, 'storeStats');
+        drawPieChart('categoryChart', stats.categoryStats, 'categoryStats');
+    }
+
+    function drawPieChart(canvasId, data, statsId) {
+        const canvas = document.getElementById(canvasId);
+        const statsDiv = document.getElementById(statsId);
+        
+        if (!canvas || !statsDiv) return;
+
+        const ctx = canvas.getContext('2d');
+        const entries = Object.entries(data).sort((a, b) => b[1].total - a[1].total).slice(0, 6);
+        
+        if (entries.length === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#666';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Nessun dato', canvas.width/2, canvas.height/2);
+            statsDiv.innerHTML = '<div style="text-align: center; color: #666;">Nessun dato disponibile</div>';
+            return;
+        }
+
+        // Colori per il grafico
+        const colors = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#607D8B'];
+        
+        // Calcola angoli
+        const total = entries.reduce((sum, [, data]) => sum + data.total, 0);
+        let currentAngle = -Math.PI / 2;
+        
+        // Pulisci canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Disegna settori
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.min(centerX, centerY) - 20;
+        
+        entries.forEach(([label, data], index) => {
+            const sliceAngle = (data.total / total) * 2 * Math.PI;
+            
+            // Disegna settore
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+            ctx.closePath();
+            ctx.fillStyle = colors[index % colors.length];
+            ctx.fill();
+            
+            // Bordo bianco
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            currentAngle += sliceAngle;
+        });
+
+        // Aggiorna statistiche testuali
+        statsDiv.innerHTML = entries.map(([label, data], index) => 
+            `<div>
+                <span style="color: ${colors[index % colors.length]}">● ${label}</span>
+                <span>${app.formatCurrency(data.total)}</span>
+            </div>`
+        ).join('');
+    }
+
+    function loadRecentExpenses(expenses) {
+        const recentList = document.getElementById('recentList');
+        if (!recentList) return;
+
+        const recent = expenses.slice(-5).reverse();
+        
+        if (recent.length === 0) {
+            recentList.innerHTML = '<div class="no-expenses">Nessuna spesa recente</div>';
+            return;
+        }
+
+        recentList.innerHTML = recent.map(expense => `
+            <div class="recent-item">
+                <div class="recent-info">
+                    <strong>🏪 ${expense.store}</strong>
+                    <small>📅 ${app.formatDate(expense.date)} • ${expense.products.length} prodotti</small>
+                </div>
+                <div class="recent-amount">${app.formatCurrency(expense.total)}</div>
+            </div>
+        `).join('');
+    }
+
     // Registra service worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');
@@ -83,7 +311,7 @@
 
     // Carica dashboard
     document.addEventListener('DOMContentLoaded', loadDashboard);
-    document.getElementById('periodSelect').addEventListener('change', loadDashboard);
+    document.getElementById('periodSelect')?.addEventListener('change', loadDashboard);
 </script>
 ```
 
