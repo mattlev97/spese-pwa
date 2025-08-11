@@ -141,10 +141,238 @@
     </form>
 </main>
 
-<script src="app.js"></script>
+<!-- JavaScript incorporato -->
 <script>
-    // Inizializza pagina aggiungi spesa
-    document.addEventListener('DOMContentLoaded', initAddExpense);
+    // TEST INIZIALE
+    alert('🔧 JavaScript caricato! Versione incorporata.');
+    
+    // Gestione spese - App principale
+    class ExpenseTracker {
+        constructor() {
+            this.expenses = this.loadExpenses();
+            this.currentCart = [];
+            this.deleteExpenseId = null;
+        }
+
+        loadExpenses() {
+            const stored = localStorage.getItem('expenses');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        saveExpenses() {
+            localStorage.setItem('expenses', JSON.stringify(this.expenses));
+        }
+
+        generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        addExpense(store, date, products) {
+            const expense = {
+                id: this.generateId(),
+                store,
+                date,
+                products: [...products],
+                total: products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0),
+                createdAt: new Date().toISOString()
+            };
+            
+            this.expenses.push(expense);
+            this.saveExpenses();
+            return expense;
+        }
+
+        formatCurrency(amount) {
+            return new Intl.NumberFormat('it-IT', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(amount || 0);
+        }
+    }
+
+    // Istanza globale
+    const app = new ExpenseTracker();
+    alert('✅ App creata: ' + typeof app);
+
+    // Funzione helper per escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+
+    function addProductToCart() {
+        alert('🛒 INIZIO: Funzione addProductToCart chiamata');
+        
+        // Ottieni elementi
+        const categoryEl = document.getElementById('productCategory');
+        const nameEl = document.getElementById('productName');
+        const priceEl = document.getElementById('productPrice');
+        const priceKgEl = document.getElementById('productPriceKg');
+        const notesEl = document.getElementById('productNotes');
+
+        // Verifica che gli elementi esistano
+        if (!categoryEl || !nameEl || !priceEl) {
+            alert('❌ ERRORE: Elementi form non trovati!');
+            return;
+        }
+
+        alert('✅ ELEMENTI TROVATI: Tutti gli elementi del form esistono');
+
+        // Ottieni valori
+        const category = categoryEl.value ? categoryEl.value.trim() : '';
+        const name = nameEl.value ? nameEl.value.trim() : '';
+        const priceValue = priceEl.value ? priceEl.value.trim() : '';
+        const price = parseFloat(priceValue);
+        const priceKg = priceKgEl ? (parseFloat(priceKgEl.value) || null) : null;
+        const notes = notesEl ? (notesEl.value ? notesEl.value.trim() : '') : '';
+
+        alert('📝 VALORI:\nCategoria: "' + category + '"\nNome: "' + name + '"\nPrezzo: "' + priceValue + '" → ' + price);
+
+        // Validazione
+        if (!category) {
+            alert('⚠️ Seleziona una tipologia di prodotto');
+            return;
+        }
+
+        if (!name) {
+            alert('⚠️ Inserisci il nome del prodotto');
+            return;
+        }
+
+        if (!priceValue || isNaN(price) || price <= 0) {
+            alert('⚠️ Inserisci un prezzo valido maggiore di 0');
+            return;
+        }
+
+        alert('✅ VALIDAZIONE SUPERATA');
+
+        // Crea prodotto
+        const product = {
+            id: app.generateId(),
+            category,
+            name,
+            price: price,
+            priceKg: priceKg,
+            notes: notes
+        };
+
+        // Aggiungi al carrello
+        const before = app.currentCart.length;
+        app.currentCart.push(product);
+        const after = app.currentCart.length;
+
+        alert('🛒 CARRELLO: ' + before + ' → ' + after + ' prodotti');
+
+        // Aggiorna display
+        updateCartDisplay();
+        clearProductForm();
+        
+        alert('🎉 PRODOTTO AGGIUNTO CON SUCCESSO!');
+    }
+
+    function updateCartDisplay() {
+        alert('🔄 Aggiornando display carrello...');
+        
+        const cartSection = document.getElementById('cartSection');
+        const cartBody = document.getElementById('cartBody');
+        const cartTotal = document.getElementById('cartTotal');
+        const saveBtn = document.getElementById('saveExpenseBtn');
+
+        if (!cartSection || !cartBody || !cartTotal || !saveBtn) {
+            alert('❌ Elementi carrello mancanti!');
+            return;
+        }
+
+        if (app.currentCart.length === 0) {
+            cartSection.style.display = 'none';
+            saveBtn.disabled = true;
+            return;
+        }
+
+        cartSection.style.display = 'block';
+        saveBtn.disabled = false;
+
+        // Aggiorna tabella
+        let htmlContent = '';
+        app.currentCart.forEach((product) => {
+            htmlContent += '<tr><td><strong>' + escapeHtml(product.name) + '</strong><br><small>' + escapeHtml(product.category) + '</small></td><td><strong>' + app.formatCurrency(product.price) + '</strong></td><td><button onclick="removeFromCart(\'' + product.id + '\')">🗑️</button></td></tr>';
+        });
+
+        cartBody.innerHTML = htmlContent;
+
+        // Totale
+        const total = app.currentCart.reduce((sum, product) => sum + product.price, 0);
+        cartTotal.textContent = app.formatCurrency(total);
+        
+        alert('✅ Carrello mostrato: ' + app.currentCart.length + ' prodotti, totale ' + app.formatCurrency(total));
+    }
+
+    function clearProductForm() {
+        document.getElementById('productCategory').value = '';
+        document.getElementById('productName').value = '';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productPriceKg').value = '';
+        document.getElementById('productNotes').value = '';
+    }
+
+    function removeFromCart(productId) {
+        app.currentCart = app.currentCart.filter(product => product.id !== productId);
+        updateCartDisplay();
+    }
+
+    function clearCart() {
+        if (confirm('Svuotare il carrello?')) {
+            app.currentCart = [];
+            updateCartDisplay();
+        }
+    }
+
+    function saveExpense() {
+        const store = document.getElementById('storeSelect').value;
+        const date = document.getElementById('expenseDate').value;
+
+        if (!store || !date || app.currentCart.length === 0) {
+            alert('Compila tutti i campi e aggiungi prodotti');
+            return;
+        }
+
+        app.addExpense(store, date, app.currentCart);
+        alert('✅ Spesa salvata!');
+        
+        // Reset
+        document.getElementById('expenseForm').reset();
+        app.currentCart = [];
+        updateCartDisplay();
+        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+    }
+
+    // Inizializzazione
+    document.addEventListener('DOMContentLoaded', function() {
+        alert('📱 DOM caricato, inizializzazione...');
+        
+        // Imposta data
+        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+        
+        // Event listeners
+        document.getElementById('addProductBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('🖱️ CLICK BOTTONE RILEVATO!');
+            addProductToCart();
+        });
+
+        document.getElementById('saveExpenseBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            saveExpense();
+        });
+
+        document.getElementById('clearCartBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            clearCart();
+        });
+
+        alert('🎉 Tutto pronto! Prova ad aggiungere un prodotto.');
+    });
 </script>
 ```
 
