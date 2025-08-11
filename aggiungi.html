@@ -143,9 +143,6 @@
 
 <!-- JavaScript incorporato -->
 <script>
-    // TEST INIZIALE
-    alert('🔧 JavaScript caricato! Versione incorporata.');
-    
     // Gestione spese - App principale
     class ExpenseTracker {
         constructor() {
@@ -188,11 +185,95 @@
                 currency: 'EUR'
             }).format(amount || 0);
         }
+
+        formatDate(dateString) {
+            return new Intl.DateTimeFormat('it-IT', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }).format(new Date(dateString));
+        }
+
+        filterByPeriod(period) {
+            const now = new Date();
+            const startDate = new Date();
+
+            switch(period) {
+                case 'settimana':
+                    startDate.setDate(now.getDate() - 7);
+                    break;
+                case 'mese':
+                    startDate.setMonth(now.getMonth() - 1);
+                    break;
+                case 'anno':
+                    startDate.setFullYear(now.getFullYear() - 1);
+                    break;
+                default:
+                    return this.expenses;
+            }
+
+            return this.expenses.filter(expense => 
+                new Date(expense.date) >= startDate
+            );
+        }
+
+        getStats(expenses = this.expenses) {
+            if (!expenses.length) {
+                return {
+                    total: 0,
+                    count: 0,
+                    max: { amount: 0, store: '' },
+                    min: { amount: 0, store: '' },
+                    avgPerExpense: 0,
+                    storeStats: {},
+                    categoryStats: {}
+                };
+            }
+
+            const total = expenses.reduce((sum, exp) => sum + exp.total, 0);
+            const amounts = expenses.map(exp => exp.total);
+            const maxAmount = Math.max(...amounts);
+            const minAmount = Math.min(...amounts);
+            
+            const maxExpense = expenses.find(exp => exp.total === maxAmount);
+            const minExpense = expenses.find(exp => exp.total === minAmount);
+
+            // Statistiche per supermercato
+            const storeStats = {};
+            expenses.forEach(expense => {
+                if (!storeStats[expense.store]) {
+                    storeStats[expense.store] = { count: 0, total: 0 };
+                }
+                storeStats[expense.store].count++;
+                storeStats[expense.store].total += expense.total;
+            });
+
+            // Statistiche per categoria
+            const categoryStats = {};
+            expenses.forEach(expense => {
+                expense.products.forEach(product => {
+                    if (!categoryStats[product.category]) {
+                        categoryStats[product.category] = { count: 0, total: 0 };
+                    }
+                    categoryStats[product.category].count++;
+                    categoryStats[product.category].total += parseFloat(product.price || 0);
+                });
+            });
+
+            return {
+                total,
+                count: expenses.length,
+                max: { amount: maxAmount, store: maxExpense.store },
+                min: { amount: minAmount, store: minExpense.store },
+                avgPerExpense: total / expenses.length,
+                storeStats,
+                categoryStats
+            };
+        }
     }
 
     // Istanza globale
     const app = new ExpenseTracker();
-    alert('✅ App creata: ' + typeof app);
 
     // Funzione helper per escape HTML
     function escapeHtml(text) {
@@ -202,8 +283,6 @@
     }
 
     function addProductToCart() {
-        alert('🛒 INIZIO: Funzione addProductToCart chiamata');
-        
         // Ottieni elementi
         const categoryEl = document.getElementById('productCategory');
         const nameEl = document.getElementById('productName');
@@ -211,13 +290,10 @@
         const priceKgEl = document.getElementById('productPriceKg');
         const notesEl = document.getElementById('productNotes');
 
-        // Verifica che gli elementi esistano
         if (!categoryEl || !nameEl || !priceEl) {
-            alert('❌ ERRORE: Elementi form non trovati!');
+            alert('❌ Errore: elementi del form non trovati');
             return;
         }
-
-        alert('✅ ELEMENTI TROVATI: Tutti gli elementi del form esistono');
 
         // Ottieni valori
         const category = categoryEl.value ? categoryEl.value.trim() : '';
@@ -227,25 +303,24 @@
         const priceKg = priceKgEl ? (parseFloat(priceKgEl.value) || null) : null;
         const notes = notesEl ? (notesEl.value ? notesEl.value.trim() : '') : '';
 
-        alert('📝 VALORI:\nCategoria: "' + category + '"\nNome: "' + name + '"\nPrezzo: "' + priceValue + '" → ' + price);
-
         // Validazione
         if (!category) {
             alert('⚠️ Seleziona una tipologia di prodotto');
+            categoryEl.focus();
             return;
         }
 
         if (!name) {
             alert('⚠️ Inserisci il nome del prodotto');
+            nameEl.focus();
             return;
         }
 
         if (!priceValue || isNaN(price) || price <= 0) {
             alert('⚠️ Inserisci un prezzo valido maggiore di 0');
+            priceEl.focus();
             return;
         }
-
-        alert('✅ VALIDAZIONE SUPERATA');
 
         // Crea prodotto
         const product = {
@@ -258,62 +333,94 @@
         };
 
         // Aggiungi al carrello
-        const before = app.currentCart.length;
         app.currentCart.push(product);
-        const after = app.currentCart.length;
-
-        alert('🛒 CARRELLO: ' + before + ' → ' + after + ' prodotti');
 
         // Aggiorna display
         updateCartDisplay();
         clearProductForm();
         
-        alert('🎉 PRODOTTO AGGIUNTO CON SUCCESSO!');
+        // Feedback visivo
+        const addBtn = document.getElementById('addProductBtn');
+        if (addBtn) {
+            addBtn.classList.add('pulse');
+            setTimeout(() => addBtn.classList.remove('pulse'), 300);
+        }
+
+        // Scroll al carrello se è la prima aggiunta
+        if (app.currentCart.length === 1) {
+            const cartSection = document.getElementById('cartSection');
+            if (cartSection) {
+                cartSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
     }
 
     function updateCartDisplay() {
-        alert('🔄 Aggiornando display carrello...');
-        
         const cartSection = document.getElementById('cartSection');
         const cartBody = document.getElementById('cartBody');
         const cartTotal = document.getElementById('cartTotal');
         const saveBtn = document.getElementById('saveExpenseBtn');
 
-        if (!cartSection || !cartBody || !cartTotal || !saveBtn) {
-            alert('❌ Elementi carrello mancanti!');
-            return;
-        }
+        if (!cartSection || !cartBody || !cartTotal || !saveBtn) return;
 
         if (app.currentCart.length === 0) {
             cartSection.style.display = 'none';
             saveBtn.disabled = true;
+            saveBtn.style.opacity = '0.5';
             return;
         }
 
         cartSection.style.display = 'block';
         saveBtn.disabled = false;
+        saveBtn.style.opacity = '1';
 
-        // Aggiorna tabella
-        let htmlContent = '';
-        app.currentCart.forEach((product) => {
-            htmlContent += '<tr><td><strong>' + escapeHtml(product.name) + '</strong><br><small>' + escapeHtml(product.category) + '</small></td><td><strong>' + app.formatCurrency(product.price) + '</strong></td><td><button onclick="removeFromCart(\'' + product.id + '\')">🗑️</button></td></tr>';
-        });
+        // Aggiorna tabella prodotti
+        cartBody.innerHTML = app.currentCart.map(product => `
+            <tr>
+                <td>
+                    <strong>${escapeHtml(product.name)}</strong><br>
+                    <small style="color: #666;">${escapeHtml(product.category)}</small>
+                    ${product.notes ? `<br><small style="color: #888;">📝 ${escapeHtml(product.notes)}</small>` : ''}
+                    ${product.priceKg ? `<br><small style="color: #666;">💰 ${app.formatCurrency(product.priceKg)}/kg</small>` : ''}
+                </td>
+                <td><strong>${app.formatCurrency(product.price)}</strong></td>
+                <td>
+                    <button type="button" class="remove-btn" onclick="removeFromCart('${product.id}')" title="Rimuovi prodotto">
+                        🗑️
+                    </button>
+                </td>
+            </tr>
+        `).join('');
 
-        cartBody.innerHTML = htmlContent;
-
-        // Totale
+        // Aggiorna totale
         const total = app.currentCart.reduce((sum, product) => sum + product.price, 0);
         cartTotal.textContent = app.formatCurrency(total);
-        
-        alert('✅ Carrello mostrato: ' + app.currentCart.length + ' prodotti, totale ' + app.formatCurrency(total));
+
+        // Aggiungi animazione fade-in
+        cartSection.classList.add('fade-in');
     }
 
     function clearProductForm() {
         document.getElementById('productCategory').value = '';
         document.getElementById('productName').value = '';
         document.getElementById('productPrice').value = '';
-        document.getElementById('productPriceKg').value = '';
-        document.getElementById('productNotes').value = '';
+        if (document.getElementById('productPriceKg')) document.getElementById('productPriceKg').value = '';
+        if (document.getElementById('productNotes')) document.getElementById('productNotes').value = '';
+    }
+
+    function toggleCustomStore() {
+        const storeSelect = document.getElementById('storeSelect');
+        const customStoreGroup = document.getElementById('customStoreGroup');
+        
+        if (storeSelect && customStoreGroup) {
+            if (storeSelect.value === 'Altro') {
+                customStoreGroup.style.display = 'block';
+                document.getElementById('customStore').required = true;
+            } else {
+                customStoreGroup.style.display = 'none';
+                document.getElementById('customStore').required = false;
+            }
+        }
     }
 
     function removeFromCart(productId) {
@@ -322,42 +429,63 @@
     }
 
     function clearCart() {
-        if (confirm('Svuotare il carrello?')) {
+        if (app.currentCart.length === 0) return;
+        
+        if (confirm('🗑️ Sei sicuro di voler svuotare il carrello?')) {
             app.currentCart = [];
             updateCartDisplay();
         }
     }
 
     function saveExpense() {
-        const store = document.getElementById('storeSelect').value;
-        const date = document.getElementById('expenseDate').value;
+        const storeSelect = document.getElementById('storeSelect');
+        const customStore = document.getElementById('customStore');
+        const expenseDate = document.getElementById('expenseDate');
 
+        if (!storeSelect || !expenseDate) return;
+
+        const store = storeSelect.value === 'Altro' ? customStore.value : storeSelect.value;
+        const date = expenseDate.value;
+
+        // Validazione
         if (!store || !date || app.currentCart.length === 0) {
-            alert('Compila tutti i campi e aggiungi prodotti');
+            alert('⚠️ Compila tutti i campi e aggiungi almeno un prodotto');
             return;
         }
 
-        app.addExpense(store, date, app.currentCart);
-        alert('✅ Spesa salvata!');
-        
-        // Reset
-        document.getElementById('expenseForm').reset();
-        app.currentCart = [];
-        updateCartDisplay();
-        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+        try {
+            app.addExpense(store, date, app.currentCart);
+            
+            // Feedback successo
+            alert('✅ Spesa salvata con successo!');
+            
+            // Reset form
+            document.getElementById('expenseForm').reset();
+            app.currentCart = [];
+            updateCartDisplay();
+            toggleCustomStore();
+            
+            // Imposta data odierna
+            const today = new Date().toISOString().split('T')[0];
+            expenseDate.value = today;
+            
+        } catch (error) {
+            console.error('Errore nel salvare la spesa:', error);
+            alert('❌ Errore nel salvare la spesa. Riprova.');
+        }
     }
 
     // Inizializzazione
     document.addEventListener('DOMContentLoaded', function() {
-        alert('📱 DOM caricato, inizializzazione...');
-        
-        // Imposta data
-        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+        // Imposta data odierna
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('expenseDate').value = today;
         
         // Event listeners
+        document.getElementById('storeSelect').addEventListener('change', toggleCustomStore);
+        
         document.getElementById('addProductBtn').addEventListener('click', function(e) {
             e.preventDefault();
-            alert('🖱️ CLICK BOTTONE RILEVATO!');
             addProductToCart();
         });
 
@@ -371,7 +499,14 @@
             clearCart();
         });
 
-        alert('🎉 Tutto pronto! Prova ad aggiungere un prodotto.');
+        document.getElementById('expenseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveExpense();
+        });
+
+        // Reset carrello
+        app.currentCart = [];
+        updateCartDisplay();
     });
 </script>
 ```
