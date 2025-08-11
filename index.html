@@ -310,8 +310,13 @@
     }
 
     // Carica dashboard
-    document.addEventListener('DOMContentLoaded', loadDashboard);
-    document.getElementById('periodSelect')?.addEventListener('change', loadDashboard);
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboard();
+        const periodSelect = document.getElementById('periodSelect');
+        if (periodSelect) {
+            periodSelect.addEventListener('change', loadDashboard);
+        }
+    });
 </script>
 ```
 
