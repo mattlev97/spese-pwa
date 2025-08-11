@@ -353,3 +353,13 @@ section h3 {
   background: #ff375f;
   color: white;
   border: none;
+  border-radius: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.3s ease;
+}
+
+.remove-btn:hover {
+  background: #ff5e78;
+}
