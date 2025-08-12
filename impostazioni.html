@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Impostazioni</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#1e1e1e" />
+  <script defer src="app.js"></script>
+  <script defer src="settings.js"></script>
+</head>
+<body>
+  <header>
+    <h1>⚙️ Impostazioni</h1>
+    <nav>
+      <a href="index.html">Dashboard</a>
+      <a href="aggiungi.html">Aggiungi</a>
+      <a href="archivio.html">Archivio</a>
+      <a href="impostazioni.html" class="nav-active">Impostazioni</a>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Supermercati</h2>
+      <p style="color:#aaa; margin-bottom:12px;">Modifica la lista di supermercati usata nella pagina Aggiungi.</p>
+      <div id="storesList" style="margin-bottom:12px;"></div>
+
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+        <input id="newStoreInput" type="text" placeholder="Nuovo supermercato" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:#1e1e1e; color:#fff;">
+        <button id="addStoreBtn" class="btn">Aggiungi</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Tema</h2>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <label style="color:#ccc;">
+          <input id="themeToggle" type="checkbox"> Modalità Chiara
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <h2>Dati App</h2>
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button id="resetDataBtn" class="btn btn-danger">Elimina tutte le spese</button>
+        <button id="resetStoresBtn" class="btn btn-secondary">Ripristina supermercati predefiniti</button>
+      </div>
+      <div style="color:#aaa; font-size:0.95rem;">
+        <div>Versione: <strong>1.1.0</strong></div>
+        <div>Autore: <strong>Tu</strong></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
