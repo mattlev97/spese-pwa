@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -19,96 +18,98 @@
             <a href="index.html">Dashboard</a>
             <a href="aggiungi.html">Aggiungi</a>
             <a href="archivio.html" class="nav-active">Archivio</a>
+            <a href="impostazioni.html">Impostazioni</a>
         </nav>
     </header>
 
-```
-<main class="archive">
-    <section class="filters">
-        <h2>🔍 Filtri</h2>
-        <div class="filter-grid">
-            <div class="filter-group">
-                <label for="periodFilter">Periodo:</label>
-                <select id="periodFilter">
-                    <option value="">Tutti i periodi</option>
-                    <option value="settimana">Ultima settimana</option>
-                    <option value="mese">Ultimo mese</option>
-                    <option value="anno">Ultimo anno</option>
-                </select>
+    <main class="archive">
+        <section class="filters">
+            <h2>🔍 Filtri</h2>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="periodFilter">Periodo:</label>
+                    <select id="periodFilter">
+                        <option value="">Tutti i periodi</option>
+                        <option value="settimana">Ultima settimana</option>
+                        <option value="mese">Ultimo mese</option>
+                        <option value="anno">Ultimo anno</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="storeFilter">Supermercato:</label>
+                    <select id="storeFilter">
+                        <option value="">Tutti i supermercati</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="categoryFilter">Tipologia:</label>
+                    <select id="categoryFilter">
+                        <option value="">Tutte le tipologie</option>
+                        <option value="Carne">🥩 Carne</option>
+                        <option value="Pesce">🐟 Pesce</option>
+                        <option value="Verdura">🥬 Verdura</option>
+                        <option value="Frutta">🍎 Frutta</option>
+                        <option value="Latticini">🧀 Latticini</option>
+                        <option value="Pane">🍞 Pane e Cereali</option>
+                        <option value="Bevande">🥤 Bevande</option>
+                        <option value="Surgelati">🧊 Surgelati</option>
+                        <option value="Dolci">🍰 Dolci</option>
+                        <option value="Pulizia">🧽 Prodotti Pulizia</option>
+                        <option value="Igiene">🧴 Igiene Personale</option>
+                        <option value="Altro">📦 Altro</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <button id="clearFiltersBtn" class="btn btn-secondary">🗑️ Pulisci Filtri</button>
+                </div>
             </div>
+        </section>
 
-            <div class="filter-group">
-                <label for="storeFilter">Supermercato:</label>
-                <select id="storeFilter">
-                    <option value="">Tutti i supermercati</option>
-                </select>
+        <section class="archive-stats">
+            <div class="stats-summary">
+                <span id="filteredCount">0 spese trovate</span>
+                <span id="filteredTotal">Totale: €0.00</span>
             </div>
+        </section>
 
-            <div class="filter-group">
-                <label for="categoryFilter">Tipologia:</label>
-                <select id="categoryFilter">
-                    <option value="">Tutte le tipologie</option>
-                    <option value="Carne">🥩 Carne</option>
-                    <option value="Pesce">🐟 Pesce</option>
-                    <option value="Verdura">🥬 Verdura</option>
-                    <option value="Frutta">🍎 Frutta</option>
-                    <option value="Latticini">🧀 Latticini</option>
-                    <option value="Pane">🍞 Pane e Cereali</option>
-                    <option value="Bevande">🥤 Bevande</option>
-                    <option value="Surgelati">🧊 Surgelati</option>
-                    <option value="Dolci">🍰 Dolci</option>
-                    <option value="Pulizia">🧽 Prodotti Pulizia</option>
-                    <option value="Igiene">🧴 Igiene Personale</option>
-                    <option value="Altro">📦 Altro</option>
-                </select>
+        <section class="expenses-list">
+            <div id="expensesList" class="expenses-container">
+                <div class="no-expenses" id="noExpenses">
+                    📝 Nessuna spesa trovata con i filtri selezionati
+                </div>
             </div>
+        </section>
+    </main>
 
-            <div class="filter-group">
-                <button id="clearFiltersBtn" class="btn btn-secondary">🗑️ Pulisci Filtri</button>
+    <!-- Modal per conferma eliminazione -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3>⚠️ Conferma Eliminazione</h3>
+            <p>Sei sicuro di voler eliminare questa spesa?</p>
+            <div class="modal-actions">
+                <button id="confirmDelete" class="btn btn-danger">Elimina</button>
+                <button id="cancelDelete" class="btn btn-secondary">Annulla</button>
             </div>
-        </div>
-    </section>
-
-    <section class="archive-stats">
-        <div class="stats-summary">
-            <span id="filteredCount">0 spese trovate</span>
-            <span id="filteredTotal">Totale: €0.00</span>
-        </div>
-    </section>
-
-    <section class="expenses-list">
-        <div id="expensesList" class="expenses-container">
-            <div class="no-expenses" id="noExpenses">
-                📝 Nessuna spesa trovata con i filtri selezionati
-            </div>
-        </div>
-    </section>
-</main>
-
-<!-- Modal per conferma eliminazione -->
-<div id="deleteModal" class="modal">
-    <div class="modal-content">
-        <h3>⚠️ Conferma Eliminazione</h3>
-        <p>Sei sicuro di voler eliminare questa spesa?</p>
-        <div class="modal-actions">
-            <button id="confirmDelete" class="btn btn-danger">Elimina</button>
-            <button id="cancelDelete" class="btn btn-secondary">Annulla</button>
         </div>
     </div>
-</div>
 
-<script>
-    // Gestione spese - App principale
+    <script>
     class ExpenseTracker {
         constructor() {
             this.expenses = this.loadExpenses();
-            this.currentCart = [];
+            this.stores = this.loadStores();
             this.deleteExpenseId = null;
         }
 
         loadExpenses() {
-            const stored = localStorage.getItem('expenses');
-            return stored ? JSON.parse(stored) : [];
+            return JSON.parse(localStorage.getItem('expenses')) || [];
+        }
+
+        loadStores() {
+            return JSON.parse(localStorage.getItem('stores')) || [];
         }
 
         saveExpenses() {
@@ -116,7 +117,7 @@
         }
 
         deleteExpense(id) {
-            this.expenses = this.expenses.filter(expense => expense.id !== id);
+            this.expenses = this.expenses.filter(e => e.id !== id);
             this.saveExpenses();
         }
 
@@ -124,116 +125,73 @@
             const now = new Date();
             const startDate = new Date();
 
-            switch(period) {
-                case 'settimana':
-                    startDate.setDate(now.getDate() - 7);
-                    break;
-                case 'mese':
-                    startDate.setMonth(now.getMonth() - 1);
-                    break;
-                case 'anno':
-                    startDate.setFullYear(now.getFullYear() - 1);
-                    break;
-                default:
-                    return this.expenses;
+            switch (period) {
+                case 'settimana': startDate.setDate(now.getDate() - 7); break;
+                case 'mese': startDate.setMonth(now.getMonth() - 1); break;
+                case 'anno': startDate.setFullYear(now.getFullYear() - 1); break;
+                default: return this.expenses;
             }
-
-            return this.expenses.filter(expense => 
-                new Date(expense.date) >= startDate
-            );
+            return this.expenses.filter(e => new Date(e.date) >= startDate);
         }
 
         formatCurrency(amount) {
-            return new Intl.NumberFormat('it-IT', {
-                style: 'currency',
-                currency: 'EUR'
-            }).format(amount || 0);
+            return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount || 0);
         }
 
-        formatDate(dateString) {
-            return new Intl.DateTimeFormat('it-IT', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            }).format(new Date(dateString));
+        formatDate(date) {
+            return new Intl.DateTimeFormat('it-IT', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(date));
         }
     }
 
-    // Istanza globale
     const app = new ExpenseTracker();
 
-    // Funzione helper per escape HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text || '';
         return div.innerHTML;
     }
 
-    // === ARCHIVIO ===
     function initArchive() {
         loadStoreFilter();
         loadExpensesList();
-        
-        // Event listeners per filtri
-        const filters = ['periodFilter', 'storeFilter', 'categoryFilter'];
-        filters.forEach(filterId => {
-            const element = document.getElementById(filterId);
-            if (element) {
-                element.addEventListener('change', loadExpensesList);
+
+        ['periodFilter', 'storeFilter', 'categoryFilter'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', loadExpensesList);
+        });
+
+        document.getElementById('clearFiltersBtn')?.addEventListener('click', clearFilters);
+
+        document.getElementById('confirmDelete')?.addEventListener('click', () => {
+            if (app.deleteExpenseId) {
+                app.deleteExpense(app.deleteExpenseId);
+                app.deleteExpenseId = null;
+                loadExpensesList();
+                closeModal();
+                alert('✅ Spesa eliminata');
             }
         });
 
-        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-        if (clearFiltersBtn) {
-            clearFiltersBtn.addEventListener('click', clearFilters);
-        }
+        document.getElementById('cancelDelete')?.addEventListener('click', closeModal);
 
-        // Modal gestione
-        const deleteModal = document.getElementById('deleteModal');
-        const confirmDelete = document.getElementById('confirmDelete');
-        const cancelDelete = document.getElementById('cancelDelete');
-
-        if (confirmDelete) {
-            confirmDelete.addEventListener('click', () => {
-                if (app.deleteExpenseId) {
-                    app.deleteExpense(app.deleteExpenseId);
-                    app.deleteExpenseId = null;
-                    loadExpensesList();
-                    closeModal();
-                    alert('✅ Spesa eliminata');
-                }
-            });
-        }
-
-        if (cancelDelete) {
-            cancelDelete.addEventListener('click', closeModal);
-        }
-
-        // Chiudi modal cliccando fuori
-        if (deleteModal) {
-            deleteModal.addEventListener('click', (e) => {
-                if (e.target === deleteModal) closeModal();
-            });
-        }
+        document.getElementById('deleteModal')?.addEventListener('click', e => {
+            if (e.target.id === 'deleteModal') closeModal();
+        });
     }
 
     function loadStoreFilter() {
         const storeFilter = document.getElementById('storeFilter');
         if (!storeFilter) return;
 
-        // Ottieni tutti i supermercati unici
-        const stores = [...new Set(app.expenses.map(expense => expense.store))].sort();
-        
-        // Mantieni le opzioni di base e aggiungi quelle personalizzate
-        const defaultOption = storeFilter.querySelector('option[value=""]');
-        storeFilter.innerHTML = '';
-        storeFilter.appendChild(defaultOption);
+        const combinedStores = new Set([...app.stores, ...app.expenses.map(e => e.store)]);
+        storeFilter.innerHTML = '<option value="">Tutti i supermercati</option>';
 
-        stores.forEach(store => {
-            const option = document.createElement('option');
-            option.value = store;
-            option.textContent = store;
-            storeFilter.appendChild(option);
+        [...combinedStores].sort().forEach(store => {
+            if (store) {
+                const opt = document.createElement('option');
+                opt.value = store;
+                opt.textContent = store;
+                storeFilter.appendChild(opt);
+            }
         });
     }
 
@@ -242,114 +200,79 @@
         const noExpenses = document.getElementById('noExpenses');
         const filteredCount = document.getElementById('filteredCount');
         const filteredTotal = document.getElementById('filteredTotal');
-        
-        if (!expensesList) return;
 
-        // Applica filtri
         let expenses = [...app.expenses];
-        
-        // Filtro periodo
+
         const period = document.getElementById('periodFilter')?.value;
-        if (period) {
-            expenses = app.filterByPeriod(period);
-        }
+        if (period) expenses = app.filterByPeriod(period);
 
-        // Filtro supermercato
         const store = document.getElementById('storeFilter')?.value;
-        if (store) {
-            expenses = expenses.filter(expense => expense.store === store);
-        }
+        if (store) expenses = expenses.filter(e => e.store === store);
 
-        // Filtro categoria
         const category = document.getElementById('categoryFilter')?.value;
-        if (category) {
-            expenses = expenses.filter(expense => 
-                expense.products.some(product => product.category === category)
-            );
-        }
+        if (category) expenses = expenses.filter(e => e.products.some(p => p.category === category));
 
-        // Ordina per data (più recenti prima)
         expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        // Aggiorna statistiche filtrate
-        if (filteredCount) {
-            filteredCount.textContent = `${expenses.length} spese trovate`;
-        }
-        if (filteredTotal) {
-            const total = expenses.reduce((sum, exp) => sum + exp.total, 0);
-            filteredTotal.textContent = `Totale: ${app.formatCurrency(total)}`;
-        }
+        filteredCount.textContent = `${expenses.length} spese trovate`;
+        filteredTotal.textContent = `Totale: ${app.formatCurrency(expenses.reduce((s, e) => s + e.total, 0))}`;
 
-        // Mostra/nascondi messaggio vuoto
-        if (expenses.length === 0) {
+        if (!expenses.length) {
             expensesList.innerHTML = '';
-            if (noExpenses) noExpenses.style.display = 'block';
+            noExpenses.style.display = 'block';
             return;
         }
 
-        if (noExpenses) noExpenses.style.display = 'none';
-
-        // Genera lista spese
-        expensesList.innerHTML = expenses.map(expense => `
+        noExpenses.style.display = 'none';
+        expensesList.innerHTML = expenses.map(e => `
             <div class="expense-item fade-in">
                 <div class="expense-header">
                     <div class="expense-info">
-                        <h4>🏪 ${escapeHtml(expense.store)}</h4>
-                        <small>📅 ${app.formatDate(expense.date)}</small>
+                        <h4>🏪 ${escapeHtml(e.store)}</h4>
+                        <small>📅 ${app.formatDate(e.date)}</small>
                     </div>
-                    <div class="expense-total">${app.formatCurrency(expense.total)}</div>
+                    <div class="expense-total">${app.formatCurrency(e.total)}</div>
                 </div>
-                
                 <div class="expense-products">
-                    <h5>🛒 Prodotti (${expense.products.length}):</h5>
+                    <h5>🛒 Prodotti (${e.products.length}):</h5>
                     <div class="product-list">
-                        ${expense.products.map(product => `
+                        ${e.products.map(p => `
                             <div class="product-item">
                                 <div class="product-info">
-                                    <strong>${escapeHtml(product.name)}</strong>
-                                    <div class="category">${escapeHtml(product.category)}</div>
-                                    ${product.notes ? `<div class="category">📝 ${escapeHtml(product.notes)}</div>` : ''}
+                                    <strong>${escapeHtml(p.name)}</strong>
+                                    <div class="category">${escapeHtml(p.category)}</div>
+                                    ${p.notes ? `<div class="category">📝 ${escapeHtml(p.notes)}</div>` : ''}
                                 </div>
-                                <div class="product-price">${app.formatCurrency(product.price)}</div>
+                                <div class="product-price">${app.formatCurrency(p.price)}</div>
                             </div>
                         `).join('')}
                     </div>
                 </div>
-                
                 <div class="expense-actions">
-                    <button class="delete-btn" onclick="confirmDeleteExpense('${expense.id}')">
-                        🗑️ Elimina
-                    </button>
+                    <button class="delete-btn" onclick="confirmDeleteExpense('${e.id}')">🗑️ Elimina</button>
                 </div>
             </div>
         `).join('');
     }
 
     function clearFilters() {
-        const filters = ['periodFilter', 'storeFilter', 'categoryFilter'];
-        filters.forEach(filterId => {
-            const element = document.getElementById(filterId);
-            if (element) element.value = '';
+        ['periodFilter', 'storeFilter', 'categoryFilter'].forEach(id => {
+            document.getElementById(id).value = '';
         });
         loadExpensesList();
     }
 
-    function confirmDeleteExpense(expenseId) {
-        app.deleteExpenseId = expenseId;
-        const modal = document.getElementById('deleteModal');
-        if (modal) modal.style.display = 'block';
+    function confirmDeleteExpense(id) {
+        app.deleteExpenseId = id;
+        document.getElementById('deleteModal').style.display = 'block';
     }
 
     function closeModal() {
-        const modal = document.getElementById('deleteModal');
-        if (modal) modal.style.display = 'none';
+        document.getElementById('deleteModal').style.display = 'none';
         app.deleteExpenseId = null;
     }
 
-    // Inizializza archivio
     document.addEventListener('DOMContentLoaded', initArchive);
-</script>
-```
-
+    </script>
 </body>
 </html>
