@@ -1,162 +1,288 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aggiungi Spesa</title>
-    <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="icon-192.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#1e1e1e" />
-    <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aggiungi Spesa</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#1e1e1e" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header>
-        <h1>🛍️ Aggiungi Spesa</h1>
-        <nav>
-            <a href="index.html">Dashboard</a>
-            <a href="aggiungi.html" class="nav-active">Aggiungi</a>
-            <a href="archivio.html">Archivio</a>
-            <a href="impostazioni.html">Impostazioni</a>
-        </nav>
-    </header>
+  <header>
+    <h1>🛍️ Aggiungi Spesa</h1>
+    <nav>
+      <a href="index.html">Dashboard</a>
+      <a href="aggiungi.html" class="nav-active">Aggiungi</a>
+      <a href="archivio.html">Archivio</a>
+      <a href="impostazioni.html">Impostazioni</a>
+    </nav>
+  </header>
 
-    <main class="add-expense">
-        <form id="expenseForm" class="expense-form" novalidate>
-            <div class="form-section">
-                <h2>🏪 Informazioni Generali</h2>
-                
-                <div class="form-group">
-                    <label for="storeSelect">Supermercato:</label>
-                    <select id="storeSelect" required></select>
-                </div>
+  <main class="add-expense">
+    <form id="expenseForm" class="expense-form" novalidate>
+      <div class="form-section">
+        <h2>🏪 Informazioni Generali</h2>
 
-                <div class="form-group" id="customStoreGroup" style="display: none;">
-                    <label for="customStore">Nome supermercato:</label>
-                    <input type="text" id="customStore" placeholder="Inserisci nome supermercato" />
-                </div>
+        <div class="form-group">
+          <label for="storeSelect">Supermercato:</label>
+          <!-- sarà popolato dinamicamente; class store-select necessario -->
+          <select id="storeSelect" class="store-select" required></select>
+        </div>
 
-                <div class="form-group">
-                    <label for="expenseDate">Data:</label>
-                    <input type="date" id="expenseDate" required />
-                </div>
+        <div class="form-group" id="customStoreGroup" style="display:none;">
+          <label for="customStore">Nome supermercato:</label>
+          <input type="text" id="customStore" placeholder="Inserisci nome supermercato" />
+        </div>
+
+        <div class="form-group">
+          <label for="expenseDate">Data:</label>
+          <input type="date" id="expenseDate" required />
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>🛒 Aggiungi Prodotti</h2>
+
+        <div class="product-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="productCategory">Tipologia:</label>
+              <select id="productCategory" required>
+                <option value="">Seleziona tipologia</option>
+                <option value="Carne">🥩 Carne</option>
+                <option value="Pesce">🐟 Pesce</option>
+                <option value="Verdura">🥬 Verdura</option>
+                <option value="Frutta">🍎 Frutta</option>
+                <option value="Latticini">🧀 Latticini</option>
+                <option value="Pane">🍞 Pane e Cereali</option>
+                <option value="Bevande">🥤 Bevande</option>
+                <option value="Surgelati">🧊 Surgelati</option>
+                <option value="Dolci">🍰 Dolci</option>
+                <option value="Pulizia">🧽 Prodotti Pulizia</option>
+                <option value="Igiene">🧴 Igiene Personale</option>
+                <option value="Altro">📦 Altro</option>
+              </select>
             </div>
 
-            <div class="form-section">
-                <h2>🛒 Aggiungi Prodotti</h2>
-                
-                <div class="product-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productCategory">Tipologia:</label>
-                            <select id="productCategory" required>
-                                <option value="">Seleziona tipologia</option>
-                                <option value="Carne">🥩 Carne</option>
-                                <option value="Pesce">🐟 Pesce</option>
-                                <option value="Verdura">🥬 Verdura</option>
-                                <option value="Frutta">🍎 Frutta</option>
-                                <option value="Latticini">🧀 Latticini</option>
-                                <option value="Pane">🍞 Pane e Cereali</option>
-                                <option value="Bevande">🥤 Bevande</option>
-                                <option value="Surgelati">🧊 Surgelati</option>
-                                <option value="Dolci">🍰 Dolci</option>
-                                <option value="Pulizia">🧽 Prodotti Pulizia</option>
-                                <option value="Igiene">🧴 Igiene Personale</option>
-                                <option value="Altro">📦 Altro</option>
-                            </select>
-                        </div>
+            <div class="form-group">
+              <label for="productName">Nome prodotto:</label>
+              <input type="text" id="productName" placeholder="Es. Pomodori" required />
+            </div>
+          </div>
 
-                        <div class="form-group">
-                            <label for="productName">Nome prodotto:</label>
-                            <input type="text" id="productName" placeholder="Es. Pomodori" required />
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productPrice">Prezzo (€):</label>
-                            <input type="number" id="productPrice" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required />
-                        </div>
-
-                        <div class="form-group">
-                            <label for="productPriceKg">Prezzo/kg (€):</label>
-                            <input type="number" id="productPriceKg" step="0.01" min="0" inputmode="decimal" placeholder="0.00" />
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="productNotes">Note:</label>
-                        <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)" />
-                    </div>
-
-                    <button type="button" id="addProductBtn" class="btn btn-secondary">
-                        ➕ Aggiungi Prodotto al Carrello
-                    </button>
-                </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="productPrice">Prezzo (€):</label>
+              <input type="number" id="productPrice" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required />
             </div>
 
-            <div class="cart-section" id="cartSection" style="display: none;">
-                <h2>🛒 Carrello</h2>
-                <div class="cart-table-container">
-                    <table id="cartTable">
-                        <thead>
-                            <tr>
-                                <th>Prodotto</th>
-                                <th>Prezzo</th>
-                                <th>Azioni</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cartBody"></tbody>
-                    </table>
-                </div>
-                <div class="cart-total">
-                    <strong>Totale: <span id="cartTotal">€0.00</span></strong>
-                </div>
+            <div class="form-group">
+              <label for="productPriceKg">Prezzo/kg (€):</label>
+              <input type="number" id="productPriceKg" step="0.01" min="0" inputmode="decimal" placeholder="0.00" />
             </div>
+          </div>
 
-            <div class="form-actions">
-                <button type="submit" id="saveExpenseBtn" class="btn btn-primary" disabled>
-                    💾 Salva Spesa Completa
-                </button>
-                <button type="button" id="clearCartBtn" class="btn btn-danger">
-                    🗑️ Svuota Carrello
-                </button>
-            </div>
-        </form>
-    </main>
+          <div class="form-group">
+            <label for="productNotes">Note:</label>
+            <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)" />
+          </div>
 
-    <script src="app.js"></script>
-    <script>
-    function populateStoreSelect() {
-        const storeSelect = document.getElementById('storeSelect');
-        if (!storeSelect || !app) return;
-        storeSelect.innerHTML = '<option value="">Seleziona supermercato</option>';
-        app.stores.forEach(store => {
-            storeSelect.innerHTML += `<option value="${store}">${store}</option>`;
-        });
-        storeSelect.innerHTML += '<option value="Altro">Altro (specificare sotto)</option>';
-    }
+          <button type="button" id="addProductBtn" class="btn btn-secondary">➕ Aggiungi Prodotto al Carrello</button>
+        </div>
+      </div>
+
+      <div class="cart-section" id="cartSection" style="display:none;">
+        <h2>🛒 Carrello</h2>
+        <div class="cart-table-container">
+          <table id="cartTable">
+            <thead>
+              <tr><th>Prodotto</th><th>Prezzo</th><th>Azioni</th></tr>
+            </thead>
+            <tbody id="cartBody"></tbody>
+          </table>
+        </div>
+        <div class="cart-total"><strong>Totale: <span id="cartTotal">€0.00</span></strong></div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" id="saveExpenseBtn" class="btn" disabled>💾 Salva Spesa Completa</button>
+        <button type="button" id="clearCartBtn" class="btn btn-danger">🗑️ Svuota Carrello</button>
+      </div>
+    </form>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // page-specific logic: usa l'istanza globale 'app' da app.js
 
     function toggleCustomStore() {
-        const storeSelect = document.getElementById('storeSelect');
-        const customStoreGroup = document.getElementById('customStoreGroup');
-        if (storeSelect.value === 'Altro') {
-            customStoreGroup.style.display = 'block';
-            document.getElementById('customStore').required = true;
-        } else {
-            customStoreGroup.style.display = 'none';
-            document.getElementById('customStore').required = false;
-        }
+      const storeSelect = document.getElementById('storeSelect');
+      const customGroup = document.getElementById('customStoreGroup');
+      const customInput = document.getElementById('customStore');
+      if (!storeSelect) return;
+      if (storeSelect.value === 'Altro') {
+        customGroup.style.display = 'block';
+        if (customInput) customInput.required = true;
+      } else {
+        customGroup.style.display = 'none';
+        if (customInput) customInput.required = false;
+      }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('expenseDate').value = today;
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
 
-        populateStoreSelect();
-        document.getElementById('storeSelect').addEventListener('change', toggleCustomStore);
+    function addProductToCart() {
+      const categoryEl = document.getElementById('productCategory');
+      const nameEl = document.getElementById('productName');
+      const priceEl = document.getElementById('productPrice');
+      const priceKgEl = document.getElementById('productPriceKg');
+      const notesEl = document.getElementById('productNotes');
+
+      if (!categoryEl || !nameEl || !priceEl) return;
+
+      const category = categoryEl.value.trim();
+      const name = nameEl.value.trim();
+      const priceRaw = priceEl.value.trim();
+      const price = parseFloat(priceRaw);
+      const priceKg = priceKgEl && priceKgEl.value ? parseFloat(priceKgEl.value) : null;
+      const notes = notesEl && notesEl.value ? notesEl.value.trim() : '';
+
+      if (!category || !name || !priceRaw || isNaN(price) || price <= 0) {
+        alert('Compila tutti i campi prodotto correttamente.');
+        return;
+      }
+
+      const product = {
+        id: app.generateId(),
+        category,
+        name,
+        price,
+        priceKg,
+        notes
+      };
+
+      app.currentCart.push(product);
+      updateCartDisplay();
+      clearProductForm();
+      nameEl.focus();
+
+      const addBtn = document.getElementById('addProductBtn');
+      if (addBtn) { addBtn.classList.add('pulse'); setTimeout(()=>addBtn.classList.remove('pulse'), 260); }
+    }
+
+    function updateCartDisplay() {
+      const cartSection = document.getElementById('cartSection');
+      const cartBody = document.getElementById('cartBody');
+      const cartTotal = document.getElementById('cartTotal');
+      const saveBtn = document.getElementById('saveExpenseBtn');
+      if (!cartSection || !cartBody || !cartTotal || !saveBtn) return;
+
+      if (!app.currentCart || app.currentCart.length === 0) {
+        cartSection.style.display = 'none';
+        saveBtn.disabled = true;
+        cartBody.innerHTML = '';
+        cartTotal.textContent = app.formatCurrency(0);
+        return;
+      }
+
+      cartSection.style.display = 'block';
+      saveBtn.disabled = false;
+
+      cartBody.innerHTML = app.currentCart.map(p => `
+        <tr>
+          <td>
+            <strong>${escapeHtml(p.name)}</strong>
+            <div style="color: ${'#bfbfc4'}; font-size:0.85rem">${escapeHtml(p.category)}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
+          </td>
+          <td><strong>${app.formatCurrency(p.price)}</strong></td>
+          <td><button type="button" class="remove-btn" onclick="removeFromCart('${p.id}')">🗑️</button></td>
+        </tr>
+      `).join('');
+
+      const total = app.currentCart.reduce((s, it) => s + (parseFloat(it.price) || 0), 0);
+      cartTotal.textContent = app.formatCurrency(total);
+    }
+
+    function clearProductForm() {
+      ['productCategory','productName','productPrice','productPriceKg','productNotes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+    }
+
+    function removeFromCart(id) {
+      app.currentCart = app.currentCart.filter(p => p.id !== id);
+      updateCartDisplay();
+    }
+
+    function clearCart() {
+      if (!app.currentCart || app.currentCart.length === 0) return;
+      if (confirm('Svuotare il carrello?')) {
+        app.currentCart = [];
+        updateCartDisplay();
+      }
+    }
+
+    function saveExpense() {
+      const storeSelect = document.getElementById('storeSelect');
+      const customStore = document.getElementById('customStore');
+      const dateEl = document.getElementById('expenseDate');
+      if (!storeSelect || !dateEl) return;
+
+      const store = (storeSelect.value === 'Altro') ? (customStore ? customStore.value.trim() : '') : storeSelect.value;
+      const date = dateEl.value;
+      if (!store) { alert('Seleziona o inserisci un supermercato.'); return; }
+      if (!date) { alert('Inserisci la data.'); return; }
+      if (!app.currentCart || app.currentCart.length === 0) { alert('Aggiungi almeno un prodotto.'); return; }
+
+      // check future date
+      const today = new Date().toISOString().split('T')[0];
+      if (date > today) { alert('La data non può essere futura'); return; }
+
+      try {
+        app.addExpense(store, date, app.currentCart);
+        // se store non era nella lista, aggiungilo
+        const inList = app.getStores().some(s => s.toLowerCase() === store.toLowerCase());
+        if (!inList && store !== 'Altro') app.addStore(store);
+
+        alert('Spesa salvata con successo');
+        document.getElementById('expenseForm').reset();
+        app.currentCart = [];
+        updateCartDisplay();
+        toggleCustomStore();
+        dateEl.value = today;
+      } catch (e) {
+        console.error(e);
+        alert('Errore salvataggio spesa');
+      }
+    }
+
+    // init page
+    document.addEventListener('DOMContentLoaded', () => {
+      // populate select(s) (app.js farà il lavoro)
+      app.populateAllStoreSelects();
+
+      const dateEl = document.getElementById('expenseDate');
+      if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+
+      document.getElementById('storeSelect')?.addEventListener('change', toggleCustomStore);
+      document.getElementById('addProductBtn')?.addEventListener('click', e => { e.preventDefault(); addProductToCart(); });
+      document.getElementById('clearCartBtn')?.addEventListener('click', e => { e.preventDefault(); clearCart(); });
+      document.getElementById('saveExpenseBtn')?.addEventListener('click', e => { e.preventDefault(); saveExpense(); });
+      document.getElementById('expenseForm')?.addEventListener('submit', e => { e.preventDefault(); saveExpense(); });
+
+      app.currentCart = [];
+      updateCartDisplay();
+      toggleCustomStore();
     });
-    </script>
+  </script>
 </body>
 </html>
