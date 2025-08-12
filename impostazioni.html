@@ -2,13 +2,12 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Impostazioni</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Impostazioni - Gestione Spese</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
   <meta name="theme-color" content="#1e1e1e" />
-  <script defer src="app.js"></script>
-  <script defer src="settings.js"></script>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
@@ -22,37 +21,118 @@
   </header>
 
   <main>
-    <section>
+    <section class="settings-section">
       <h2>Supermercati</h2>
-      <p style="color:#aaa; margin-bottom:12px;">Modifica la lista di supermercati usata nella pagina Aggiungi.</p>
-      <div id="storesList" style="margin-bottom:12px;"></div>
+      <p class="hint">Rimuovi i supermercati che non usi o aggiungine di nuovi. Le modifiche verranno salvate automaticamente.</p>
 
-      <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-        <input id="newStoreInput" type="text" placeholder="Nuovo supermercato" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:#1e1e1e; color:#fff;">
-        <button id="addStoreBtn" class="btn">Aggiungi</button>
-      </div>
-    </section>
+      <div id="storesContainer" class="stores-list" aria-live="polite"></div>
 
-    <section>
-      <h2>Tema</h2>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <label style="color:#ccc;">
-          <input id="themeToggle" type="checkbox"> Modalità Chiara
-        </label>
+      <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+        <input id="newStoreInput" class="store-input" type="text" placeholder="Aggiungi nuovo supermercato" />
+        <button id="addStoreBtn" class="add-store-btn">➕ Aggiungi</button>
       </div>
-    </section>
 
-    <section>
-      <h2>Dati App</h2>
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <button id="resetDataBtn" class="btn btn-danger">Elimina tutte le spese</button>
-        <button id="resetStoresBtn" class="btn btn-secondary">Ripristina supermercati predefiniti</button>
-      </div>
-      <div style="color:#aaa; font-size:0.95rem;">
-        <div>Versione: <strong>1.1.0</strong></div>
-        <div>Autore: <strong>Tu</strong></div>
+      <div>
+        <button id="resetDefaultsBtn" class="btn btn-secondary" style="margin-top:12px;">Ripristina valori predefiniti</button>
+        <button id="saveSettingsBtn" class="save-settings-btn">Salva impostazioni</button>
       </div>
     </section>
   </main>
+
+  <script src="app.js"></script>
+  <script>
+    // impostazioni page logic
+    function renderStoresList() {
+      const container = document.getElementById('storesContainer');
+      container.innerHTML = '';
+      const stores = app.getStores();
+      if (!stores || stores.length === 0) {
+        container.innerHTML = '<div class="no-expenses">Nessun supermercato salvato</div>';
+        return;
+      }
+
+      stores.forEach((storeName, idx) => {
+        const item = document.createElement('div');
+        item.className = 'store-item';
+        item.dataset.store = storeName;
+
+        const handle = document.createElement('div');
+        handle.className = 'store-handle';
+        handle.title = 'Trascina per riordinare (non implementato)';
+        handle.textContent = '≡';
+
+        const input = document.createElement('input');
+        input.className = 'store-input';
+        input.value = storeName;
+        input.readOnly = true;
+
+        const actions = document.createElement('div');
+        actions.className = 'store-actions';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.title = 'Rimuovi';
+        removeBtn.innerHTML = '🗑️';
+        removeBtn.addEventListener('click', () => {
+          if (confirm(`Eliminare "${storeName}" dalla lista dei supermercati?`)) {
+            app.removeStore(storeName);
+            renderStoresList();
+            // aggiorna selects in altre pagine
+            app.populateAllStoreSelects();
+          }
+        });
+
+        actions.appendChild(removeBtn);
+        item.appendChild(handle);
+        item.appendChild(input);
+        item.appendChild(actions);
+        container.appendChild(item);
+      });
+    }
+
+    function addNewStoreFromInput() {
+      const inp = document.getElementById('newStoreInput');
+      const val = inp.value ? inp.value.trim() : '';
+      if (!val) { alert('Inserisci il nome del supermercato'); return; }
+      const ok = app.addStore(val);
+      if (!ok) {
+        alert('Questo supermercato è già presente o nome non valido.');
+        return;
+      }
+      inp.value = '';
+      renderStoresList();
+      app.populateAllStoreSelects();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // render della lista
+      renderStoresList();
+
+      document.getElementById('addStoreBtn')?.addEventListener('click', e => {
+        e.preventDefault();
+        addNewStoreFromInput();
+      });
+
+      document.getElementById('newStoreInput')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); addNewStoreFromInput(); }
+      });
+
+      document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
+        // salvataggio già effettuato automaticamente, ma confermiamo
+        app.saveStores(app.getStores());
+        alert('Impostazioni salvate.');
+      });
+
+      document.getElementById('resetDefaultsBtn')?.addEventListener('click', () => {
+        if (!confirm('Ripristinare la lista dei supermercati ai valori predefiniti?')) return;
+        app.saveStores(app.defaultStores.slice());
+        // forziamo reload della lista in memoria e UI
+        app.stores = app.loadStores();
+        renderStoresList();
+        app.populateAllStoreSelects();
+        alert('Valori predefiniti ripristinati.');
+      });
+    });
+  </script>
 </body>
 </html>
