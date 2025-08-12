@@ -18,6 +18,7 @@
             <a href="index.html">Dashboard</a>
             <a href="aggiungi.html" class="nav-active">Aggiungi</a>
             <a href="archivio.html">Archivio</a>
+            <a href="impostazioni.html">Impostazioni</a>
         </nav>
     </header>
 
@@ -28,20 +29,7 @@
                 
                 <div class="form-group">
                     <label for="storeSelect">Supermercato:</label>
-                    <select id="storeSelect" required>
-                        <option value="">Seleziona supermercato</option>
-                        <option value="Conad">Conad</option>
-                        <option value="Coop">Coop</option>
-                        <option value="Esselunga">Esselunga</option>
-                        <option value="Eurospin">Eurospin</option>
-                        <option value="Carrefour">Carrefour</option>
-                        <option value="Lidl">Lidl</option>
-                        <option value="MD">MD</option>
-                        <option value="Pam">Pam</option>
-                        <option value="Simply">Simply</option>
-                        <option value="Iper">Iper</option>
-                        <option value="Altro">Altro (specificare sotto)</option>
-                    </select>
+                    <select id="storeSelect" required></select>
                 </div>
 
                 <div class="form-group" id="customStoreGroup" style="display: none;">
@@ -138,229 +126,36 @@
         </form>
     </main>
 
-    <!-- Includi la classe condivisa e l'istanza globale -->
     <script src="app.js"></script>
-
-    <!-- Script specifico per la pagina Aggiungi -->
     <script>
-    // Verifica che l'istanza globale app esista
-    if (typeof app === 'undefined') {
-        console.error('ERRORE: oggetto globale "app" non trovato. Controlla che app.js sia incluso e valido.');
+    function populateStoreSelect() {
+        const storeSelect = document.getElementById('storeSelect');
+        if (!storeSelect || !app) return;
+        storeSelect.innerHTML = '<option value="">Seleziona supermercato</option>';
+        app.stores.forEach(store => {
+            storeSelect.innerHTML += `<option value="${store}">${store}</option>`;
+        });
+        storeSelect.innerHTML += '<option value="Altro">Altro (specificare sotto)</option>';
     }
 
-    // Helper: escape HTML
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text || '';
-        return div.innerHTML;
-    }
-
-    // Funzioni UI / logica carrello (usano l'istanza globale `app`)
     function toggleCustomStore() {
         const storeSelect = document.getElementById('storeSelect');
         const customStoreGroup = document.getElementById('customStoreGroup');
-        const customStore = document.getElementById('customStore');
-
-        if (!storeSelect || !customStoreGroup) return;
         if (storeSelect.value === 'Altro') {
             customStoreGroup.style.display = 'block';
-            if (customStore) customStore.required = true;
+            document.getElementById('customStore').required = true;
         } else {
             customStoreGroup.style.display = 'none';
-            if (customStore) customStore.required = false;
+            document.getElementById('customStore').required = false;
         }
     }
 
-    function addProductToCart() {
-        const categoryEl = document.getElementById('productCategory');
-        const nameEl = document.getElementById('productName');
-        const priceEl = document.getElementById('productPrice');
-        const priceKgEl = document.getElementById('productPriceKg');
-        const notesEl = document.getElementById('productNotes');
-
-        if (!categoryEl || !nameEl || !priceEl) {
-            console.error('Elementi form non trovati');
-            return;
-        }
-
-        const category = categoryEl.value.trim();
-        const name = nameEl.value.trim();
-        const priceRaw = priceEl.value.trim();
-        const price = parseFloat(priceRaw);
-        const priceKg = priceKgEl && priceKgEl.value ? parseFloat(priceKgEl.value) : null;
-        const notes = notesEl && notesEl.value ? notesEl.value.trim() : '';
-
-        if (!category) { categoryEl.focus(); return; }
-        if (!name) { nameEl.focus(); return; }
-        if (!priceRaw || isNaN(price) || price <= 0) { priceEl.focus(); return; }
-
-        if (typeof app === 'undefined') {
-            console.error('Oggetto app non disponibile');
-            return;
-        }
-
-        const product = {
-            id: app.generateId(),
-            category,
-            name,
-            price,
-            priceKg,
-            notes
-        };
-
-        app.currentCart.push(product);
-        updateCartDisplay();
-        clearProductForm();
-
-        const addBtn = document.getElementById('addProductBtn');
-        if (addBtn) {
-            addBtn.classList.add('pulse');
-            setTimeout(() => addBtn.classList.remove('pulse'), 300);
-        }
-
-        // focus su nome prodotto per inserimento rapido
-        nameEl.focus();
-    }
-
-    function updateCartDisplay() {
-        const cartSection = document.getElementById('cartSection');
-        const cartBody = document.getElementById('cartBody');
-        const cartTotal = document.getElementById('cartTotal');
-        const saveBtn = document.getElementById('saveExpenseBtn');
-
-        if (!cartSection || !cartBody || !cartTotal || !saveBtn) return;
-
-        if (!app.currentCart || app.currentCart.length === 0) {
-            cartSection.style.display = 'none';
-            saveBtn.disabled = true;
-            saveBtn.style.opacity = '0.5';
-            cartBody.innerHTML = '';
-            cartTotal.textContent = app.formatCurrency(0);
-            return;
-        }
-
-        cartSection.style.display = 'block';
-        saveBtn.disabled = false;
-        saveBtn.style.opacity = '1';
-
-        cartBody.innerHTML = app.currentCart.map(product => `
-            <tr>
-                <td>
-                    <strong>${escapeHtml(product.name)}</strong><br>
-                    <small style="color: #666;">${escapeHtml(product.category)}</small>
-                    ${product.notes ? `<br><small style="color: #888;">📝 ${escapeHtml(product.notes)}</small>` : ''}
-                    ${product.priceKg ? `<br><small style="color: #666;">💰 ${app.formatCurrency(product.priceKg)}/kg</small>` : ''}
-                </td>
-                <td><strong>${app.formatCurrency(product.price)}</strong></td>
-                <td>
-                    <button type="button" class="remove-btn" onclick="removeFromCart('${product.id}')" title="Rimuovi prodotto">
-                        🗑️
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-
-        const total = app.currentCart.reduce((sum, p) => sum + (parseFloat(p.price) || 0), 0);
-        cartTotal.textContent = app.formatCurrency(total);
-    }
-
-    function clearProductForm() {
-        const category = document.getElementById('productCategory');
-        const name = document.getElementById('productName');
-        const price = document.getElementById('productPrice');
-        const priceKg = document.getElementById('productPriceKg');
-        const notes = document.getElementById('productNotes');
-
-        if (category) category.value = '';
-        if (name) name.value = '';
-        if (price) price.value = '';
-        if (priceKg) priceKg.value = '';
-        if (notes) notes.value = '';
-    }
-
-    function removeFromCart(productId) {
-        if (!app.currentCart) return;
-        app.currentCart = app.currentCart.filter(p => p.id !== productId);
-        updateCartDisplay();
-    }
-
-    function clearCart() {
-        if (!app.currentCart || app.currentCart.length === 0) return;
-        if (confirm('🗑️ Sei sicuro di voler svuotare il carrello?')) {
-            app.currentCart = [];
-            updateCartDisplay();
-        }
-    }
-
-    function saveExpense() {
-        const storeSelect = document.getElementById('storeSelect');
-        const customStore = document.getElementById('customStore');
-        const expenseDate = document.getElementById('expenseDate');
-
-        if (!storeSelect || !expenseDate) return;
-
-        const store = storeSelect.value === 'Altro' ? (customStore ? customStore.value.trim() : '') : storeSelect.value;
-        const date = expenseDate.value;
-
-        // validazione base
-        if (!store) { alert('⚠️ Inserisci il supermercato.'); return; }
-        if (!date) { alert('⚠️ Inserisci la data.'); return; }
-        if (!app.currentCart || app.currentCart.length === 0) { alert('⚠️ Aggiungi almeno un prodotto.'); return; }
-
-        // prevenire date future
+    document.addEventListener('DOMContentLoaded', () => {
         const today = new Date().toISOString().split('T')[0];
-        if (date > today) { alert('⚠️ La data non può essere futura.'); return; }
+        document.getElementById('expenseDate').value = today;
 
-        try {
-            app.addExpense(store, date, app.currentCart);
-
-            // feedback non bloccante
-            // preferibile sostituire con toast UI in futuro
-            alert('✅ Spesa salvata con successo!');
-
-            // reset form
-            document.getElementById('expenseForm').reset();
-            app.currentCart = [];
-            updateCartDisplay();
-            toggleCustomStore();
-
-            // reimposta data odierna
-            expenseDate.value = today;
-        } catch (err) {
-            console.error('Errore salvataggio spesa:', err);
-            alert('❌ Errore nel salvataggio. Riprova.');
-        }
-    }
-
-    // Inizializzazione pagina
-    document.addEventListener('DOMContentLoaded', function () {
-        // Imposta data odierna
-        const today = new Date().toISOString().split('T')[0];
-        const dateInput = document.getElementById('expenseDate');
-        if (dateInput) dateInput.value = today;
-
-        // Event listeners
-        const storeSelect = document.getElementById('storeSelect');
-        const addProductBtn = document.getElementById('addProductBtn');
-        const saveExpenseBtn = document.getElementById('saveExpenseBtn');
-        const clearCartBtn = document.getElementById('clearCartBtn');
-        const expenseForm = document.getElementById('expenseForm');
-
-        if (storeSelect) storeSelect.addEventListener('change', toggleCustomStore);
-        if (addProductBtn) addProductBtn.addEventListener('click', function(e) { e.preventDefault(); addProductToCart(); });
-        if (saveExpenseBtn) saveExpenseBtn.addEventListener('click', function(e) { e.preventDefault(); saveExpense(); });
-        if (clearCartBtn) clearCartBtn.addEventListener('click', function(e) { e.preventDefault(); clearCart(); });
-        if (expenseForm) expenseForm.addEventListener('submit', function(e) { e.preventDefault(); saveExpense(); });
-
-        // inizializza carrello vuoto
-        if (app && Array.isArray(app.currentCart)) {
-            app.currentCart = [];
-        } else if (app) {
-            app.currentCart = [];
-        }
-
-        updateCartDisplay();
-        toggleCustomStore();
+        populateStoreSelect();
+        document.getElementById('storeSelect').addEventListener('change', toggleCustomStore);
     });
     </script>
 </body>
