@@ -1,25 +1,26 @@
-// app.js — Gestione spese unificata (expenses + stores)
+// app.js - Gestione spese (versione aggiornata con gestione supermercati)
+
+/*
+  Funzionalità aggiunte:
+  - gestione lista supermercati (localStorage key: "stores")
+  - populateAllStoreSelects() per aggiornare automaticamente tutti i <select class="store-select">
+  - metodi getStores/addStore/removeStore/saveStores/loadStores
+*/
 
 class ExpenseTracker {
   constructor() {
     this.expenses = this.loadExpenses();
-    this.stores = this.loadStores();
     this.currentCart = [];
     this.deleteExpenseId = null;
 
-    // Se non hai stores predefiniti, inizializza con una lista utile
-    if (!this.stores || !this.stores.length) {
-      this.stores = [
-        "Conad", "Coop", "Esselunga", "Eurospin", "Carrefour",
-        "Lidl", "MD", "Pam", "Simply", "Iper"
-      ];
-      this.saveStores();
-    }
+    // Carica lista supermercati (o inizializza con default)
+    this.defaultStores = ["Conad", "Coop", "Esselunga", "Eurospin", "Carrefour", "Lidl", "MD", "Pam", "Simply", "Iper"];
+    this.stores = this.loadStores();
   }
 
-  /* -------------------------
-     Persistenza: expenses
-     ------------------------- */
+  // -------------------------
+  // Expenses
+  // -------------------------
   loadExpenses() {
     try {
       const stored = localStorage.getItem('expenses');
@@ -34,105 +35,23 @@ class ExpenseTracker {
     try {
       localStorage.setItem('expenses', JSON.stringify(this.expenses));
     } catch (e) {
-      console.error('Errore salvataggio expenses su localStorage', e);
+      console.error('Errore salvataggio expenses', e);
     }
   }
 
-  /* -------------------------
-     Persistenza: stores
-     ------------------------- */
-  loadStores() {
-    try {
-      const stored = localStorage.getItem('stores');
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      console.error('Errore parsing stores da localStorage', e);
-      return [];
-    }
-  }
-
-  saveStores() {
-    try {
-      localStorage.setItem('stores', JSON.stringify(this.stores));
-    } catch (e) {
-      console.error('Errore salvataggio stores su localStorage', e);
-    }
-  }
-
-  addStore(name) {
-    const trimmed = (name || '').trim();
-    if (!trimmed) return false;
-    if (!this.stores.includes(trimmed)) {
-      this.stores.push(trimmed);
-      this.stores.sort((a, b) => a.localeCompare(b, 'it'));
-      this.saveStores();
-    }
-    return true;
-  }
-
-  removeStore(name) {
-    const idx = this.stores.indexOf(name);
-    if (idx === -1) return false;
-    this.stores.splice(idx, 1);
-    this.saveStores();
-    return true;
-  }
-
-  setStores(list) {
-    this.stores = Array.isArray(list) ? list.map(s => String(s).trim()).filter(Boolean) : [];
-    this.stores = [...new Set(this.stores)].sort((a, b) => a.localeCompare(b, 'it'));
-    this.saveStores();
-  }
-
-  /* -------------------------
-     Utilità generali
-     ------------------------- */
   generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
-  formatCurrency(amount) {
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount || 0);
-  }
-
-  formatDate(dateString) {
-    return new Intl.DateTimeFormat('it-IT', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(dateString));
-  }
-
-  /* -------------------------
-     CRUD spesa
-     ------------------------- */
   addExpense(store, date, products) {
-    const trimmedStore = (store || '').trim();
-    if (!trimmedStore) throw new Error('Store obbligatorio');
-    if (!date) throw new Error('Date obbligatoria');
-    if (!Array.isArray(products) || products.length === 0) throw new Error('Prodotti richiesti');
-
-    // Calcola totale (assume p.price numeric)
-    const total = products.reduce((sum, p) => sum + (parseFloat(p.price) || 0), 0);
-
     const expense = {
       id: this.generateId(),
-      store: trimmedStore,
+      store,
       date,
-      products: products.map(p => ({
-        id: p.id || this.generateId(),
-        name: p.name || '',
-        category: p.category || 'Altro',
-        price: parseFloat(p.price) || 0,
-        priceKg: p.priceKg != null ? parseFloat(p.priceKg) : null,
-        notes: p.notes || ''
-      })),
-      total,
+      products: [...products],
+      total: products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0),
       createdAt: new Date().toISOString()
     };
-
-    // Se lo store non è presente nell'elenco, aggiungilo
-    if (!this.stores.includes(trimmedStore)) {
-      this.stores.push(trimmedStore);
-      this.stores.sort((a, b) => a.localeCompare(b, 'it'));
-      this.saveStores();
-    }
 
     this.expenses.push(expense);
     this.saveExpenses();
@@ -140,23 +59,14 @@ class ExpenseTracker {
   }
 
   deleteExpense(id) {
-    const before = this.expenses.length;
-    this.expenses = this.expenses.filter(e => e.id !== id);
-    if (this.expenses.length !== before) {
-      this.saveExpenses();
-      return true;
-    }
-    return false;
+    this.expenses = this.expenses.filter(expense => expense.id !== id);
+    this.saveExpenses();
   }
 
-  /* -------------------------
-     Filtri / statistiche
-     ------------------------- */
-  filterByPeriod(period, expenses = this.expenses) {
-    if (!period) return expenses.slice();
-
+  filterByPeriod(period) {
+    if (!period) return this.expenses.slice();
     const now = new Date();
-    const startDate = new Date(now);
+    const startDate = new Date();
 
     switch (period) {
       case 'settimana':
@@ -169,69 +79,180 @@ class ExpenseTracker {
         startDate.setFullYear(now.getFullYear() - 1);
         break;
       default:
-        return expenses.slice();
+        return this.expenses.slice();
     }
 
-    return expenses.filter(exp => new Date(exp.date) >= startDate);
+    return this.expenses.filter(expense => new Date(expense.date) >= startDate);
   }
 
   getStats(expenses = this.expenses) {
     if (!expenses || expenses.length === 0) {
       return {
-        total: 0,
-        count: 0,
-        max: { amount: 0, store: '' },
-        min: { amount: 0, store: '' },
-        avgPerExpense: 0,
-        storeStats: {},
-        categoryStats: {}
+        total: 0, count: 0,
+        max: { amount: 0, store: '' }, min: { amount: 0, store: '' },
+        avgPerExpense: 0, storeStats: {}, categoryStats: {}
       };
     }
 
-    const total = expenses.reduce((s, e) => s + (e.total || 0), 0);
-    const counts = expenses.map(e => e.total || 0);
-    const maxAmount = Math.max(...counts);
-    const minAmount = Math.min(...counts);
-    const maxExpense = expenses.find(e => (e.total || 0) === maxAmount) || { store: '' };
-    const minExpense = expenses.find(e => (e.total || 0) === minAmount) || { store: '' };
+    const total = expenses.reduce((sum, exp) => sum + exp.total, 0);
+    const amounts = expenses.map(exp => exp.total);
+    const maxAmount = Math.max(...amounts);
+    const minAmount = Math.min(...amounts);
+
+    const maxExpense = expenses.find(exp => exp.total === maxAmount) || {};
+    const minExpense = expenses.find(exp => exp.total === minAmount) || {};
 
     const storeStats = {};
     const categoryStats = {};
 
-    expenses.forEach(exp => {
+    expenses.forEach(expense => {
       // store stats
-      const s = exp.store || 'Sconosciuto';
-      if (!storeStats[s]) storeStats[s] = { count: 0, total: 0 };
-      storeStats[s].count++;
-      storeStats[s].total += (exp.total || 0);
+      if (!storeStats[expense.store]) storeStats[expense.store] = { count: 0, total: 0 };
+      storeStats[expense.store].count++;
+      storeStats[expense.store].total += expense.total;
 
-      // category stats (per prodotto)
-      (exp.products || []).forEach(p => {
-        const c = p.category || 'Altro';
-        if (!categoryStats[c]) categoryStats[c] = { count: 0, total: 0 };
-        categoryStats[c].count++;
-        categoryStats[c].total += (parseFloat(p.price) || 0);
+      // category stats
+      (expense.products || []).forEach(product => {
+        if (!categoryStats[product.category]) categoryStats[product.category] = { count: 0, total: 0 };
+        categoryStats[product.category].count++;
+        categoryStats[product.category].total += parseFloat(product.price || 0);
       });
     });
 
     return {
       total,
       count: expenses.length,
-      max: { amount: maxAmount, store: maxExpense.store },
-      min: { amount: minAmount, store: minExpense.store },
+      max: { amount: maxAmount, store: maxExpense.store || '' },
+      min: { amount: minAmount, store: minExpense.store || '' },
       avgPerExpense: total / expenses.length,
       storeStats,
       categoryStats
     };
   }
+
+  formatCurrency(amount) {
+    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount || 0);
+  }
+
+  formatDate(dateString) {
+    try {
+      return new Intl.DateTimeFormat('it-IT', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(dateString));
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  // -------------------------
+  // Stores (supermercati) management
+  // -------------------------
+  loadStores() {
+    try {
+      const raw = localStorage.getItem('stores');
+      if (!raw) {
+        // salva default al primo avvio
+        this.saveStores(this.defaultStores.slice());
+        return this.defaultStores.slice();
+      }
+      const parsed = JSON.parse(raw);
+      // se parsed non valido, resetta a default
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        this.saveStores(this.defaultStores.slice());
+        return this.defaultStores.slice();
+      }
+      return parsed;
+    } catch (e) {
+      console.error('Errore loadStores', e);
+      this.saveStores(this.defaultStores.slice());
+      return this.defaultStores.slice();
+    }
+  }
+
+  saveStores(list) {
+    try {
+      const toSave = Array.isArray(list) ? list : this.stores;
+      localStorage.setItem('stores', JSON.stringify(toSave));
+      // aggiorna istanza se passata lista
+      if (Array.isArray(list)) this.stores = list.slice();
+    } catch (e) {
+      console.error('Errore saveStores', e);
+    }
+  }
+
+  getStores() {
+    // ritorna copia per sicurezza
+    return Array.isArray(this.stores) ? this.stores.slice() : [];
+  }
+
+  addStore(name) {
+    if (!name || typeof name !== 'string') return false;
+    const clean = name.trim();
+    if (!clean) return false;
+    // previeni duplicati case-insensitive
+    const exists = this.stores.some(s => s.toLowerCase() === clean.toLowerCase());
+    if (exists) return false;
+    this.stores.push(clean);
+    this.saveStores(this.stores);
+    // popoliamo i select dopo la modifica
+    this.populateAllStoreSelects();
+    return true;
+  }
+
+  removeStore(name) {
+    if (!name) return false;
+    const before = this.stores.length;
+    this.stores = this.stores.filter(s => s.toLowerCase() !== name.toLowerCase());
+    if (this.stores.length === before) return false;
+    this.saveStores(this.stores);
+    this.populateAllStoreSelects();
+    return true;
+  }
+
+  // Popola tutti i <select class="store-select"> trovati nella pagina corrente
+  populateAllStoreSelects() {
+    try {
+      const selects = document.querySelectorAll('select.store-select');
+      selects.forEach(select => {
+        // keep current value to restore if still present
+        const current = select.value;
+        // clear existing
+        select.innerHTML = '';
+        // blank option
+        const optBlank = document.createElement('option');
+        optBlank.value = '';
+        optBlank.textContent = 'Seleziona supermercato';
+        select.appendChild(optBlank);
+
+        // add stores
+        this.getStores().forEach(storeName => {
+          const opt = document.createElement('option');
+          opt.value = storeName;
+          opt.textContent = storeName;
+          select.appendChild(opt);
+        });
+
+        // add "Altro"
+        const optOther = document.createElement('option');
+        optOther.value = 'Altro';
+        optOther.textContent = 'Altro (specificare sotto)';
+        select.appendChild(optOther);
+
+        // restore value if possible
+        if (current) {
+          const has = Array.from(select.options).some(o => o.value === current);
+          if (has) select.value = current;
+        }
+      });
+    } catch (e) {
+      console.error('populateAllStoreSelects error', e);
+    }
+  }
 }
 
-/* ===== Istanza globale condivisa ===== */
+// istanza globale
 const app = new ExpenseTracker();
 
-/* Compatibility helper: assicurati che venga esportato in ambienti diversi
-   (opzionale, utile se vuoi includere app.js come modulo in futuro)
-*/
-if (typeof window !== 'undefined') {
-  window.app = app;
-}
+// Popola selects all'avvio (se siamo su una pagina che ha select store)
+document.addEventListener('DOMContentLoaded', () => {
+  // populate store selects in the page
+  app.populateAllStoreSelects();
+});
