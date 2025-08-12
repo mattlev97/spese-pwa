@@ -1,278 +1,69 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archivio Spese</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#1e1e1e">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archivio Spese</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>📚 Archivio Spese</h1>
-        <nav>
-            <a href="index.html">Dashboard</a>
-            <a href="aggiungi.html">Aggiungi</a>
-            <a href="archivio.html" class="nav-active">Archivio</a>
-            <a href="impostazioni.html">Impostazioni</a>
-        </nav>
-    </header>
+  <header>
+    <h1>Archivio Spese</h1>
+    <nav>
+      <a href="index.html">Dashboard</a>
+      <a href="aggiungi.html">Aggiungi</a>
+      <a href="archivio.html" class="nav-active">Archivio</a>
+      <a href="impostazioni.html">Impostazioni</a>
+    </nav>
+  </header>
 
-    <main class="archive">
-        <section class="filters">
-            <h2>🔍 Filtri</h2>
-            <div class="filter-grid">
-                <div class="filter-group">
-                    <label for="periodFilter">Periodo:</label>
-                    <select id="periodFilter">
-                        <option value="">Tutti i periodi</option>
-                        <option value="settimana">Ultima settimana</option>
-                        <option value="mese">Ultimo mese</option>
-                        <option value="anno">Ultimo anno</option>
-                    </select>
-                </div>
+  <main>
+    <section>
+      <h2>Tutte le Spese</h2>
+      <div id="expenseList"></div>
+    </section>
+  </main>
 
-                <div class="filter-group">
-                    <label for="storeFilter">Supermercato:</label>
-                    <select id="storeFilter">
-                        <option value="">Tutti i supermercati</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="categoryFilter">Tipologia:</label>
-                    <select id="categoryFilter">
-                        <option value="">Tutte le tipologie</option>
-                        <option value="Carne">🥩 Carne</option>
-                        <option value="Pesce">🐟 Pesce</option>
-                        <option value="Verdura">🥬 Verdura</option>
-                        <option value="Frutta">🍎 Frutta</option>
-                        <option value="Latticini">🧀 Latticini</option>
-                        <option value="Pane">🍞 Pane e Cereali</option>
-                        <option value="Bevande">🥤 Bevande</option>
-                        <option value="Surgelati">🧊 Surgelati</option>
-                        <option value="Dolci">🍰 Dolci</option>
-                        <option value="Pulizia">🧽 Prodotti Pulizia</option>
-                        <option value="Igiene">🧴 Igiene Personale</option>
-                        <option value="Altro">📦 Altro</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <button id="clearFiltersBtn" class="btn btn-secondary">🗑️ Pulisci Filtri</button>
-                </div>
-            </div>
-        </section>
-
-        <section class="archive-stats">
-            <div class="stats-summary">
-                <span id="filteredCount">0 spese trovate</span>
-                <span id="filteredTotal">Totale: €0.00</span>
-            </div>
-        </section>
-
-        <section class="expenses-list">
-            <div id="expensesList" class="expenses-container">
-                <div class="no-expenses" id="noExpenses">
-                    📝 Nessuna spesa trovata con i filtri selezionati
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Modal per conferma eliminazione -->
-    <div id="deleteModal" class="modal">
-        <div class="modal-content">
-            <h3>⚠️ Conferma Eliminazione</h3>
-            <p>Sei sicuro di voler eliminare questa spesa?</p>
-            <div class="modal-actions">
-                <button id="confirmDelete" class="btn btn-danger">Elimina</button>
-                <button id="cancelDelete" class="btn btn-secondary">Annulla</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
+  <script>
     class ExpenseTracker {
-        constructor() {
-            this.expenses = this.loadExpenses();
-            this.stores = this.loadStores();
-            this.deleteExpenseId = null;
+      constructor() {
+        this.expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        this.supermarkets = JSON.parse(localStorage.getItem('supermarkets')) || [
+          "Esselunga", "Coop", "Carrefour"
+        ];
+      }
+
+      getSupermarketName(name) {
+        // Controlla se il supermercato esiste nella lista aggiornata
+        return this.supermarkets.includes(name) ? name : "(Supermercato rimosso)";
+      }
+
+      renderExpenses() {
+        const expenseList = document.getElementById('expenseList');
+        expenseList.innerHTML = '';
+
+        if (this.expenses.length === 0) {
+          expenseList.innerHTML = '<p>Nessuna spesa registrata.</p>';
+          return;
         }
 
-        loadExpenses() {
-            return JSON.parse(localStorage.getItem('expenses')) || [];
-        }
-
-        loadStores() {
-            return JSON.parse(localStorage.getItem('stores')) || [];
-        }
-
-        saveExpenses() {
-            localStorage.setItem('expenses', JSON.stringify(this.expenses));
-        }
-
-        deleteExpense(id) {
-            this.expenses = this.expenses.filter(e => e.id !== id);
-            this.saveExpenses();
-        }
-
-        filterByPeriod(period) {
-            const now = new Date();
-            const startDate = new Date();
-
-            switch (period) {
-                case 'settimana': startDate.setDate(now.getDate() - 7); break;
-                case 'mese': startDate.setMonth(now.getMonth() - 1); break;
-                case 'anno': startDate.setFullYear(now.getFullYear() - 1); break;
-                default: return this.expenses;
-            }
-            return this.expenses.filter(e => new Date(e.date) >= startDate);
-        }
-
-        formatCurrency(amount) {
-            return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount || 0);
-        }
-
-        formatDate(date) {
-            return new Intl.DateTimeFormat('it-IT', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(date));
-        }
-    }
-
-    const app = new ExpenseTracker();
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text || '';
-        return div.innerHTML;
-    }
-
-    function initArchive() {
-        loadStoreFilter();
-        loadExpensesList();
-
-        ['periodFilter', 'storeFilter', 'categoryFilter'].forEach(id => {
-            document.getElementById(id)?.addEventListener('change', loadExpensesList);
-        });
-
-        document.getElementById('clearFiltersBtn')?.addEventListener('click', clearFilters);
-
-        document.getElementById('confirmDelete')?.addEventListener('click', () => {
-            if (app.deleteExpenseId) {
-                app.deleteExpense(app.deleteExpenseId);
-                app.deleteExpenseId = null;
-                loadExpensesList();
-                closeModal();
-                alert('✅ Spesa eliminata');
-            }
-        });
-
-        document.getElementById('cancelDelete')?.addEventListener('click', closeModal);
-
-        document.getElementById('deleteModal')?.addEventListener('click', e => {
-            if (e.target.id === 'deleteModal') closeModal();
-        });
-    }
-
-    function loadStoreFilter() {
-        const storeFilter = document.getElementById('storeFilter');
-        if (!storeFilter) return;
-
-        const combinedStores = new Set([...app.stores, ...app.expenses.map(e => e.store)]);
-        storeFilter.innerHTML = '<option value="">Tutti i supermercati</option>';
-
-        [...combinedStores].sort().forEach(store => {
-            if (store) {
-                const opt = document.createElement('option');
-                opt.value = store;
-                opt.textContent = store;
-                storeFilter.appendChild(opt);
-            }
-        });
-    }
-
-    function loadExpensesList() {
-        const expensesList = document.getElementById('expensesList');
-        const noExpenses = document.getElementById('noExpenses');
-        const filteredCount = document.getElementById('filteredCount');
-        const filteredTotal = document.getElementById('filteredTotal');
-
-        let expenses = [...app.expenses];
-
-        const period = document.getElementById('periodFilter')?.value;
-        if (period) expenses = app.filterByPeriod(period);
-
-        const store = document.getElementById('storeFilter')?.value;
-        if (store) expenses = expenses.filter(e => e.store === store);
-
-        const category = document.getElementById('categoryFilter')?.value;
-        if (category) expenses = expenses.filter(e => e.products.some(p => p.category === category));
-
-        expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        filteredCount.textContent = `${expenses.length} spese trovate`;
-        filteredTotal.textContent = `Totale: ${app.formatCurrency(expenses.reduce((s, e) => s + e.total, 0))}`;
-
-        if (!expenses.length) {
-            expensesList.innerHTML = '';
-            noExpenses.style.display = 'block';
-            return;
-        }
-
-        noExpenses.style.display = 'none';
-        expensesList.innerHTML = expenses.map(e => `
-            <div class="expense-item fade-in">
-                <div class="expense-header">
-                    <div class="expense-info">
-                        <h4>🏪 ${escapeHtml(e.store)}</h4>
-                        <small>📅 ${app.formatDate(e.date)}</small>
-                    </div>
-                    <div class="expense-total">${app.formatCurrency(e.total)}</div>
-                </div>
-                <div class="expense-products">
-                    <h5>🛒 Prodotti (${e.products.length}):</h5>
-                    <div class="product-list">
-                        ${e.products.map(p => `
-                            <div class="product-item">
-                                <div class="product-info">
-                                    <strong>${escapeHtml(p.name)}</strong>
-                                    <div class="category">${escapeHtml(p.category)}</div>
-                                    ${p.notes ? `<div class="category">📝 ${escapeHtml(p.notes)}</div>` : ''}
-                                </div>
-                                <div class="product-price">${app.formatCurrency(p.price)}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                <div class="expense-actions">
-                    <button class="delete-btn" onclick="confirmDeleteExpense('${e.id}')">🗑️ Elimina</button>
-                </div>
+        this.expenses.forEach(exp => {
+          const div = document.createElement('div');
+          div.className = 'recent-item';
+          div.innerHTML = `
+            <div class="recent-info">
+              <strong>${exp.description}</strong><br>
+              <small>${new Date(exp.date).toLocaleDateString('it-IT')} - ${this.getSupermarketName(exp.store)}</small>
             </div>
-        `).join('');
-    }
-
-    function clearFilters() {
-        ['periodFilter', 'storeFilter', 'categoryFilter'].forEach(id => {
-            document.getElementById(id).value = '';
+            <div class="recent-amount">€${exp.amount.toFixed(2)}</div>
+          `;
+          expenseList.appendChild(div);
         });
-        loadExpensesList();
+      }
     }
 
-    function confirmDeleteExpense(id) {
-        app.deleteExpenseId = id;
-        document.getElementById('deleteModal').style.display = 'block';
-    }
-
-    function closeModal() {
-        document.getElementById('deleteModal').style.display = 'none';
-        app.deleteExpenseId = null;
-    }
-
-    document.addEventListener('DOMContentLoaded', initArchive);
-    </script>
+    const tracker = new ExpenseTracker();
+    tracker.renderExpenses();
+  </script>
 </body>
 </html>
