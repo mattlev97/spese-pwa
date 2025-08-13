@@ -20,6 +20,15 @@
   <main>
     <section>
       <h2>Tutte le Spese</h2>
+
+      <!-- Filtri -->
+      <div class="filters" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;">
+        <select id="filterStore" class="store-select"></select>
+        <input type="date" id="filterDate">
+        <input type="text" id="filterProduct" placeholder="Cerca prodotto...">
+      </div>
+
+      <!-- Contenitore spese -->
       <div id="expenseList"></div>
     </section>
   </main>
@@ -27,33 +36,69 @@
   <!-- Importa la logica condivisa -->
   <script src="app.js"></script>
   <script>
-    // Usa SEMPRE la stessa istanza globale "app" creata in app.js
+    document.addEventListener('DOMContentLoaded', () => {
+      app.populateAllStoreSelects();
+      document.getElementById('filterStore').addEventListener('change', renderArchive);
+      document.getElementById('filterDate').addEventListener('input', renderArchive);
+      document.getElementById('filterProduct').addEventListener('input', renderArchive);
+      renderArchive();
+    });
+
     function renderArchive() {
+      const storeFilter = document.getElementById('filterStore').value.trim().toLowerCase();
+      const dateFilter = document.getElementById('filterDate').value;
+      const productFilter = document.getElementById('filterProduct').value.trim().toLowerCase();
+
       const container = document.getElementById('expenseList');
       if (!container) return;
 
-      // ricarica dal localStorage usando i metodi di app, se disponibili
-      const expenses = (typeof app?.loadExpenses === 'function') ? app.loadExpenses() : (app?.expenses || JSON.parse(localStorage.getItem('expenses')) || []);
+      let expenses = app.expenses || [];
+      if (typeof app?.loadExpenses === 'function') {
+        expenses = app.loadExpenses();
+      }
+
+      // Ordina dalla più recente
+      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      // Filtri
+      if (storeFilter) {
+        expenses = expenses.filter(exp => exp.store.toLowerCase() === storeFilter);
+      }
+      if (dateFilter) {
+        expenses = expenses.filter(exp => exp.date.startsWith(dateFilter));
+      }
+      if (productFilter) {
+        expenses = expenses.filter(exp =>
+          exp.products?.some(p => (p.name || '').toLowerCase().includes(productFilter))
+        );
+      }
 
       if (!expenses.length) {
-        container.innerHTML = '<p>Nessuna spesa registrata.</p>';
+        container.innerHTML = '<p>Nessuna spesa trovata.</p>';
         return;
       }
 
-      // ordina dalla più recente
-      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      // costruisci lista
       container.innerHTML = expenses.map(exp => `
-        <div class="recent-item">
+        <div class="recent-item" style="display:flex;justify-content:space-between;align-items:center;">
           <div class="recent-info">
             <strong>🏪 ${escapeHtml(exp.store || '')}</strong><br>
             <small>📅 ${formatDateSafe(exp.date)} • ${exp.products ? exp.products.length : 0} prodotti</small>
           </div>
           <div class="recent-amount">${formatCurrencySafe(exp.total)}</div>
+          <button class="delete-expense" data-id="${exp.id}" style="margin-left:10px;">🗑️</button>
         </div>
         ${renderProducts(exp.products)}
       `).join('');
+
+      // Attiva eliminazione
+      document.querySelectorAll('.delete-expense').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (confirm('Sei sicuro di voler eliminare questa spesa?')) {
+            app.deleteExpense(btn.dataset.id);
+            renderArchive();
+          }
+        });
+      });
     }
 
     function renderProducts(products = []) {
@@ -90,8 +135,6 @@
         return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d);
       } catch { return d.toLocaleDateString('it-IT'); }
     }
-
-    document.addEventListener('DOMContentLoaded', renderArchive);
   </script>
 </body>
 </html>
