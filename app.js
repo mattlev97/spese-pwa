@@ -1,10 +1,10 @@
-// app.js - Gestione spese (versione aggiornata con gestione supermercati)
+// app.js - Gestione spese (versione migliorata con sincronizzazione impostazioni)
 
 /*
-  Funzionalità aggiunte:
-  - gestione lista supermercati (localStorage key: "stores")
-  - populateAllStoreSelects() per aggiornare automaticamente tutti i <select class="store-select">
-  - metodi getStores/addStore/removeStore/saveStores/loadStores
+  Novità:
+  - Aggiornamento live fra schede tramite evento 'storage'
+  - Validazione robusta per i nomi supermercati
+  - Sincronizzazione automatica dei <select.store-select> quando cambia la lista
 */
 
 class ExpenseTracker {
@@ -13,9 +13,22 @@ class ExpenseTracker {
     this.currentCart = [];
     this.deleteExpenseId = null;
 
-    // Carica lista supermercati (o inizializza con default)
-    this.defaultStores = ["Conad", "Coop", "Esselunga", "Eurospin", "Carrefour", "Lidl", "MD", "Pam", "Simply", "Iper"];
+    this.defaultStores = [
+      "Conad", "Coop", "Esselunga", "Eurospin",
+      "Carrefour", "Lidl", "MD", "Pam", "Simply", "Iper"
+    ];
     this.stores = this.loadStores();
+
+    // ascolta modifiche da altre schede
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'stores') {
+        this.stores = this.loadStores();
+        this.populateAllStoreSelects();
+      }
+      if (e.key === 'expenses') {
+        this.expenses = this.loadExpenses();
+      }
+    });
   }
 
   // -------------------------
@@ -86,11 +99,13 @@ class ExpenseTracker {
   }
 
   getStats(expenses = this.expenses) {
-    if (!expenses || expenses.length === 0) {
+    if (!expenses.length) {
       return {
         total: 0, count: 0,
-        max: { amount: 0, store: '' }, min: { amount: 0, store: '' },
-        avgPerExpense: 0, storeStats: {}, categoryStats: {}
+        max: { amount: 0, store: '' },
+        min: { amount: 0, store: '' },
+        avgPerExpense: 0,
+        storeStats: {}, categoryStats: {}
       };
     }
 
@@ -106,12 +121,10 @@ class ExpenseTracker {
     const categoryStats = {};
 
     expenses.forEach(expense => {
-      // store stats
       if (!storeStats[expense.store]) storeStats[expense.store] = { count: 0, total: 0 };
       storeStats[expense.store].count++;
       storeStats[expense.store].total += expense.total;
 
-      // category stats
       (expense.products || []).forEach(product => {
         if (!categoryStats[product.category]) categoryStats[product.category] = { count: 0, total: 0 };
         categoryStats[product.category].count++;
@@ -137,24 +150,22 @@ class ExpenseTracker {
   formatDate(dateString) {
     try {
       return new Intl.DateTimeFormat('it-IT', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(dateString));
-    } catch (e) {
+    } catch {
       return dateString;
     }
   }
 
   // -------------------------
-  // Stores (supermercati) management
+  // Stores management
   // -------------------------
   loadStores() {
     try {
       const raw = localStorage.getItem('stores');
       if (!raw) {
-        // salva default al primo avvio
         this.saveStores(this.defaultStores.slice());
         return this.defaultStores.slice();
       }
       const parsed = JSON.parse(raw);
-      // se parsed non valido, resetta a default
       if (!Array.isArray(parsed) || parsed.length === 0) {
         this.saveStores(this.defaultStores.slice());
         return this.defaultStores.slice();
@@ -169,31 +180,33 @@ class ExpenseTracker {
 
   saveStores(list) {
     try {
-      const toSave = Array.isArray(list) ? list : this.stores;
-      localStorage.setItem('stores', JSON.stringify(toSave));
-      // aggiorna istanza se passata lista
-      if (Array.isArray(list)) this.stores = list.slice();
+      const cleanList = (Array.isArray(list) ? list : this.stores)
+        .map(s => s && s.toString().trim())
+        .filter(s => s)
+        .filter((s, i, arr) => arr.findIndex(x => x.toLowerCase() === s.toLowerCase()) === i);
+
+      localStorage.setItem('stores', JSON.stringify(cleanList));
+      this.stores = cleanList;
+      this.populateAllStoreSelects();
     } catch (e) {
       console.error('Errore saveStores', e);
     }
   }
 
   getStores() {
-    // ritorna copia per sicurezza
-    return Array.isArray(this.stores) ? this.stores.slice() : [];
+    return Array.isArray(this.stores) ? [...this.stores] : [];
   }
 
   addStore(name) {
     if (!name || typeof name !== 'string') return false;
     const clean = name.trim();
     if (!clean) return false;
-    // previeni duplicati case-insensitive
+
     const exists = this.stores.some(s => s.toLowerCase() === clean.toLowerCase());
     if (exists) return false;
+
     this.stores.push(clean);
     this.saveStores(this.stores);
-    // popoliamo i select dopo la modifica
-    this.populateAllStoreSelects();
     return true;
   }
 
@@ -203,26 +216,21 @@ class ExpenseTracker {
     this.stores = this.stores.filter(s => s.toLowerCase() !== name.toLowerCase());
     if (this.stores.length === before) return false;
     this.saveStores(this.stores);
-    this.populateAllStoreSelects();
     return true;
   }
 
-  // Popola tutti i <select class="store-select"> trovati nella pagina corrente
   populateAllStoreSelects() {
     try {
       const selects = document.querySelectorAll('select.store-select');
       selects.forEach(select => {
-        // keep current value to restore if still present
         const current = select.value;
-        // clear existing
         select.innerHTML = '';
-        // blank option
+
         const optBlank = document.createElement('option');
         optBlank.value = '';
         optBlank.textContent = 'Seleziona supermercato';
         select.appendChild(optBlank);
 
-        // add stores
         this.getStores().forEach(storeName => {
           const opt = document.createElement('option');
           opt.value = storeName;
@@ -230,16 +238,13 @@ class ExpenseTracker {
           select.appendChild(opt);
         });
 
-        // add "Altro"
         const optOther = document.createElement('option');
         optOther.value = 'Altro';
         optOther.textContent = 'Altro (specificare sotto)';
         select.appendChild(optOther);
 
-        // restore value if possible
-        if (current) {
-          const has = Array.from(select.options).some(o => o.value === current);
-          if (has) select.value = current;
+        if (current && Array.from(select.options).some(o => o.value === current)) {
+          select.value = current;
         }
       });
     } catch (e) {
@@ -248,11 +253,8 @@ class ExpenseTracker {
   }
 }
 
-// istanza globale
 const app = new ExpenseTracker();
 
-// Popola selects all'avvio (se siamo su una pagina che ha select store)
 document.addEventListener('DOMContentLoaded', () => {
-  // populate store selects in the page
   app.populateAllStoreSelects();
 });
