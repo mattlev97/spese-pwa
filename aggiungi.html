@@ -29,7 +29,6 @@
 
         <div class="form-group">
           <label for="storeSelect">Supermercato:</label>
-          <!-- sarà popolato dinamicamente; class store-select necessario -->
           <select id="storeSelect" class="store-select" required></select>
         </div>
 
@@ -117,8 +116,6 @@
 
   <script src="app.js"></script>
   <script>
-    // page-specific logic: usa l'istanza globale 'app' da app.js
-
     function toggleCustomStore() {
       const storeSelect = document.getElementById('storeSelect');
       const customGroup = document.getElementById('customStoreGroup');
@@ -200,7 +197,7 @@
         <tr>
           <td>
             <strong>${escapeHtml(p.name)}</strong>
-            <div style="color: ${'#bfbfc4'}; font-size:0.85rem">${escapeHtml(p.category)}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
+            <div style="color:#bfbfc4;font-size:0.85rem">${escapeHtml(p.category)}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
           </td>
           <td><strong>${app.formatCurrency(p.price)}</strong></td>
           <td><button type="button" class="remove-btn" onclick="removeFromCart('${p.id}')">🗑️</button></td>
@@ -243,13 +240,11 @@
       if (!date) { alert('Inserisci la data.'); return; }
       if (!app.currentCart || app.currentCart.length === 0) { alert('Aggiungi almeno un prodotto.'); return; }
 
-      // check future date
       const today = new Date().toISOString().split('T')[0];
       if (date > today) { alert('La data non può essere futura'); return; }
 
       try {
         app.addExpense(store, date, app.currentCart);
-        // se store non era nella lista, aggiungilo
         const inList = app.getStores().some(s => s.toLowerCase() === store.toLowerCase());
         if (!inList && store !== 'Altro') app.addStore(store);
 
@@ -265,10 +260,42 @@
       }
     }
 
+    // Fallback per popolamento supermercati se app.populateAllStoreSelects non esiste
+    function populateStoreSelectFallback() {
+      const el = document.getElementById('storeSelect');
+      if (!el) return;
+      el.innerHTML = '';
+      const stores = (typeof app?.getStores === 'function')
+        ? app.getStores()
+        : (JSON.parse(localStorage.getItem('stores')) ||
+           JSON.parse(localStorage.getItem('supermarkets')) ||
+           ["Conad","Coop","Esselunga","Eurospin","Carrefour","Lidl","MD","Pam","Simply","Iper"]);
+      // opzione placeholder
+      const ph = document.createElement('option');
+      ph.value = '';
+      ph.textContent = 'Seleziona supermercato';
+      el.appendChild(ph);
+      // elenco
+      stores.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        el.appendChild(opt);
+      });
+      // Altro
+      const other = document.createElement('option');
+      other.value = 'Altro';
+      other.textContent = 'Altro (specificare sotto)';
+      el.appendChild(other);
+    }
+
     // init page
     document.addEventListener('DOMContentLoaded', () => {
-      // populate select(s) (app.js farà il lavoro)
-      app.populateAllStoreSelects();
+      if (typeof app?.populateAllStoreSelects === 'function') {
+        app.populateAllStoreSelects();
+      } else {
+        populateStoreSelectFallback();
+      }
 
       const dateEl = document.getElementById('expenseDate');
       if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
