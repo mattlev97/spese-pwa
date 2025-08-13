@@ -10,6 +10,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="theme-color" content="#1e1e1e" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Piccoli aggiustamenti locali per il modal scanner */
+    .scanner-instructions { color: var(--text-secondary); margin-bottom:8px; font-size:0.95rem; }
+    #scannerVideo { width:100%; height: auto; border-radius: 10px; background: #000; }
+    .scanner-actions { display:flex; gap:8px; margin-top:10px; justify-content: flex-end; }
+    .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 28px; background: rgba(0,0,0,0.7); color: #fff; padding: 8px 12px; border-radius: 10px; z-index: 2100; font-size: 0.95rem; display:none; }
+  </style>
 </head>
 <body>
   <header>
@@ -29,6 +36,7 @@
 
         <div class="form-group">
           <label for="storeSelect">Supermercato:</label>
+          <!-- sarà popolato dinamicamente; class store-select necessario -->
           <select id="storeSelect" class="store-select" required></select>
         </div>
 
@@ -90,7 +98,11 @@
             <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)" />
           </div>
 
-          <button type="button" id="addProductBtn" class="btn btn-secondary">➕ Aggiungi Prodotto al Carrello</button>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button type="button" id="scanBarcodeBtn" class="btn btn-secondary">📷 Scansiona codice a barre</button>
+            <button type="button" id="addProductBtn" class="btn btn-primary">➕ Aggiungi Prodotto al Carrello</button>
+          </div>
+
         </div>
       </div>
 
@@ -114,8 +126,217 @@
     </form>
   </main>
 
+  <!-- Scanner modal -->
+  <div id="scannerModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <h3>📷 Scansione Codice a Barre</h3>
+      <p class="scanner-instructions">Inquadra il codice a barre con la fotocamera. L'app proverà a recuperare i dati da Open Food Facts.</p>
+      <video id="scannerVideo" autoplay playsinline></video>
+      <div class="scanner-actions">
+        <button id="scannerCancelBtn" class="btn btn-secondary">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- app.js (la tua logica condivisa) -->
   <script src="app.js"></script>
+
+  <!-- ZXing library (UMD build) -->
+  <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+
   <script>
+    // Helper toast
+    function showToast(msg, duration = 2200) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(t._timeout);
+      t._timeout = setTimeout(() => { t.style.display = 'none'; }, duration);
+    }
+
+    // Scanner logic using ZXing BrowserMultiFormatReader
+    let codeReader = null;
+    let currentStreamDeviceId = null;
+
+    async function openScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      modal.style.display = 'block';
+      modal.setAttribute('aria-hidden', 'false');
+
+      // instantiate reader
+      try {
+        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+      } catch (e) {
+        // fall back to global name if different
+        if (window.ZXing && window.ZXing.BrowserMultiFormatReader) {
+          codeReader = new window.ZXing.BrowserMultiFormatReader();
+        } else {
+          console.error('ZXing load error', e);
+          alert('Errore inizializzazione scanner. Controlla la connessione alla libreria.');
+          closeScannerModal();
+          return;
+        }
+      }
+
+      const videoElem = document.getElementById('scannerVideo');
+      // prefer rear camera if available
+      try {
+        const devices = await codeReader.listVideoInputDevices();
+        let chosen = devices.find(d => /back|rear|environment/gi.test(d.label)) || devices[0];
+        currentStreamDeviceId = chosen ? chosen.deviceId : undefined;
+
+        await codeReader.decodeFromVideoDevice(currentStreamDeviceId, videoElem, (result, err) => {
+          if (result) {
+            // found code
+            const code = result.getText ? result.getText() : (result.text || '');
+            handleBarcodeFound(code);
+          }
+          // ignore continuous errors - ZXing handles them
+        });
+      } catch (err) {
+        console.error('Camera/Scanner error', err);
+        alert('Impossibile accedere alla fotocamera. Controlla i permessi o usa l\'inserimento manuale.');
+        closeScannerModal();
+      }
+    }
+
+    async function closeScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      if (codeReader) {
+        try { await codeReader.reset(); } catch (e) { /* ignore */ }
+        codeReader = null;
+      }
+      // stop any tracks on video element
+      const video = document.getElementById('scannerVideo');
+      if (video && video.srcObject) {
+        const tracks = video.srcObject.getTracks();
+        tracks.forEach(t => t.stop());
+        video.srcObject = null;
+      }
+
+      if (modal) {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    // When ZXing finds a barcode
+    let barcodeHandled = false;
+    async function handleBarcodeFound(barcode) {
+      if (!barcode || barcodeHandled) return;
+      barcodeHandled = true; // prevent double handling
+      showToast('Codice rilevato: ' + barcode, 1500);
+
+      // Fetch Open Food Facts
+      try {
+        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(barcode)}.json`);
+        if (!res.ok) throw new Error('Network response not ok');
+        const json = await res.json();
+
+        if (json && json.status === 1 && json.product) {
+          const p = json.product;
+          // fill fields
+          const nameField = document.getElementById('productName');
+          const notesField = document.getElementById('productNotes');
+          const categoryField = document.getElementById('productCategory');
+
+          // product name best-effort
+          const prodName = p.product_name || p.generic_name || p.brands || '';
+          if (nameField && prodName) nameField.value = prodName;
+
+          // add brand as note if available
+          let noteParts = [];
+          if (p.brands) noteParts.push(p.brands);
+          if (p.quantity) noteParts.push(p.quantity);
+          if (p.categories) noteParts.push(p.categories.split(',').slice(0,2).join(' • '));
+          if (notesField && noteParts.length) notesField.value = noteParts.join(' • ');
+
+          // try map first category tag to existing select options (best-effort)
+          if (categoryField && Array.isArray(p.categories_tags) && p.categories_tags.length) {
+            const tag = p.categories_tags[0] || '';
+            // simplify tag to a human label
+            const human = (p.categories || '').split(',')[0] || tag.replace('en:', '').replace(/-/g,' ');
+            // try to find a matching option by substring
+            const opts = Array.from(categoryField.options).map(o => o.value);
+            const found = opts.find(o => human && o && o.toLowerCase().includes(human.toLowerCase()));
+            if (found) categoryField.value = found;
+          }
+
+          showToast('Dati trovati e compilati (verifica prima di aggiungere)', 2200);
+        } else {
+          alert('Prodotto non trovato in Open Food Facts. Inserisci i dettagli manualmente.');
+        }
+      } catch (err) {
+        console.error('OpenFoodFacts fetch error', err);
+        alert('Errore nel recupero dei dati. Controlla la connessione o inserisci manualmente.');
+      } finally {
+        // close scanner after short delay to let user see toast
+        setTimeout(() => {
+          closeScannerModal();
+          barcodeHandled = false;
+        }, 800);
+      }
+    }
+
+    // Fallback manual code prompt (if user wants to input barcode manually)
+    async function manualBarcodePrompt() {
+      const code = prompt('Inserisci manualmente il codice a barre (EAN/UPC):');
+      if (!code) return;
+      // try to use same handler (without camera)
+      barcodeHandled = false;
+      handleBarcodeFound(code);
+    }
+
+    // --- Page logic integration with your existing functions ---
+    // Reuse existing functions already in previous version of this page (you had them).
+    // We'll wire buttons and scanner lifecycle.
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // populate select(s)
+      try { app.populateAllStoreSelects(); } catch(e){ /* ignore if not available */ }
+
+      const dateEl = document.getElementById('expenseDate');
+      if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+
+      document.getElementById('storeSelect')?.addEventListener('change', toggleCustomStore);
+      document.getElementById('addProductBtn')?.addEventListener('click', e => { e.preventDefault(); addProductToCart(); });
+      document.getElementById('clearCartBtn')?.addEventListener('click', e => { e.preventDefault(); clearCart(); });
+      document.getElementById('saveExpenseBtn')?.addEventListener('click', e => { e.preventDefault(); saveExpense(); });
+      document.getElementById('expenseForm')?.addEventListener('submit', e => { e.preventDefault(); saveExpense(); });
+
+      // scanner buttons
+      document.getElementById('scanBarcodeBtn')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        // check camera availability before opening
+        try {
+          // ask for permissions minimally
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          // if works, immediately stop it (we will re-open via ZXing with chosen device)
+          stream.getTracks().forEach(t => t.stop());
+          openScannerModal();
+        } catch (err) {
+          console.warn('Camera permission denied or not available', err);
+          if (confirm('Impossibile aprire la fotocamera. Vuoi inserire manualmente il codice a barre?')) {
+            manualBarcodePrompt();
+          }
+        }
+      });
+
+      document.getElementById('scannerCancelBtn')?.addEventListener('click', () => {
+        closeScannerModal();
+      });
+
+      // initialize cart
+      app.currentCart = app.currentCart || [];
+      updateCartDisplay();
+      toggleCustomStore();
+    });
+
+    // --- The following functions are the same you already have on page (kept for completeness)
+    // If you already have them in a shared script they will be used; duplicates are safe in browsers.
     function toggleCustomStore() {
       const storeSelect = document.getElementById('storeSelect');
       const customGroup = document.getElementById('customStoreGroup');
@@ -197,7 +418,7 @@
         <tr>
           <td>
             <strong>${escapeHtml(p.name)}</strong>
-            <div style="color:#bfbfc4;font-size:0.85rem">${escapeHtml(p.category)}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
+            <div style="color: ${'#bfbfc4'}; font-size:0.85rem">${escapeHtml(p.category)}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
           </td>
           <td><strong>${app.formatCurrency(p.price)}</strong></td>
           <td><button type="button" class="remove-btn" onclick="removeFromCart('${p.id}')">🗑️</button></td>
@@ -240,13 +461,17 @@
       if (!date) { alert('Inserisci la data.'); return; }
       if (!app.currentCart || app.currentCart.length === 0) { alert('Aggiungi almeno un prodotto.'); return; }
 
+      // check future date
       const today = new Date().toISOString().split('T')[0];
       if (date > today) { alert('La data non può essere futura'); return; }
 
       try {
         app.addExpense(store, date, app.currentCart);
-        const inList = app.getStores().some(s => s.toLowerCase() === store.toLowerCase());
-        if (!inList && store !== 'Altro') app.addStore(store);
+        // se store non era nella lista, aggiungilo
+        try {
+          const inList = app.getStores().some(s => s.toLowerCase() === store.toLowerCase());
+          if (!inList && store !== 'Altro') app.addStore(store);
+        } catch(e) { /* ignore */ }
 
         alert('Spesa salvata con successo');
         document.getElementById('expenseForm').reset();
@@ -260,56 +485,6 @@
       }
     }
 
-    // Fallback per popolamento supermercati se app.populateAllStoreSelects non esiste
-    function populateStoreSelectFallback() {
-      const el = document.getElementById('storeSelect');
-      if (!el) return;
-      el.innerHTML = '';
-      const stores = (typeof app?.getStores === 'function')
-        ? app.getStores()
-        : (JSON.parse(localStorage.getItem('stores')) ||
-           JSON.parse(localStorage.getItem('supermarkets')) ||
-           ["Conad","Coop","Esselunga","Eurospin","Carrefour","Lidl","MD","Pam","Simply","Iper"]);
-      // opzione placeholder
-      const ph = document.createElement('option');
-      ph.value = '';
-      ph.textContent = 'Seleziona supermercato';
-      el.appendChild(ph);
-      // elenco
-      stores.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s;
-        el.appendChild(opt);
-      });
-      // Altro
-      const other = document.createElement('option');
-      other.value = 'Altro';
-      other.textContent = 'Altro (specificare sotto)';
-      el.appendChild(other);
-    }
-
-    // init page
-    document.addEventListener('DOMContentLoaded', () => {
-      if (typeof app?.populateAllStoreSelects === 'function') {
-        app.populateAllStoreSelects();
-      } else {
-        populateStoreSelectFallback();
-      }
-
-      const dateEl = document.getElementById('expenseDate');
-      if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
-
-      document.getElementById('storeSelect')?.addEventListener('change', toggleCustomStore);
-      document.getElementById('addProductBtn')?.addEventListener('click', e => { e.preventDefault(); addProductToCart(); });
-      document.getElementById('clearCartBtn')?.addEventListener('click', e => { e.preventDefault(); clearCart(); });
-      document.getElementById('saveExpenseBtn')?.addEventListener('click', e => { e.preventDefault(); saveExpense(); });
-      document.getElementById('expenseForm')?.addEventListener('submit', e => { e.preventDefault(); saveExpense(); });
-
-      app.currentCart = [];
-      updateCartDisplay();
-      toggleCustomStore();
-    });
   </script>
 </body>
 </html>
