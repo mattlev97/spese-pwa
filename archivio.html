@@ -24,46 +24,74 @@
     </section>
   </main>
 
+  <!-- Importa la logica condivisa -->
+  <script src="app.js"></script>
   <script>
-    class ExpenseTracker {
-      constructor() {
-        this.expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-        this.supermarkets = JSON.parse(localStorage.getItem('supermarkets')) || [
-          "Esselunga", "Coop", "Carrefour"
-        ];
+    // Usa SEMPRE la stessa istanza globale "app" creata in app.js
+    function renderArchive() {
+      const container = document.getElementById('expenseList');
+      if (!container) return;
+
+      // ricarica dal localStorage usando i metodi di app, se disponibili
+      const expenses = (typeof app?.loadExpenses === 'function') ? app.loadExpenses() : (app?.expenses || JSON.parse(localStorage.getItem('expenses')) || []);
+
+      if (!expenses.length) {
+        container.innerHTML = '<p>Nessuna spesa registrata.</p>';
+        return;
       }
 
-      getSupermarketName(name) {
-        // Controlla se il supermercato esiste nella lista aggiornata
-        return this.supermarkets.includes(name) ? name : "(Supermercato rimosso)";
-      }
+      // ordina dalla più recente
+      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      renderExpenses() {
-        const expenseList = document.getElementById('expenseList');
-        expenseList.innerHTML = '';
-
-        if (this.expenses.length === 0) {
-          expenseList.innerHTML = '<p>Nessuna spesa registrata.</p>';
-          return;
-        }
-
-        this.expenses.forEach(exp => {
-          const div = document.createElement('div');
-          div.className = 'recent-item';
-          div.innerHTML = `
-            <div class="recent-info">
-              <strong>${exp.description}</strong><br>
-              <small>${new Date(exp.date).toLocaleDateString('it-IT')} - ${this.getSupermarketName(exp.store)}</small>
-            </div>
-            <div class="recent-amount">€${exp.amount.toFixed(2)}</div>
-          `;
-          expenseList.appendChild(div);
-        });
-      }
+      // costruisci lista
+      container.innerHTML = expenses.map(exp => `
+        <div class="recent-item">
+          <div class="recent-info">
+            <strong>🏪 ${escapeHtml(exp.store || '')}</strong><br>
+            <small>📅 ${formatDateSafe(exp.date)} • ${exp.products ? exp.products.length : 0} prodotti</small>
+          </div>
+          <div class="recent-amount">${formatCurrencySafe(exp.total)}</div>
+        </div>
+        ${renderProducts(exp.products)}
+      `).join('');
     }
 
-    const tracker = new ExpenseTracker();
-    tracker.renderExpenses();
+    function renderProducts(products = []) {
+      if (!products.length) return '';
+      const rows = products.map(p => `
+        <div class="product-item" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;">
+          <div>
+            <strong>${escapeHtml(p.name || '')}</strong>
+            <div class="category" style="color:#bfbfc4;font-size:0.85rem">${escapeHtml(p.category || '')}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
+          </div>
+          <div class="product-price">${formatCurrencySafe(p.price)}</div>
+        </div>
+      `).join('');
+      return `<div class="product-list" style="margin:6px 0 16px 0;">${rows}</div>`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    function formatCurrencySafe(amount) {
+      if (typeof app?.formatCurrency === 'function') return app.formatCurrency(amount || 0);
+      try {
+        return new Intl.NumberFormat('it-IT', { style:'currency', currency:'EUR' }).format(amount || 0);
+      } catch { return `€${Number(amount||0).toFixed(2)}`; }
+    }
+
+    function formatDateSafe(dateStr) {
+      if (typeof app?.formatDate === 'function') return app.formatDate(dateStr);
+      const d = dateStr ? new Date(dateStr) : new Date();
+      try {
+        return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d);
+      } catch { return d.toLocaleDateString('it-IT'); }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderArchive);
   </script>
 </body>
 </html>
