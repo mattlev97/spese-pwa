@@ -1,43 +1,47 @@
-// app.js - Gestione spese (versione migliorata con sincronizzazione impostazioni)
-
+// app.js - Gestione spese (versione pulita e con API completa)
 /*
-  Novità:
-  - Aggiornamento live fra schede tramite evento 'storage'
-  - Validazione robusta per i nomi supermercati
-  - Sincronizzazione automatica dei <select.store-select> quando cambia la lista
+  - Chiavi esplicite (expensesKey, storesKey)
+  - Metodi mancanti aggiunti: editStore, clearExpenses, ensureDefaultStores
+  - populateAllStoreSelects aggiornata e robusta
+  - Emissione locale di event "app:stores-changed" per aggiornamenti UI immediati
 */
 
 class ExpenseTracker {
   constructor() {
-    this.expenses = this.loadExpenses();
-    this.currentCart = [];
-    this.deleteExpenseId = null;
+    this.expensesKey = 'expenses';
+    this.storesKey = 'stores';
 
     this.defaultStores = [
       "Conad", "Coop", "Esselunga", "Eurospin",
       "Carrefour", "Lidl", "MD", "Pam", "Simply", "Iper"
     ];
+
+    this.expenses = this.loadExpenses();
+    this.currentCart = [];
     this.stores = this.loadStores();
 
-    // ascolta modifiche da altre schede
+    // ascolta modifiche da altre schede (storage)
     window.addEventListener('storage', (e) => {
-      if (e.key === 'stores') {
+      if (e.key === this.storesKey) {
         this.stores = this.loadStores();
+        // notifica DOM listeners
         this.populateAllStoreSelects();
+        document.dispatchEvent(new CustomEvent('app:stores-changed', { detail: this.stores }));
       }
-      if (e.key === 'expenses') {
+      if (e.key === this.expensesKey) {
         this.expenses = this.loadExpenses();
+        document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: this.expenses }));
       }
     });
   }
 
   // -------------------------
-  // Expenses
+  // Expenses (CRUD)
   // -------------------------
   loadExpenses() {
     try {
-      const stored = localStorage.getItem('expenses');
-      return stored ? JSON.parse(stored) : [];
+      const raw = localStorage.getItem(this.expensesKey);
+      return raw ? JSON.parse(raw) : [];
     } catch (e) {
       console.error('Errore parsing expenses da localStorage', e);
       return [];
@@ -46,14 +50,16 @@ class ExpenseTracker {
 
   saveExpenses() {
     try {
-      localStorage.setItem('expenses', JSON.stringify(this.expenses));
+      localStorage.setItem(this.expensesKey, JSON.stringify(this.expenses));
+      // notify other parts in same page
+      document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: this.expenses }));
     } catch (e) {
       console.error('Errore salvataggio expenses', e);
     }
   }
 
   generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
   }
 
   addExpense(store, date, products) {
@@ -61,8 +67,8 @@ class ExpenseTracker {
       id: this.generateId(),
       store,
       date,
-      products: [...products],
-      total: products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0),
+      products: Array.isArray(products) ? products.map(p => ({ ...p })) : [],
+      total: (products || []).reduce((sum, p) => sum + parseFloat(p.price || 0), 0),
       createdAt: new Date().toISOString()
     };
 
@@ -72,63 +78,71 @@ class ExpenseTracker {
   }
 
   deleteExpense(id) {
+    const before = this.expenses.length;
     this.expenses = this.expenses.filter(expense => expense.id !== id);
+    if (this.expenses.length !== before) this.saveExpenses();
+  }
+
+  clearExpenses() {
+    this.expenses = [];
     this.saveExpenses();
   }
 
+  // filtro per periodo (settimana/mese/anno)
   filterByPeriod(period) {
     if (!period) return this.expenses.slice();
     const now = new Date();
-    const startDate = new Date();
+    const start = new Date();
 
     switch (period) {
       case 'settimana':
-        startDate.setDate(now.getDate() - 7);
+        start.setDate(now.getDate() - 7);
         break;
       case 'mese':
-        startDate.setMonth(now.getMonth() - 1);
+        start.setMonth(now.getMonth() - 1);
         break;
       case 'anno':
-        startDate.setFullYear(now.getFullYear() - 1);
+        start.setFullYear(now.getFullYear() - 1);
         break;
       default:
         return this.expenses.slice();
     }
 
-    return this.expenses.filter(expense => new Date(expense.date) >= startDate);
+    return this.expenses.filter(exp => new Date(exp.date) >= start);
   }
 
   getStats(expenses = this.expenses) {
-    if (!expenses.length) {
+    if (!expenses || expenses.length === 0) {
       return {
         total: 0, count: 0,
         max: { amount: 0, store: '' },
         min: { amount: 0, store: '' },
         avgPerExpense: 0,
-        storeStats: {}, categoryStats: {}
+        storeStats: {},
+        categoryStats: {}
       };
     }
 
-    const total = expenses.reduce((sum, exp) => sum + exp.total, 0);
-    const amounts = expenses.map(exp => exp.total);
+    const total = expenses.reduce((s, e) => s + (parseFloat(e.total) || 0), 0);
+    const amounts = expenses.map(e => e.total || 0);
     const maxAmount = Math.max(...amounts);
     const minAmount = Math.min(...amounts);
-
-    const maxExpense = expenses.find(exp => exp.total === maxAmount) || {};
-    const minExpense = expenses.find(exp => exp.total === minAmount) || {};
+    const maxExpense = expenses.find(e => e.total === maxAmount) || {};
+    const minExpense = expenses.find(e => e.total === minAmount) || {};
 
     const storeStats = {};
     const categoryStats = {};
 
-    expenses.forEach(expense => {
-      if (!storeStats[expense.store]) storeStats[expense.store] = { count: 0, total: 0 };
-      storeStats[expense.store].count++;
-      storeStats[expense.store].total += expense.total;
+    expenses.forEach(exp => {
+      if (!storeStats[exp.store]) storeStats[exp.store] = { count: 0, total: 0 };
+      storeStats[exp.store].count++;
+      storeStats[exp.store].total += parseFloat(exp.total || 0);
 
-      (expense.products || []).forEach(product => {
-        if (!categoryStats[product.category]) categoryStats[product.category] = { count: 0, total: 0 };
-        categoryStats[product.category].count++;
-        categoryStats[product.category].total += parseFloat(product.price || 0);
+      (exp.products || []).forEach(prod => {
+        const cat = prod.category || 'Altro';
+        if (!categoryStats[cat]) categoryStats[cat] = { count: 0, total: 0 };
+        categoryStats[cat].count++;
+        categoryStats[cat].total += parseFloat(prod.price || 0);
       });
     });
 
@@ -144,14 +158,18 @@ class ExpenseTracker {
   }
 
   formatCurrency(amount) {
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount || 0);
+    try {
+      return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount || 0);
+    } catch {
+      return `€${Number(amount || 0).toFixed(2)}`;
+    }
   }
 
   formatDate(dateString) {
     try {
-      return new Intl.DateTimeFormat('it-IT', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(dateString));
+      return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(new Date(dateString));
     } catch {
-      return dateString;
+      return dateString || '';
     }
   }
 
@@ -160,7 +178,7 @@ class ExpenseTracker {
   // -------------------------
   loadStores() {
     try {
-      const raw = localStorage.getItem('stores');
+      const raw = localStorage.getItem(this.storesKey);
       if (!raw) {
         this.saveStores(this.defaultStores.slice());
         return this.defaultStores.slice();
@@ -180,14 +198,17 @@ class ExpenseTracker {
 
   saveStores(list) {
     try {
-      const cleanList = (Array.isArray(list) ? list : this.stores)
+      const incoming = Array.isArray(list) ? list : this.stores || [];
+      const cleanList = incoming
         .map(s => s && s.toString().trim())
-        .filter(s => s)
+        .filter(Boolean)
         .filter((s, i, arr) => arr.findIndex(x => x.toLowerCase() === s.toLowerCase()) === i);
 
-      localStorage.setItem('stores', JSON.stringify(cleanList));
+      localStorage.setItem(this.storesKey, JSON.stringify(cleanList));
       this.stores = cleanList;
+      // update selects in DOM immediately
       this.populateAllStoreSelects();
+      document.dispatchEvent(new CustomEvent('app:stores-changed', { detail: this.stores }));
     } catch (e) {
       console.error('Errore saveStores', e);
     }
@@ -201,10 +222,9 @@ class ExpenseTracker {
     if (!name || typeof name !== 'string') return false;
     const clean = name.trim();
     if (!clean) return false;
-
+    if (!this.stores) this.stores = [];
     const exists = this.stores.some(s => s.toLowerCase() === clean.toLowerCase());
     if (exists) return false;
-
     this.stores.push(clean);
     this.saveStores(this.stores);
     return true;
@@ -219,11 +239,31 @@ class ExpenseTracker {
     return true;
   }
 
+  editStore(oldName, newName) {
+    if (!oldName || !newName) return false;
+    const cleanNew = newName.trim();
+    if (!cleanNew) return false;
+    const idx = this.stores.findIndex(s => s.toLowerCase() === oldName.toLowerCase());
+    if (idx === -1) return false;
+    // prevent duplicates
+    if (this.stores.some((s, i) => i !== idx && s.toLowerCase() === cleanNew.toLowerCase())) return false;
+    this.stores[idx] = cleanNew;
+    this.saveStores(this.stores);
+    return true;
+  }
+
+  ensureDefaultStores() {
+    if (!this.stores || !this.stores.length) {
+      this.saveStores(this.defaultStores.slice());
+    }
+  }
+
+  // populate all select elements with class 'store-select'
   populateAllStoreSelects() {
     try {
       const selects = document.querySelectorAll('select.store-select');
       selects.forEach(select => {
-        const current = select.value;
+        const currentValue = select.value || '';
         select.innerHTML = '';
 
         const optBlank = document.createElement('option');
@@ -243,8 +283,8 @@ class ExpenseTracker {
         optOther.textContent = 'Altro (specificare sotto)';
         select.appendChild(optOther);
 
-        if (current && Array.from(select.options).some(o => o.value === current)) {
-          select.value = current;
+        if (currentValue && Array.from(select.options).some(o => o.value === currentValue)) {
+          select.value = currentValue;
         }
       });
     } catch (e) {
@@ -253,8 +293,10 @@ class ExpenseTracker {
   }
 }
 
+// esponi istanza globale (usata da tutte le pagine)
 const app = new ExpenseTracker();
 
+// quando DOM pronto, popola select esistenti
 document.addEventListener('DOMContentLoaded', () => {
-  app.populateAllStoreSelects();
+  try { app.populateAllStoreSelects(); } catch (e) { /* ignore */ }
 });
