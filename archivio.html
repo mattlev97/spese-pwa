@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Archivio Spese</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
@@ -21,100 +21,38 @@
     <section>
       <h2>Tutte le Spese</h2>
 
-      <!-- Filtri -->
-      <div class="filters" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;">
-        <select id="filterStore" class="store-select"></select>
-        <input type="date" id="filterDate">
-        <input type="text" id="filterProduct" placeholder="Cerca prodotto...">
+      <!-- Filtri con etichette chiare -->
+      <div class="filters" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;align-items:end;">
+        <div style="display:flex;flex-direction:column;min-width:160px;">
+          <label for="filterStore" style="color:var(--text-secondary);font-weight:600;">Supermercato</label>
+          <select id="filterStore" class="store-select" aria-label="Filtra per supermercato"></select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;">
+          <label for="filterDate" style="color:var(--text-secondary);font-weight:600;">Data (giorno)</label>
+          <input type="date" id="filterDate" aria-label="Filtra per data" />
+        </div>
+
+        <div style="flex:1; min-width:180px; display:flex;flex-direction:column;">
+          <label for="filterProduct" style="color:var(--text-secondary);font-weight:600;">Prodotto (nome)</label>
+          <input type="text" id="filterProduct" placeholder="Cerca prodotto..." aria-label="Filtra per prodotto" />
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="applyFiltersBtn" class="btn btn-secondary small-btn" title="Applica filtri">🔎 Applica</button>
+          <button id="clearFiltersBtn" class="btn small-btn" title="Rimuovi filtri">✖ Rimuovi filtri</button>
+        </div>
       </div>
 
       <!-- Contenitore spese -->
-      <div id="expenseList"></div>
+      <div id="expenseList" aria-live="polite"></div>
     </section>
   </main>
 
   <!-- Importa la logica condivisa -->
   <script src="app.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      app.populateAllStoreSelects();
-      document.getElementById('filterStore').addEventListener('change', renderArchive);
-      document.getElementById('filterDate').addEventListener('input', renderArchive);
-      document.getElementById('filterProduct').addEventListener('input', renderArchive);
-      renderArchive();
-    });
-
-    function renderArchive() {
-      const storeFilter = document.getElementById('filterStore').value.trim().toLowerCase();
-      const dateFilter = document.getElementById('filterDate').value;
-      const productFilter = document.getElementById('filterProduct').value.trim().toLowerCase();
-
-      const container = document.getElementById('expenseList');
-      if (!container) return;
-
-      let expenses = app.expenses || [];
-      if (typeof app?.loadExpenses === 'function') {
-        expenses = app.loadExpenses();
-      }
-
-      // Ordina dalla più recente
-      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      // Filtri
-      if (storeFilter) {
-        expenses = expenses.filter(exp => exp.store.toLowerCase() === storeFilter);
-      }
-      if (dateFilter) {
-        expenses = expenses.filter(exp => exp.date.startsWith(dateFilter));
-      }
-      if (productFilter) {
-        expenses = expenses.filter(exp =>
-          exp.products?.some(p => (p.name || '').toLowerCase().includes(productFilter))
-        );
-      }
-
-      if (!expenses.length) {
-        container.innerHTML = '<p>Nessuna spesa trovata.</p>';
-        return;
-      }
-
-      container.innerHTML = expenses.map(exp => `
-        <div class="recent-item" style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="recent-info">
-            <strong>🏪 ${escapeHtml(exp.store || '')}</strong><br>
-            <small>📅 ${formatDateSafe(exp.date)} • ${exp.products ? exp.products.length : 0} prodotti</small>
-          </div>
-          <div class="recent-amount">${formatCurrencySafe(exp.total)}</div>
-          <button class="delete-expense" data-id="${exp.id}" style="margin-left:10px;">🗑️</button>
-        </div>
-        ${renderProducts(exp.products)}
-      `).join('');
-
-      // Attiva eliminazione
-      document.querySelectorAll('.delete-expense').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (confirm('Sei sicuro di voler eliminare questa spesa?')) {
-            app.deleteExpense(btn.dataset.id);
-            renderArchive();
-          }
-        });
-      });
-    }
-
-    function renderProducts(products = []) {
-      if (!products.length) return '';
-      const rows = products.map(p => `
-        <div class="product-item" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;">
-          <div>
-            <strong>${escapeHtml(p.name || '')}</strong>
-            <div class="category" style="color:#bfbfc4;font-size:0.85rem">${escapeHtml(p.category || '')}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
-          </div>
-          <div class="product-price">${formatCurrencySafe(p.price)}</div>
-        </div>
-      `).join('');
-      return `<div class="product-list" style="margin:6px 0 16px 0;">${rows}</div>`;
-    }
-
+    // helper: escape HTML
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text || '';
@@ -135,6 +73,124 @@
         return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d);
       } catch { return d.toLocaleDateString('it-IT'); }
     }
+
+    // render lista spese con filtri
+    function renderArchive() {
+      const storeFilter = (document.getElementById('filterStore').value || '').trim().toLowerCase();
+      const dateFilter = (document.getElementById('filterDate').value || '').trim();
+      const productFilter = (document.getElementById('filterProduct').value || '').trim().toLowerCase();
+
+      const container = document.getElementById('expenseList');
+      if (!container) return;
+
+      // prendi la sorgente più aggiornata
+      let expenses = (typeof app?.loadExpenses === 'function') ? app.loadExpenses() : (app.expenses || []);
+
+      // ordina per data (più recente prima)
+      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      // applica filtri
+      if (storeFilter) {
+        expenses = expenses.filter(exp => (exp.store || '').toLowerCase() === storeFilter);
+      }
+      if (dateFilter) {
+        // confronto su inizio stringa ISO YYYY-MM-DD
+        expenses = expenses.filter(exp => (exp.date || '').startsWith(dateFilter));
+      }
+      if (productFilter) {
+        expenses = expenses.filter(exp => Array.isArray(exp.products) && exp.products.some(p => (p.name || '').toLowerCase().includes(productFilter)));
+      }
+
+      if (!expenses.length) {
+        container.innerHTML = '<div class="no-expenses">Nessuna spesa trovata con i filtri selezionati.</div>';
+        return;
+      }
+
+      // build HTML
+      container.innerHTML = expenses.map(exp => {
+        const productCount = (exp.products || []).length;
+        return `
+          <div style="margin-bottom:8px;">
+            <div class="recent-item" style="display:flex;justify-content:space-between;align-items:center;">
+              <div class="recent-info" style="flex:1;min-width:0;">
+                <strong>🏪 ${escapeHtml(exp.store || '')}</strong><br>
+                <small>📅 ${formatDateSafe(exp.date)} • ${productCount} prodotti</small>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="recent-amount" style="font-weight:700; margin-right:8px;">${formatCurrencySafe(exp.total)}</div>
+                <button class="delete-expense remove-btn" data-id="${exp.id}" title="Elimina spesa">🗑️</button>
+              </div>
+            </div>
+
+            ${renderProducts(exp.products)}
+          </div>
+        `;
+      }).join('');
+      
+      // attacca listener eliminazione dopo render
+      container.querySelectorAll('.delete-expense').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (!confirm('Sei sicuro di voler eliminare questa spesa?')) return;
+          app.deleteExpense(btn.dataset.id);
+          renderArchive();
+        });
+      });
+    }
+
+    function renderProducts(products = []) {
+      if (!products || !products.length) return '';
+      const rows = products.map(p => `
+        <div class="product-item" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+          <div style="min-width:0;">
+            <strong>${escapeHtml(p.name || '')}</strong>
+            <div class="category" style="color:var(--text-secondary);font-size:0.85rem">${escapeHtml(p.category || '')}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
+          </div>
+          <div class="product-price" style="margin-left:12px;">${formatCurrencySafe(p.price)}</div>
+        </div>
+      `).join('');
+      return `<div class="product-list" style="margin:6px 0 12px 0;">${rows}</div>`;
+    }
+
+    // Reset filtri
+    function clearFilters() {
+      const s = document.getElementById('filterStore');
+      const d = document.getElementById('filterDate');
+      const p = document.getElementById('filterProduct');
+      if (s) s.value = '';
+      if (d) d.value = '';
+      if (p) p.value = '';
+      renderArchive();
+    }
+
+    // popolamento store select e wiring events
+    document.addEventListener('DOMContentLoaded', () => {
+      // popola select tramite app (se app caricato)
+      try { app.populateAllStoreSelects(); } catch (e) { /* ignore */ }
+
+      const filterStore = document.getElementById('filterStore');
+      const filterDate = document.getElementById('filterDate');
+      const filterProduct = document.getElementById('filterProduct');
+      const applyBtn = document.getElementById('applyFiltersBtn');
+      const clearBtn = document.getElementById('clearFiltersBtn');
+
+      // eventi di filtro (debounce per input testo)
+      let debounce;
+      filterStore?.addEventListener('change', renderArchive);
+      filterDate?.addEventListener('input', renderArchive);
+      filterProduct?.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(renderArchive, 220); });
+
+      applyBtn?.addEventListener('click', (e) => { e.preventDefault(); renderArchive(); });
+      clearBtn?.addEventListener('click', (e) => { e.preventDefault(); clearFilters(); });
+
+      // reagisci a cambi listato negozi da altre schede
+      document.addEventListener('app:stores-changed', () => {
+        try { app.populateAllStoreSelects(); } catch (e) {}
+      });
+
+      // iniziale render
+      renderArchive();
+    });
   </script>
 </body>
 </html>
