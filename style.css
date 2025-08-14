@@ -5,6 +5,7 @@
    - Aggiunte regole per pagina IMPOSTAZIONI
    - Aggiunte regole scanner overlay/modal
    - AGGIUNTE: nav no-wrap + scrolling orizzontale per mantenere tutte le voci su una riga
+   - AGGIUNTE: filter-status e piccoli stili per pulsanti ricerca
    ========================= */
 
 /* Reset e base styles */
@@ -179,6 +180,12 @@ section h2, section h3 {
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+}
+
+/* piccolo bottone compatto */
+.small-btn {
+  padding: 8px 12px;
+  min-width: auto;
 }
 
 /* Form styles */
@@ -372,11 +379,22 @@ section h2, section h3 {
 }
 
 .device-label { font-size: 0.85rem; color: var(--text-secondary); margin-right: 8px; }
-.small-btn { padding:8px 10px; border-radius:8px; font-size:0.9rem; }
 
 /* Filters (Archivio) */
 .filter-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:12px; align-items:end; }
 .filter-group label { color: var(--text-secondary); }
+
+/* filter status (inline) */
+.filter-status {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+/* special small style for OF search button (to visually group with filters) */
+.btn-secondary + .btn-secondary {
+  margin-left: 6px;
+}
 
 /* No-expenses */
 .no-expenses { text-align:center; color:var(--text-secondary); padding: 28px 6px; }
