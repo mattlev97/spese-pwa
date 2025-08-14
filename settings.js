@@ -1,135 +1,117 @@
 /* settings.js - logica per impostazioni (usa l'istanza globale `app`) */
 
-(function(){
+(function () {
   if (typeof app === 'undefined') {
     console.error('settings.js necessita di app.js caricato prima');
     return;
   }
 
-  // elementi
-  const storesListEl = document.getElementById('storesList');
+  const container = document.getElementById('storesContainer');
   const newStoreInput = document.getElementById('newStoreInput');
   const addStoreBtn = document.getElementById('addStoreBtn');
-  const resetDataBtn = document.getElementById('resetDataBtn');
-  const resetStoresBtn = document.getElementById('resetStoresBtn');
-  const themeToggle = document.getElementById('themeToggle');
+  const resetDefaultsBtn = document.getElementById('resetDefaultsBtn');
+  const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 
-  // render lista supermercati nella pagina impostazioni
-  function renderStores() {
-    if (!storesListEl) return;
+  function renderStoresList() {
+    if (!container) return;
+    container.innerHTML = '';
     const stores = app.getStores() || [];
-    storesListEl.innerHTML = '';
-    if (stores.length === 0) {
-      storesListEl.innerHTML = '<div style="color:#aaa">Nessun supermercato</div>';
+    if (!stores.length) {
+      container.innerHTML = '<div class="no-expenses">Nessun supermercato salvato</div>';
       return;
     }
-    stores.forEach(s => {
-      const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.justifyContent = 'space-between';
-      row.style.gap = '8px';
-      row.style.marginBottom = '8px';
 
-      const name = document.createElement('div');
-      name.textContent = s;
-      name.style.flex = '1';
-      name.style.color = '#fff';
+    stores.forEach(name => {
+      const item = document.createElement('div');
+      item.className = 'store-item';
+      item.dataset.store = name;
 
-      const group = document.createElement('div');
-      group.style.display = 'flex';
-      group.style.gap = '8px';
+      const handle = document.createElement('div');
+      handle.className = 'store-handle';
+      handle.title = 'Trascina per riordinare (non implementato)';
+      handle.textContent = '≡';
+
+      const input = document.createElement('input');
+      input.className = 'store-input';
+      input.value = name;
+      input.readOnly = true;
+
+      const actions = document.createElement('div');
+      actions.className = 'store-actions';
 
       const editBtn = document.createElement('button');
       editBtn.className = 'btn-secondary';
-      editBtn.style.minWidth = '44px';
-      editBtn.textContent = '✏️';
-      editBtn.title = 'Modifica';
-      editBtn.addEventListener('click', () => editStorePrompt(s));
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'btn-danger';
-      delBtn.style.minWidth = '44px';
-      delBtn.textContent = '🗑️';
-      delBtn.title = 'Elimina';
-      delBtn.addEventListener('click', () => {
-        if (confirm(`Eliminare "${s}"?`)) {
-          app.removeStore(s);
-          renderStores();
-          try { populateStoreSelect('storeSelect'); populateStoreFilter(); } catch(e){}
-        }
+      editBtn.title = 'Rinomina';
+      editBtn.innerHTML = '✏️';
+      editBtn.addEventListener('click', () => {
+        const newName = prompt('Nuovo nome supermercato:', name);
+        if (!newName) return;
+        const ok = app.editStore(name, newName.trim());
+        if (!ok) alert('Rinomina fallita (nome duplicato o non valido).');
+        renderStoresList();
       });
 
-      group.appendChild(editBtn);
-      group.appendChild(delBtn);
-      row.appendChild(name);
-      row.appendChild(group);
-      storesListEl.appendChild(row);
-    });
-  }
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-btn';
+      removeBtn.title = 'Rimuovi';
+      removeBtn.innerHTML = '🗑️';
+      removeBtn.addEventListener('click', () => {
+        if (!confirm(`Eliminare "${name}" dalla lista dei supermercati?`)) return;
+        app.removeStore(name);
+        renderStoresList();
+        app.populateAllStoreSelects();
+      });
 
-  function editStorePrompt(oldName) {
-    const newName = prompt('Nuovo nome supermercato:', oldName);
-    if (!newName) return;
-    const ok = app.editStore(oldName, newName.trim());
-    if (!ok) alert('Rinomina fallita (nome duplicato o non valido).');
-    renderStores();
-    try { populateStoreSelect('storeSelect'); populateStoreFilter(); } catch(e){}
+      actions.appendChild(editBtn);
+      actions.appendChild(removeBtn);
+
+      item.appendChild(handle);
+      item.appendChild(input);
+      item.appendChild(actions);
+
+      container.appendChild(item);
+    });
   }
 
   function addStoreFromInput() {
     const val = newStoreInput ? newStoreInput.value.trim() : '';
-    if (!val) { alert('Inserisci un nome valido'); return; }
+    if (!val) { alert('Inserisci il nome del supermercato'); return; }
     const ok = app.addStore(val);
-    if (!ok) { alert('Nome già presente o non valido'); return; }
+    if (!ok) { alert('Questo supermercato è già presente o non valido.'); return; }
     if (newStoreInput) newStoreInput.value = '';
-    renderStores();
-    try { populateStoreSelect('storeSelect'); populateStoreFilter(); } catch(e){}
+    renderStoresList();
+    app.populateAllStoreSelects();
   }
 
-  function resetAllData() {
-    if (!confirm('Eliminare tutte le spese? Operazione irreversibile.')) return;
-    app.clearExpenses();
-    alert('Spese eliminate');
-    try { loadDashboard(); loadExpensesList(); } catch(e){}
+  function resetDefaults() {
+    if (!confirm('Ripristinare la lista ai valori predefiniti?')) return;
+    app.saveStores(app.defaultStores.slice());
+    renderStoresList();
+    app.populateAllStoreSelects();
+    alert('Valori predefiniti ripristinati.');
   }
 
-  function resetStores() {
-    if (!confirm('Ripristinare supermercati predefiniti?')) return;
-    localStorage.removeItem(app.storesKey);
-    app.ensureDefaultStores();
-    renderStores();
-    try { populateStoreSelect('storeSelect'); populateStoreFilter(); } catch(e){}
-  }
-
-  // tema (salvato in localStorage 'theme' = 'dark'|'light')
-  function applyTheme(theme) {
-    if (theme === 'light') {
-      document.body.classList.remove('dark-mode');
-      localStorage.setItem('theme', 'light');
-    } else {
-      document.body.classList.add('dark-mode');
-      localStorage.setItem('theme', 'dark');
-    }
-  }
-
-  // init
   document.addEventListener('DOMContentLoaded', () => {
-    renderStores();
+    renderStoresList();
+
     if (addStoreBtn) addStoreBtn.addEventListener('click', addStoreFromInput);
-    if (newStoreInput) newStoreInput.addEventListener('keydown', (e)=> { if (e.key === 'Enter') addStoreFromInput(); });
+    if (newStoreInput) newStoreInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addStoreFromInput(); } });
 
-    if (resetDataBtn) resetDataBtn.addEventListener('click', resetAllData);
-    if (resetStoresBtn) resetStoresBtn.addEventListener('click', resetStores);
+    if (saveSettingsBtn) {
+      saveSettingsBtn.addEventListener('click', () => {
+        app.saveStores(app.getStores());
+        alert('Impostazioni salvate.');
+      });
+    }
 
-    // theme
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    if (themeToggle) themeToggle.checked = (savedTheme === 'light');
-    applyTheme(savedTheme);
-    if (themeToggle) themeToggle.addEventListener('change', ()=> applyTheme(themeToggle.checked ? 'light' : 'dark'));
+    if (resetDefaultsBtn) {
+      resetDefaultsBtn.addEventListener('click', resetDefaults);
+    }
+
+    // react to external changes (other tabs)
+    document.addEventListener('app:stores-changed', () => {
+      renderStoresList();
+    });
   });
-
-  // Expose render function for storage listener
-  window.renderSettingsStores = renderStores;
 
 })();
