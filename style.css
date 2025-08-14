@@ -5,6 +5,7 @@
    - Aggiunte regole per pagina IMPOSTAZIONI
    - Aggiunte regole scanner overlay/modal
    - AGGIUNTE: nav no-wrap + scrolling orizzontale per mantenere tutte le voci su una riga
+   - MODIFICA: stats-grid 2x2 layout (desktop) con fallback responsive (1 colonna)
    ========================= */
 
 /* Reset e base styles */
@@ -231,13 +232,27 @@ section h2, section h3 {
   color: var(--text-primary);
 }
 
-/* Stats grid */
+/* Stats grid: default responsive behaviour (used elsewhere) */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 14px;
 }
 
+/* Specific 2x2 layout for dashboard cards (desktop/tablet) */
+.stats-grid-2x2 {
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  grid-auto-rows: minmax(90px, auto);
+  gap: 14px;
+}
+
+/* On smaller screens use single column */
+@media (max-width: 640px) {
+  .stats-grid-2x2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* stat card styling kept as before, slightly adjusted amount size */
 .stat-card {
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
   padding: 18px;
@@ -245,6 +260,10 @@ section h2, section h3 {
   text-align: center;
   border: 1px solid var(--border);
   transition: transform .12s ease, box-shadow .12s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .stat-card:hover {
@@ -262,7 +281,7 @@ section h2, section h3 {
 }
 
 .stat-card .amount {
-  font-size: 1.6rem;
+  font-size: 1.45rem; /* leggermente ridotto per adattarsi meglio alla griglia 2x2 */
   font-weight: 700;
   color: var(--text-primary);
   display: block;
