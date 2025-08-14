@@ -22,7 +22,7 @@
       <h2>Tutte le Spese</h2>
 
       <!-- Filtri con etichette chiare -->
-      <div class="filters" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;align-items:end;">
+      <div class="filters" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;align-items:end;">
         <div style="display:flex;flex-direction:column;min-width:160px;">
           <label for="filterStore" style="color:var(--text-secondary);font-weight:600;">Supermercato</label>
           <select id="filterStore" class="store-select" aria-label="Filtra per supermercato"></select>
@@ -40,9 +40,13 @@
 
         <div style="display:flex;gap:8px;align-items:center;">
           <button id="applyFiltersBtn" class="btn btn-secondary small-btn" title="Applica filtri">🔎 Applica</button>
+          <button id="searchOFBtn" class="btn btn-secondary small-btn" title="Cerca manualmente su Open Food Facts">🔎 Cerca OF</button>
           <button id="clearFiltersBtn" class="btn small-btn" title="Rimuovi filtri">✖ Rimuovi filtri</button>
         </div>
       </div>
+
+      <!-- Status filtri / messaggio inline -->
+      <div id="filterStatus" class="filter-status" aria-live="polite" role="status" style="margin-bottom:10px;"></div>
 
       <!-- Contenitore spese -->
       <div id="expenseList" aria-live="polite"></div>
@@ -74,6 +78,18 @@
       } catch { return d.toLocaleDateString('it-IT'); }
     }
 
+    // aggiorna messaggio status filtro (risultati / nessun risultato)
+    function updateFilterStatus(foundCount, totalCount, activeFilters) {
+      const statusEl = document.getElementById('filterStatus');
+      if (!statusEl) return;
+      const filtersText = activeFilters.length ? `Filtri attivi: ${activeFilters.join(', ')}` : 'Nessun filtro attivo';
+      if (foundCount === 0) {
+        statusEl.innerHTML = `<span style="color:var(--text-secondary)">Nessuna spesa trovata. ${filtersText}.</span>`;
+      } else {
+        statusEl.innerHTML = `<strong>${foundCount}</strong> spesa${foundCount>1 ? 'e' : ''} trovata${foundCount>1 ? '' : ''} su <strong>${totalCount}</strong>. ${filtersText}.`;
+      }
+    }
+
     // render lista spese con filtri
     function renderArchive() {
       const storeFilter = (document.getElementById('filterStore').value || '').trim().toLowerCase();
@@ -85,21 +101,29 @@
 
       // prendi la sorgente più aggiornata
       let expenses = (typeof app?.loadExpenses === 'function') ? app.loadExpenses() : (app.expenses || []);
+      const totalCount = expenses.length;
 
       // ordina per data (più recente prima)
       expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
 
       // applica filtri
+      const activeFilters = [];
       if (storeFilter) {
+        activeFilters.push(`Supermercato: ${storeFilter}`);
         expenses = expenses.filter(exp => (exp.store || '').toLowerCase() === storeFilter);
       }
       if (dateFilter) {
+        activeFilters.push(`Data: ${dateFilter}`);
         // confronto su inizio stringa ISO YYYY-MM-DD
         expenses = expenses.filter(exp => (exp.date || '').startsWith(dateFilter));
       }
       if (productFilter) {
+        activeFilters.push(`Prodotto: ${productFilter}`);
         expenses = expenses.filter(exp => Array.isArray(exp.products) && exp.products.some(p => (p.name || '').toLowerCase().includes(productFilter)));
       }
+
+      // aggiorna stato filtro *prima* di render
+      updateFilterStatus(expenses.length, totalCount, activeFilters);
 
       if (!expenses.length) {
         container.innerHTML = '<div class="no-expenses">Nessuna spesa trovata con i filtri selezionati.</div>';
@@ -160,7 +184,24 @@
       if (s) s.value = '';
       if (d) d.value = '';
       if (p) p.value = '';
+      // focalizza sul primo campo per comodità
+      if (p) p.focus();
       renderArchive();
+    }
+
+    // Cerca manuale su Open Food Facts (apre nuova scheda con query)
+    function openSearchOnOpenFoodFacts() {
+      const q = (document.getElementById('filterProduct').value || '').trim();
+      if (!q) {
+        // se non c'è query, chiedi conferma per aprire la home
+        if (confirm('Nessun termine inserito. Aprire la pagina principale di Open Food Facts?')) {
+          window.open('https://world.openfoodfacts.org', '_blank', 'noopener');
+        }
+        return;
+      }
+      // usa l'endpoint di ricerca (pagina web) con query
+      const url = 'https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(q) + '&search_simple=1&action=process';
+      window.open(url, '_blank', 'noopener');
     }
 
     // popolamento store select e wiring events
@@ -173,6 +214,7 @@
       const filterProduct = document.getElementById('filterProduct');
       const applyBtn = document.getElementById('applyFiltersBtn');
       const clearBtn = document.getElementById('clearFiltersBtn');
+      const searchBtn = document.getElementById('searchOFBtn');
 
       // eventi di filtro (debounce per input testo)
       let debounce;
@@ -183,9 +225,24 @@
       applyBtn?.addEventListener('click', (e) => { e.preventDefault(); renderArchive(); });
       clearBtn?.addEventListener('click', (e) => { e.preventDefault(); clearFilters(); });
 
+      searchBtn?.addEventListener('click', (e) => { e.preventDefault(); openSearchOnOpenFoodFacts(); });
+
+      // invio con ENTER nella text input: applica filtri
+      filterProduct?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          renderArchive();
+        }
+      });
+
       // reagisci a cambi listato negozi da altre schede
       document.addEventListener('app:stores-changed', () => {
         try { app.populateAllStoreSelects(); } catch (e) {}
+      });
+
+      // reagisci a cambi delle spese (es: eliminazione da altra scheda)
+      document.addEventListener('app:expenses-changed', () => {
+        renderArchive();
       });
 
       // iniziale render
