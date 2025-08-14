@@ -8,7 +8,7 @@
   "background_color": "#1e1e1e",
   "theme_color": "#1e1e1e",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": "./",
   "lang": "it",
   "dir": "ltr",
   "categories": ["finance", "productivity", "utilities"],
