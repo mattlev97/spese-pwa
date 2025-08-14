@@ -38,9 +38,8 @@
           <input type="text" id="filterProduct" placeholder="Cerca prodotto..." aria-label="Filtra per prodotto" />
         </div>
 
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button id="applyFiltersBtn" class="btn btn-secondary small-btn" title="Applica filtri">🔎 Applica</button>
-          <button id="searchOFBtn" class="btn btn-secondary small-btn" title="Cerca manualmente su Open Food Facts">🔎 Cerca OF</button>
+        <!-- Azioni: solo Rimuovi filtri (ottimizzato nello spazio) -->
+        <div class="filter-actions" style="display:flex;gap:8px;align-items:center;width:240px;max-width:40%;">
           <button id="clearFiltersBtn" class="btn small-btn" title="Rimuovi filtri">✖ Rimuovi filtri</button>
         </div>
       </div>
@@ -86,7 +85,7 @@
       if (foundCount === 0) {
         statusEl.innerHTML = `<span style="color:var(--text-secondary)">Nessuna spesa trovata. ${filtersText}.</span>`;
       } else {
-        statusEl.innerHTML = `<strong>${foundCount}</strong> spesa${foundCount>1 ? 'e' : ''} trovata${foundCount>1 ? '' : ''} su <strong>${totalCount}</strong>. ${filtersText}.`;
+        statusEl.innerHTML = `<strong>${foundCount}</strong> spesa${foundCount>1 ? 'e' : ''} trovata su <strong>${totalCount}</strong>. ${filtersText}.`;
       }
     }
 
@@ -114,7 +113,6 @@
       }
       if (dateFilter) {
         activeFilters.push(`Data: ${dateFilter}`);
-        // confronto su inizio stringa ISO YYYY-MM-DD
         expenses = expenses.filter(exp => (exp.date || '').startsWith(dateFilter));
       }
       if (productFilter) {
@@ -184,24 +182,9 @@
       if (s) s.value = '';
       if (d) d.value = '';
       if (p) p.value = '';
-      // focalizza sul primo campo per comodità
+      // focalizza sul campo prodotto per ripartenza rapida
       if (p) p.focus();
       renderArchive();
-    }
-
-    // Cerca manuale su Open Food Facts (apre nuova scheda con query)
-    function openSearchOnOpenFoodFacts() {
-      const q = (document.getElementById('filterProduct').value || '').trim();
-      if (!q) {
-        // se non c'è query, chiedi conferma per aprire la home
-        if (confirm('Nessun termine inserito. Aprire la pagina principale di Open Food Facts?')) {
-          window.open('https://world.openfoodfacts.org', '_blank', 'noopener');
-        }
-        return;
-      }
-      // usa l'endpoint di ricerca (pagina web) con query
-      const url = 'https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(q) + '&search_simple=1&action=process';
-      window.open(url, '_blank', 'noopener');
     }
 
     // popolamento store select e wiring events
@@ -212,20 +195,16 @@
       const filterStore = document.getElementById('filterStore');
       const filterDate = document.getElementById('filterDate');
       const filterProduct = document.getElementById('filterProduct');
-      const applyBtn = document.getElementById('applyFiltersBtn');
       const clearBtn = document.getElementById('clearFiltersBtn');
-      const searchBtn = document.getElementById('searchOFBtn');
 
       // eventi di filtro (debounce per input testo)
       let debounce;
+      // aggiornamento automatico al change/input
       filterStore?.addEventListener('change', renderArchive);
       filterDate?.addEventListener('input', renderArchive);
       filterProduct?.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(renderArchive, 220); });
 
-      applyBtn?.addEventListener('click', (e) => { e.preventDefault(); renderArchive(); });
       clearBtn?.addEventListener('click', (e) => { e.preventDefault(); clearFilters(); });
-
-      searchBtn?.addEventListener('click', (e) => { e.preventDefault(); openSearchOnOpenFoodFacts(); });
 
       // invio con ENTER nella text input: applica filtri
       filterProduct?.addEventListener('keydown', (e) => {
