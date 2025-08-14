@@ -3,7 +3,7 @@
   "short_name": "Spese",
   "description": "App per la gestione delle spese personali al supermercato",
   "version": "1.0.0",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1e1e1e",
   "theme_color": "#1e1e1e",
