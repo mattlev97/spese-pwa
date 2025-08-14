@@ -30,46 +30,10 @@
   ],
   "icons": [
     {
-      "src": "icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-192.png",
+      "src": "FDE6748E-E787-40BF-B6FD-203C136F8138.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
-    },
-    {
-      "src": "icon-384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any"
     },
     {
       "src": "icon-512.png",
@@ -85,10 +49,10 @@
       "name": "Aggiungi Spesa",
       "short_name": "Aggiungi",
       "description": "Aggiungi una nuova spesa rapidamente",
-      "url": "/aggiungi.html",
+      "url": "./aggiungi.html",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "FDE6748E-E787-40BF-B6FD-203C136F8138.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -98,10 +62,10 @@
       "name": "Archivio",
       "short_name": "Archivio",
       "description": "Visualizza tutte le spese salvate",
-      "url": "/archivio.html",
+      "url": "./archivio.html",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "FDE6748E-E787-40BF-B6FD-203C136F8138.png",
           "sizes": "192x192",
           "type": "image/png"
         }
