@@ -88,6 +88,15 @@ class ExpenseTracker {
     this.saveExpenses();
   }
 
+  // restituisce una copia degli expenses attuali
+  getAllExpenses() {
+    return Array.isArray(this.expenses) ? [...this.expenses] : [];
+  }
+
+  getTotalExpensesCount() {
+    return Array.isArray(this.expenses) ? this.expenses.length : 0;
+  }
+
   // filtro per periodo (settimana/mese/anno)
   filterByPeriod(period) {
     if (!period) return this.expenses.slice();
