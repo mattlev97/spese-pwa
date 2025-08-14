@@ -14,8 +14,12 @@
     /* Piccoli aggiustamenti locali per il modal scanner */
     .scanner-instructions { color: var(--text-secondary); margin-bottom:8px; font-size:0.95rem; }
     #scannerVideo { width:100%; height: auto; border-radius: 10px; background: #000; }
-    .scanner-actions { display:flex; gap:8px; margin-top:10px; justify-content: flex-end; }
+    .scanner-actions { display:flex; gap:8px; margin-top:10px; justify-content: space-between; align-items:center; }
+    .scanner-actions .left { display:flex; gap:8px; align-items:center; }
+    .scanner-actions .right { display:flex; gap:8px; align-items:center; }
     .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 28px; background: rgba(0,0,0,0.7); color: #fff; padding: 8px 12px; border-radius: 10px; z-index: 2100; font-size: 0.95rem; display:none; }
+    .device-label { font-size: 0.85rem; color: var(--text-secondary); }
+    .small-btn { padding:8px 10px; border-radius:8px; font-size:0.9rem; }
   </style>
 </head>
 <body>
@@ -131,9 +135,15 @@
     <div class="modal-content">
       <h3>📷 Scansione Codice a Barre</h3>
       <p class="scanner-instructions">Inquadra il codice a barre con la fotocamera. L'app proverà a recuperare i dati da Open Food Facts.</p>
-      <video id="scannerVideo" autoplay playsinline></video>
+      <video id="scannerVideo" autoplay playsinline muted></video>
       <div class="scanner-actions">
-        <button id="scannerCancelBtn" class="btn btn-secondary">Annulla</button>
+        <div class="left">
+          <div id="deviceLabel" class="device-label" aria-live="polite"></div>
+        </div>
+        <div class="right">
+          <button id="switchCameraBtn" class="btn btn-secondary small-btn">🔁 Cambia Camera</button>
+          <button id="scannerCancelBtn" class="btn btn-secondary">Annulla</button>
+        </div>
       </div>
     </div>
   </div>
@@ -159,12 +169,71 @@
 
     // Scanner logic using ZXing BrowserMultiFormatReader
     let codeReader = null;
-    let currentStreamDeviceId = null;
+    let availableVideoDevices = []; // [{deviceId,label},...]
+    let currentDeviceIndex = -1;
+    let isScannerOpen = false;
+    let barcodeHandled = false;
+
+    // Utility: stop ZXing + any streams
+    async function stopScanner() {
+      if (codeReader) {
+        try { await codeReader.reset(); } catch (e) { /* ignore */ }
+        codeReader = null;
+      }
+      const video = document.getElementById('scannerVideo');
+      if (video) {
+        // if ZXing attached stream via video.srcObject, it will be stopped by reset()
+        if (video.srcObject) {
+          try {
+            const tracks = video.srcObject.getTracks();
+            tracks.forEach(t => t.stop());
+          } catch (e) { /* ignore */ }
+          video.srcObject = null;
+        }
+        try { video.pause(); } catch(e) {}
+      }
+      isScannerOpen = false;
+      barcodeHandled = false;
+      updateDeviceLabel('');
+    }
+
+    function updateDeviceLabel(text) {
+      const lab = document.getElementById('deviceLabel');
+      if (lab) lab.textContent = text || '';
+    }
+
+    // Choose preferred device: try to use environment/rear
+    async function prepareDevicesAndChoosePreferred() {
+      // Ensure permission prompt so labels are available on some browsers
+      try {
+        const tmpStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+        // get deviceId from the acquired track if available
+        const track = tmpStream.getVideoTracks()[0];
+        const settings = track.getSettings();
+        const maybeDeviceId = settings.deviceId;
+        // stop tmp stream
+        tmpStream.getTracks().forEach(t => t.stop());
+        // enumerate devices (labels should be available now)
+      } catch (e) {
+        // permission denied or failed - continue to enumerate devices anyway
+      }
+
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      availableVideoDevices = devices.filter(d => d.kind === 'videoinput').map(d => ({ deviceId: d.deviceId, label: d.label || 'Camera' }));
+      // pick device with label containing back/rear/environment if possible
+      let idx = availableVideoDevices.findIndex(d => /back|rear|environment|posteriore/gi.test(d.label));
+      if (idx === -1) idx = (availableVideoDevices.length > 0 ? 0 : -1);
+      currentDeviceIndex = idx;
+      return currentDeviceIndex;
+    }
 
     async function openScannerModal() {
       const modal = document.getElementById('scannerModal');
       modal.style.display = 'block';
       modal.setAttribute('aria-hidden', 'false');
+
+      isScannerOpen = true;
+      barcodeHandled = false;
 
       // instantiate reader
       try {
@@ -176,55 +245,84 @@
         } else {
           console.error('ZXing load error', e);
           alert('Errore inizializzazione scanner. Controlla la connessione alla libreria.');
-          closeScannerModal();
+          await closeScannerModal();
           return;
         }
       }
 
-      const videoElem = document.getElementById('scannerVideo');
-      // prefer rear camera if available
       try {
-        const devices = await codeReader.listVideoInputDevices();
-        let chosen = devices.find(d => /back|rear|environment/gi.test(d.label)) || devices[0];
-        currentStreamDeviceId = chosen ? chosen.deviceId : undefined;
+        const chosenIndex = await prepareDevicesAndChoosePreferred();
+        if (chosenIndex === -1) {
+          alert('Nessuna videocamera disponibile sul dispositivo.');
+          await closeScannerModal();
+          return;
+        }
 
-        await codeReader.decodeFromVideoDevice(currentStreamDeviceId, videoElem, (result, err) => {
+        // show chosen device label
+        const chosen = availableVideoDevices[chosenIndex];
+        updateDeviceLabel('Camera: ' + (chosen.label || 'Sconosciuta'));
+
+        // start decoding using the chosen device
+        const videoElem = document.getElementById('scannerVideo');
+
+        // decodeFromVideoDevice expects deviceId; it handles getUserMedia internally
+        await codeReader.decodeFromVideoDevice(chosen.deviceId, videoElem, (result, err) => {
           if (result) {
-            // found code
-            const code = result.getText ? result.getText() : (result.text || '');
+            const code = (result.getText ? result.getText() : (result.text || '')).trim();
             handleBarcodeFound(code);
           }
-          // ignore continuous errors - ZXing handles them
+          // ZXing will call this continuously; ignore errors here
         });
       } catch (err) {
         console.error('Camera/Scanner error', err);
-        alert('Impossibile accedere alla fotocamera. Controlla i permessi o usa l\'inserimento manuale.');
-        closeScannerModal();
+        alert('Impossibile avviare lo scanner. Controlla i permessi o riprova.');
+        await closeScannerModal();
       }
     }
 
     async function closeScannerModal() {
       const modal = document.getElementById('scannerModal');
-      if (codeReader) {
-        try { await codeReader.reset(); } catch (e) { /* ignore */ }
-        codeReader = null;
-      }
-      // stop any tracks on video element
-      const video = document.getElementById('scannerVideo');
-      if (video && video.srcObject) {
-        const tracks = video.srcObject.getTracks();
-        tracks.forEach(t => t.stop());
-        video.srcObject = null;
-      }
-
+      try {
+        await stopScanner();
+      } catch (e) { /* ignore */ }
       if (modal) {
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
       }
     }
 
-    // When ZXing finds a barcode
-    let barcodeHandled = false;
+    // Switch camera: cycles through availableVideoDevices
+    async function switchCamera() {
+      if (!isScannerOpen) return;
+      if (!availableVideoDevices || availableVideoDevices.length <= 1) {
+        showToast('Nessun altra camera disponibile', 1600);
+        return;
+      }
+      // stop current reader first
+      try { await stopScanner(); } catch (e) { /* ignore */ }
+
+      currentDeviceIndex = (currentDeviceIndex + 1) % availableVideoDevices.length;
+      const chosen = availableVideoDevices[currentDeviceIndex];
+      updateDeviceLabel('Camera: ' + (chosen.label || 'Sconosciuta'));
+
+      // re-init reader and start decode on new device
+      try {
+        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+        const videoElem = document.getElementById('scannerVideo');
+        await codeReader.decodeFromVideoDevice(chosen.deviceId, videoElem, (result, err) => {
+          if (result) {
+            const code = (result.getText ? result.getText() : (result.text || '')).trim();
+            handleBarcodeFound(code);
+          }
+        });
+      } catch (err) {
+        console.error('Errore switching camera', err);
+        showToast('Errore nel cambiare camera', 1600);
+        // try to close safely
+        await stopScanner();
+      }
+    }
+
     async function handleBarcodeFound(barcode) {
       if (!barcode || barcodeHandled) return;
       barcodeHandled = true; // prevent double handling
@@ -257,9 +355,7 @@
           // try map first category tag to existing select options (best-effort)
           if (categoryField && Array.isArray(p.categories_tags) && p.categories_tags.length) {
             const tag = p.categories_tags[0] || '';
-            // simplify tag to a human label
             const human = (p.categories || '').split(',')[0] || tag.replace('en:', '').replace(/-/g,' ');
-            // try to find a matching option by substring
             const opts = Array.from(categoryField.options).map(o => o.value);
             const found = opts.find(o => human && o && o.toLowerCase().includes(human.toLowerCase()));
             if (found) categoryField.value = found;
@@ -274,8 +370,8 @@
         alert('Errore nel recupero dei dati. Controlla la connessione o inserisci manualmente.');
       } finally {
         // close scanner after short delay to let user see toast
-        setTimeout(() => {
-          closeScannerModal();
+        setTimeout(async () => {
+          await closeScannerModal();
           barcodeHandled = false;
         }, 800);
       }
@@ -285,15 +381,11 @@
     async function manualBarcodePrompt() {
       const code = prompt('Inserisci manualmente il codice a barre (EAN/UPC):');
       if (!code) return;
-      // try to use same handler (without camera)
       barcodeHandled = false;
       handleBarcodeFound(code);
     }
 
     // --- Page logic integration with your existing functions ---
-    // Reuse existing functions already in previous version of this page (you had them).
-    // We'll wire buttons and scanner lifecycle.
-
     document.addEventListener('DOMContentLoaded', () => {
       // populate select(s)
       try { app.populateAllStoreSelects(); } catch(e){ /* ignore if not available */ }
@@ -310,15 +402,11 @@
       // scanner buttons
       document.getElementById('scanBarcodeBtn')?.addEventListener('click', async (e) => {
         e.preventDefault();
-        // check camera availability before opening
+        // attempt to open scanner modal (prepare devices + permission inside)
         try {
-          // ask for permissions minimally
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          // if works, immediately stop it (we will re-open via ZXing with chosen device)
-          stream.getTracks().forEach(t => t.stop());
-          openScannerModal();
+          await openScannerModal();
         } catch (err) {
-          console.warn('Camera permission denied or not available', err);
+          console.warn('Scanner open failed', err);
           if (confirm('Impossibile aprire la fotocamera. Vuoi inserire manualmente il codice a barre?')) {
             manualBarcodePrompt();
           }
@@ -329,14 +417,17 @@
         closeScannerModal();
       });
 
+      document.getElementById('switchCameraBtn')?.addEventListener('click', async () => {
+        await switchCamera();
+      });
+
       // initialize cart
       app.currentCart = app.currentCart || [];
       updateCartDisplay();
       toggleCustomStore();
     });
 
-    // --- The following functions are the same you already have on page (kept for completeness)
-    // If you already have them in a shared script they will be used; duplicates are safe in browsers.
+    // --- The following helper functions are same as prior (kept for completeness) ---
     function toggleCustomStore() {
       const storeSelect = document.getElementById('storeSelect');
       const customGroup = document.getElementById('customStoreGroup');
