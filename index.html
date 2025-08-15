@@ -10,18 +10,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#1e1e1e">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <h1>📊 Gestione Spese</h1>
-        <nav>
-            <a href="index.html" class="nav-active">Dashboard</a>
-            <a href="aggiungi.html">Aggiungi</a>
-            <a href="archivio.html">Archivio</a>
-            <a href="impostazioni.html">Impostazioni</a>
-        </nav>
-    </header>
-
     <main class="dashboard">
         <section class="period-selector">
             <h2>📈 Statistiche</h2>
@@ -32,7 +23,7 @@
             </select>
         </section>
 
-        <!-- GRID 2x2: Totale / Spesa Massima / Spesa Minima / Numero Spese -->
+        <!-- GRID 2x2 -->
         <section class="stats-grid stats-grid-2x2">
             <div class="stat-card">
                 <h3>💰 Totale Spese</h3>
@@ -74,9 +65,28 @@
         </section>
     </main>
 
+    <!-- Barra di navigazione in basso -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item nav-active">
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="aggiungi.html" class="nav-item">
+            <i class="fas fa-plus-circle"></i>
+            <span>Aggiungi</span>
+        </a>
+        <a href="archivio.html" class="nav-item">
+            <i class="fas fa-archive"></i>
+            <span>Archivio</span>
+        </a>
+        <a href="impostazioni.html" class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Impostazioni</span>
+        </a>
+    </nav>
+
     <script src="app.js"></script>
     <script>
-        // Usa l'istanza globale "app" definita in app.js
         function loadDashboard() {
             const period = document.getElementById('periodSelect')?.value || 'mese';
             const filteredExpenses = app.filterByPeriod(period);
@@ -168,12 +178,9 @@
             loadDashboard();
             const periodSelect = document.getElementById('periodSelect');
             if (periodSelect) periodSelect.addEventListener('change', loadDashboard);
-
-            // Aggiorna dashboard se le spese cambiano in un'altra scheda
             document.addEventListener('app:expenses-changed', () => { loadDashboard(); });
         });
 
-        // Registra SW
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW register failed', err));
         }
