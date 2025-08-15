@@ -1,189 +1,212 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Spese - Dashboard</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="FDE6748E-E787-40BF-B6FD-203C136F8138.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#1e1e1e">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestione Spese - Dashboard</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="FDE6748E-E787-40BF-B6FD-203C136F8138.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#1e1e1e">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <main class="dashboard">
-        <section class="period-selector">
-            <h2>📈 Statistiche</h2>
-            <select id="periodSelect">
-                <option value="settimana">Ultima Settimana</option>
-                <option value="mese" selected>Ultimo Mese</option>
-                <option value="anno">Ultimo Anno</option>
-            </select>
-        </section>
-
-        <!-- GRID 2x2 -->
-        <section class="stats-grid stats-grid-2x2">
-            <div class="stat-card">
-                <h3>💰 Totale Spese</h3>
-                <span id="totalAmount" class="amount">€0.00</span>
-            </div>
-            <div class="stat-card">
-                <h3>📈 Spesa Massima</h3>
-                <span id="maxAmount" class="amount">€0.00</span>
-                <small id="maxStore" class="store-info"></small>
-            </div>
-            <div class="stat-card">
-                <h3>📉 Spesa Minima</h3>
-                <span id="minAmount" class="amount">€0.00</span>
-                <small id="minStore" class="store-info"></small>
-            </div>
-            <div class="stat-card">
-                <h3>🛍️ Numero Spese</h3>
-                <span id="totalExpenses" class="amount">0</span>
-            </div>
-        </section>
-
-        <section class="charts-section">
-            <div class="chart-container">
-                <h3>🏪 Supermercati Più Usati</h3>
-                <canvas id="storeChart" width="300" height="300"></canvas>
-                <div id="storeStats" class="stats-list"></div>
-            </div>
-
-            <div class="chart-container">
-                <h3>🛒 Tipologie Prodotti</h3>
-                <canvas id="categoryChart" width="300" height="300"></canvas>
-                <div id="categoryStats" class="stats-list"></div>
-            </div>
-        </section>
-
-        <section class="recent-expenses">
-            <h3>🕐 Ultime Spese</h3>
-            <div id="recentList" class="recent-list"></div>
-        </section>
-    </main>
-
-    <!-- Barra di navigazione in basso -->
-    <nav class="bottom-nav">
-        <a href="index.html" class="nav-item nav-active">
-            <i class="fas fa-chart-line"></i>
-            <span>Dashboard</span>
-        </a>
-        <a href="aggiungi.html" class="nav-item">
-            <i class="fas fa-plus-circle"></i>
-            <span>Aggiungi</span>
-        </a>
-        <a href="archivio.html" class="nav-item">
-            <i class="fas fa-archive"></i>
-            <span>Archivio</span>
-        </a>
-        <a href="impostazioni.html" class="nav-item">
-            <i class="fas fa-cog"></i>
-            <span>Impostazioni</span>
-        </a>
+  <header>
+    <h1>📊 Gestione Spese</h1>
+    <nav class="top-nav" role="navigation" aria-label="Menu principale">
+      <a href="index.html" class="nav-active">Dashboard</a>
+      <a href="aggiungi.html">Aggiungi</a>
+      <a href="archivio.html">Archivio</a>
+      <a href="impostazioni.html">Impostazioni</a>
     </nav>
+  </header>
 
-    <script src="app.js"></script>
-    <script>
-        function loadDashboard() {
-            const period = document.getElementById('periodSelect')?.value || 'mese';
-            const filteredExpenses = app.filterByPeriod(period);
-            const stats = app.getStats(filteredExpenses);
-            updateStatsDisplay(stats);
-            loadCharts(stats);
-            loadRecentExpenses(filteredExpenses);
-        }
+  <main class="dashboard">
+    <section class="period-selector">
+      <h2>📈 Statistiche</h2>
+      <select id="periodSelect">
+        <option value="settimana">Ultima Settimana</option>
+        <option value="mese" selected>Ultimo Mese</option>
+        <option value="anno">Ultimo Anno</option>
+      </select>
+    </section>
 
-        function updateStatsDisplay(stats) {
-            const get = id => document.getElementById(id);
-            if (get('totalAmount')) get('totalAmount').textContent = app.formatCurrency(stats.total);
-            if (get('maxAmount')) get('maxAmount').textContent = app.formatCurrency(stats.max.amount);
-            if (get('minAmount')) get('minAmount').textContent = app.formatCurrency(stats.min.amount);
-            if (get('totalExpenses')) get('totalExpenses').textContent = stats.count;
-            if (get('maxStore')) get('maxStore').textContent = stats.max.store || '';
-            if (get('minStore')) get('minStore').textContent = stats.min.store || '';
-        }
+    <!-- GRID 2x2 -->
+    <section class="stats-grid stats-grid-2x2">
+      <div class="stat-card">
+        <h3>💰 Totale Spese</h3>
+        <span id="totalAmount" class="amount">€0.00</span>
+      </div>
+      <div class="stat-card">
+        <h3>📈 Spesa Massima</h3>
+        <span id="maxAmount" class="amount">€0.00</span>
+        <small id="maxStore" class="store-info"></small>
+      </div>
+      <div class="stat-card">
+        <h3>📉 Spesa Minima</h3>
+        <span id="minAmount" class="amount">€0.00</span>
+        <small id="minStore" class="store-info"></small>
+      </div>
+      <div class="stat-card">
+        <h3>🛍️ Numero Spese</h3>
+        <span id="totalExpenses" class="amount">0</span>
+      </div>
+    </section>
 
-        function drawPieChart(canvasId, data, statsId) {
-            const canvas = document.getElementById(canvasId);
-            const statsDiv = document.getElementById(statsId);
-            if (!canvas || !statsDiv) return;
+    <section class="charts-section">
+      <div class="chart-container">
+        <h3>🏪 Supermercati Più Usati</h3>
+        <canvas id="storeChart" width="300" height="300"></canvas>
+        <div id="storeStats" class="stats-list"></div>
+      </div>
 
-            const ctx = canvas.getContext('2d');
-            const entries = Object.entries(data).sort((a,b)=> b[1].total - a[1].total).slice(0, 6);
-            if (entries.length === 0) {
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                ctx.fillStyle = '#666';
-                ctx.font = '14px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Nessun dato', canvas.width/2, canvas.height/2);
-                statsDiv.innerHTML = '<div style="text-align:center;color:#666">Nessun dato disponibile</div>';
-                return;
-            }
+      <div class="chart-container">
+        <h3>🛒 Tipologie Prodotti</h3>
+        <canvas id="categoryChart" width="300" height="300"></canvas>
+        <div id="categoryStats" class="stats-list"></div>
+      </div>
+    </section>
 
-            const colors = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#607D8B'];
-            const total = entries.reduce((s, [, d]) => s + d.total, 0);
-            let currentAngle = -Math.PI / 2;
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = Math.min(centerX, centerY) - 20;
+    <section class="recent-expenses">
+      <h3>🕐 Ultime Spese</h3>
+      <div id="recentList" class="recent-list"></div>
+    </section>
+  </main>
 
-            entries.forEach(([label, d], idx) => {
-                const slice = (d.total / total) * 2 * Math.PI;
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + slice);
-                ctx.closePath();
-                ctx.fillStyle = colors[idx % colors.length];
-                ctx.fill();
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-                currentAngle += slice;
-            });
+  <!-- Barra di navigazione in basso -->
+  <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
+    <a href="index.html" class="nav-item nav-active">
+      <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
+      <span class="label">Dashboard</span>
+    </a>
+    <a href="aggiungi.html" class="nav-item">
+      <span class="icon-wrap"><i class="fa-solid fa-plus-circle"></i></span>
+      <span class="label">Aggiungi</span>
+    </a>
+    <a href="archivio.html" class="nav-item">
+      <span class="icon-wrap"><i class="fa-solid fa-box-archive"></i></span>
+      <span class="label">Archivio</span>
+    </a>
+    <a href="impostazioni.html" class="nav-item">
+      <span class="icon-wrap"><i class="fa-solid fa-gear"></i></span>
+      <span class="label">Impostazioni</span>
+    </a>
+  </nav>
 
-            statsDiv.innerHTML = entries.map(([label, d], idx) =>
-                `<div><span style="color:${colors[idx % colors.length]}">● ${label}</span> <span>${app.formatCurrency(d.total)}</span></div>`
-            ).join('');
-        }
+  <script src="app.js"></script>
+  <script>
+    function loadDashboard() {
+      const period = document.getElementById('periodSelect')?.value || 'mese';
+      const filteredExpenses = app.filterByPeriod(period);
+      const stats = app.getStats(filteredExpenses);
+      updateStatsDisplay(stats);
+      loadCharts(stats);
+      loadRecentExpenses(filteredExpenses);
+    }
 
-        function loadCharts(stats) {
-            drawPieChart('storeChart', stats.storeStats, 'storeStats');
-            drawPieChart('categoryChart', stats.categoryStats, 'categoryStats');
-        }
+    function updateStatsDisplay(stats) {
+      const get = id => document.getElementById(id);
+      if (get('totalAmount')) get('totalAmount').textContent = app.formatCurrency(stats.total);
+      if (get('maxAmount')) get('maxAmount').textContent = app.formatCurrency(stats.max.amount);
+      if (get('minAmount')) get('minAmount').textContent = app.formatCurrency(stats.min.amount);
+      if (get('totalExpenses')) get('totalExpenses').textContent = stats.count;
+      if (get('maxStore')) get('maxStore').textContent = stats.max.store || '';
+      if (get('minStore')) get('minStore').textContent = stats.min.store || '';
+    }
 
-        function loadRecentExpenses(expenses) {
-            const recentList = document.getElementById('recentList');
-            if (!recentList) return;
-            const recent = (expenses || []).slice(-5).reverse();
-            if (!recent.length) {
-                recentList.innerHTML = '<div class="no-expenses">Nessuna spesa recente</div>';
-                return;
-            }
-            recentList.innerHTML = recent.map(exp => `
-                <div class="recent-item">
-                    <div class="recent-info">
-                        <strong>🏪 ${exp.store}</strong>
-                        <small>📅 ${app.formatDate(exp.date)} • ${exp.products?.length || 0} prodotti</small>
-                    </div>
-                    <div class="recent-amount">${app.formatCurrency(exp.total)}</div>
-                </div>
-            `).join('');
-        }
+    function drawPieChart(canvasId, data, statsId) {
+      const canvas = document.getElementById(canvasId);
+      const statsDiv = document.getElementById(statsId);
+      if (!canvas || !statsDiv) return;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDashboard();
-            const periodSelect = document.getElementById('periodSelect');
-            if (periodSelect) periodSelect.addEventListener('change', loadDashboard);
-            document.addEventListener('app:expenses-changed', () => { loadDashboard(); });
+      const ctx = canvas.getContext('2d');
+      const entries = Object.entries(data).sort((a,b)=> b[1].total - a[1].total).slice(0, 6);
+      if (entries.length === 0) {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#666';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Nessun dato', canvas.width/2, canvas.height/2);
+        statsDiv.innerHTML = '<div style="text-align:center;color:#666">Nessun dato disponibile</div>';
+        return;
+      }
+
+      const colors = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#607D8B'];
+      const total = entries.reduce((s, [, d]) => s + d.total, 0);
+      let currentAngle = -Math.PI / 2;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(centerX, centerY) - 20;
+
+      entries.forEach(([label, d], idx) => {
+        const slice = (d.total / total) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + slice);
+        ctx.closePath();
+        ctx.fillStyle = colors[idx % colors.length];
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        currentAngle += slice;
+      });
+
+      statsDiv.innerHTML = entries.map(([label, d], idx) =>
+        `<div><span style="color:${colors[idx % colors.length]}">● ${label}</span> <span>${app.formatCurrency(d.total)}</span></div>`
+      ).join('');
+    }
+
+    function loadCharts(stats) {
+      drawPieChart('storeChart', stats.storeStats, 'storeStats');
+      drawPieChart('categoryChart', stats.categoryStats, 'categoryStats');
+    }
+
+    function loadRecentExpenses(expenses) {
+      const recentList = document.getElementById('recentList');
+      if (!recentList) return;
+      const recent = (expenses || []).slice(-5).reverse();
+      if (!recent.length) {
+        recentList.innerHTML = '<div class="no-expenses">Nessuna spesa recente</div>';
+        return;
+      }
+      recentList.innerHTML = recent.map(exp => `
+        <div class="recent-item">
+          <div class="recent-info">
+            <strong>🏪 ${exp.store}</strong>
+            <small>📅 ${app.formatDate(exp.date)} • ${exp.products?.length || 0} prodotti</small>
+          </div>
+          <div class="recent-amount">${app.formatCurrency(exp.total)}</div>
+        </div>
+      `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboard();
+      const periodSelect = document.getElementById('periodSelect');
+      if (periodSelect) periodSelect.addEventListener('change', loadDashboard);
+      document.addEventListener('app:expenses-changed', () => { loadDashboard(); });
+
+      // sincronizza bottom nav active
+      (function () {
+        const path = location.pathname.split('/').pop() || 'index.html';
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
+          const href = a.getAttribute('href') || '';
+          a.classList.toggle('nav-active', href.endsWith(path));
         });
+      })();
+    });
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW register failed', err));
-        }
-    </script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW register failed', err));
+    }
+  </script>
 </body>
 </html>
