@@ -4,12 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Archivio Spese</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="" crossorigin="anonymous">
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
     <h1>Archivio Spese</h1>
-    <nav>
+    <nav class="top-nav" role="navigation" aria-label="Menu principale">
       <a href="index.html">Dashboard</a>
       <a href="aggiungi.html">Aggiungi</a>
       <a href="archivio.html" class="nav-active">Archivio</a>
@@ -56,28 +60,10 @@
   <script src="app.js"></script>
   <script>
     // helper: escape HTML
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text || '';
-      return div.innerHTML;
-    }
+    function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text || ''; return div.innerHTML; }
+    function formatCurrencySafe(amount) { if (typeof app?.formatCurrency === 'function') return app.formatCurrency(amount || 0); try { return new Intl.NumberFormat('it-IT', { style:'currency', currency:'EUR' }).format(amount || 0); } catch { return `€${Number(amount||0).toFixed(2)}`; } }
+    function formatDateSafe(dateStr) { if (typeof app?.formatDate === 'function') return app.formatDate(dateStr); const d = dateStr ? new Date(dateStr) : new Date(); try { return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d); } catch { return d.toLocaleDateString('it-IT'); } }
 
-    function formatCurrencySafe(amount) {
-      if (typeof app?.formatCurrency === 'function') return app.formatCurrency(amount || 0);
-      try {
-        return new Intl.NumberFormat('it-IT', { style:'currency', currency:'EUR' }).format(amount || 0);
-      } catch { return `€${Number(amount||0).toFixed(2)}`; }
-    }
-
-    function formatDateSafe(dateStr) {
-      if (typeof app?.formatDate === 'function') return app.formatDate(dateStr);
-      const d = dateStr ? new Date(dateStr) : new Date();
-      try {
-        return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d);
-      } catch { return d.toLocaleDateString('it-IT'); }
-    }
-
-    // aggiorna messaggio status filtro (risultati / nessun risultato)
     function updateFilterStatus(foundCount, totalCount, activeFilters) {
       const statusEl = document.getElementById('filterStatus');
       if (!statusEl) return;
@@ -120,7 +106,6 @@
         expenses = expenses.filter(exp => Array.isArray(exp.products) && exp.products.some(p => (p.name || '').toLowerCase().includes(productFilter)));
       }
 
-      // aggiorna stato filtro *prima* di render
       updateFilterStatus(expenses.length, totalCount, activeFilters);
 
       if (!expenses.length) {
@@ -128,7 +113,6 @@
         return;
       }
 
-      // build HTML
       container.innerHTML = expenses.map(exp => {
         const productCount = (exp.products || []).length;
         return `
@@ -182,51 +166,62 @@
       if (s) s.value = '';
       if (d) d.value = '';
       if (p) p.value = '';
-      // focalizza sul campo prodotto per ripartenza rapida
       if (p) p.focus();
       renderArchive();
     }
 
-    // popolamento store select e wiring events
+    // wiring eventi
     document.addEventListener('DOMContentLoaded', () => {
-      // popola select tramite app (se app caricato)
-      try { app.populateAllStoreSelects(); } catch (e) { /* ignore */ }
-
+      try { app.populateAllStoreSelects(); } catch (e) {}
       const filterStore = document.getElementById('filterStore');
       const filterDate = document.getElementById('filterDate');
       const filterProduct = document.getElementById('filterProduct');
       const clearBtn = document.getElementById('clearFiltersBtn');
 
-      // eventi di filtro (debounce per input testo)
       let debounce;
-      // aggiornamento automatico al change/input
       filterStore?.addEventListener('change', renderArchive);
       filterDate?.addEventListener('input', renderArchive);
       filterProduct?.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(renderArchive, 220); });
 
       clearBtn?.addEventListener('click', (e) => { e.preventDefault(); clearFilters(); });
 
-      // invio con ENTER nella text input: applica filtri
-      filterProduct?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          renderArchive();
-        }
-      });
+      filterProduct?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); renderArchive(); } });
 
-      // reagisci a cambi listato negozi da altre schede
-      document.addEventListener('app:stores-changed', () => {
-        try { app.populateAllStoreSelects(); } catch (e) {}
-      });
+      document.addEventListener('app:stores-changed', () => { try { app.populateAllStoreSelects(); } catch(e) {} });
+      document.addEventListener('app:expenses-changed', () => { renderArchive(); });
 
-      // reagisci a cambi delle spese (es: eliminazione da altra scheda)
-      document.addEventListener('app:expenses-changed', () => {
-        renderArchive();
-      });
-
-      // iniziale render
       renderArchive();
     });
+  </script>
+
+  <!-- bottom navigation -->
+  <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
+    <a class="nav-item" href="index.html" aria-label="Dashboard">
+      <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
+      <span class="label">Dashboard</span>
+    </a>
+    <a class="nav-item" href="aggiungi.html" aria-label="Aggiungi">
+      <span class="icon-wrap"><i class="fa-solid fa-plus-circle"></i></span>
+      <span class="label">Aggiungi</span>
+    </a>
+    <a class="nav-item nav-active" href="archivio.html" aria-label="Archivio">
+      <span class="icon-wrap"><i class="fa-solid fa-box-archive"></i></span>
+      <span class="label">Archivio</span>
+    </a>
+    <a class="nav-item" href="impostazioni.html" aria-label="Impostazioni">
+      <span class="icon-wrap"><i class="fa-solid fa-gear"></i></span>
+      <span class="label">Impostazioni</span>
+    </a>
+  </nav>
+
+  <script>
+    (function () {
+      const path = location.pathname.split('/').pop() || 'index.html';
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
+        const href = a.getAttribute('href') || '';
+        if (href.endsWith(path)) a.classList.add('nav-active'); else a.classList.remove('nav-active');
+      });
+    })();
   </script>
 </body>
 </html>
