@@ -1,5 +1,5 @@
 /* =========================
-   style.css (VERSIONE AGGIORNATA)
+   style.css (VERSIONE AGGIORNATA CON CORREZIONE BOTTOM NAV)
    - 2x2 grid per dashboard compatibile con iPhone moderni
    - nav no-wrap + scrolling orizzontale
    - bottom navigation (mobile-first friendly) usando Font Awesome
@@ -38,8 +38,7 @@ body {
   color: var(--text-primary);
   background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
   min-height: 100vh;
-  /* spazio per la bottom navigation */
-  padding-bottom: calc(var(--bottom-nav-height) + 12px);
+  /* rimosso padding-bottom da body per evitare duplicazioni */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -245,7 +244,16 @@ nav.top-nav a.nav-active {
 }
 
 /* Layout principale */
-main { max-width: 500px; margin: 0 auto; padding: 20px; }
+main {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  /* ==============================
+     Spazio per la bottom navigation fissa in basso
+     per evitare che i contenuti siano coperti
+  ================================ */
+  padding-bottom: calc(var(--bottom-nav-height) + 12px);
+}
 
 /* Sezioni (card) */
 section {
