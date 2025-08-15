@@ -2,6 +2,7 @@
    style.css (VERSIONE AGGIORNATA)
    - 2x2 grid per dashboard compatibile con iPhone moderni
    - nav no-wrap + scrolling orizzontale
+   - bottom navigation (mobile-first friendly) usando Font Awesome
    - regole scanner/modal/impostazioni mantenute
    ========================= */
 
@@ -18,6 +19,13 @@
   --danger: #ff3b30;
   --border: rgba(255,255,255,0.04);
   --radius: 12px;
+
+  /* bottom nav sizes */
+  --bottom-nav-height: 70px;
+  --bottom-nav-pill-bg: rgba(255,255,255,0.06);
+  --bottom-nav-bg: var(--panel);
+  --bottom-nav-text-inactive: var(--text-secondary);
+  --bottom-nav-text-active: var(--text-primary);
 }
 
 /* core reset */
@@ -30,11 +38,12 @@ body {
   color: var(--text-primary);
   background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
   min-height: 100vh;
-  padding-bottom: 20px;
+  /* spazio per la bottom navigation */
+  padding-bottom: calc(var(--bottom-nav-height) + 12px);
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Header e navigazione */
+/* Header e navigazione (top) */
 header {
   background: var(--panel);
   color: var(--text-primary);
@@ -54,8 +63,8 @@ header h1 {
   color: var(--text-primary);
 }
 
-/* NAV */
-nav {
+/* TOP NAV (kept for large screens) */
+nav.top-nav {
   display: flex;
   justify-content: center;
   gap: 10px;
@@ -67,13 +76,13 @@ nav {
   padding-bottom: 6px;
 }
 
-/* Styling per scrollbar orizzontale */
-nav::-webkit-scrollbar { height: 7px; }
-nav::-webkit-scrollbar-track { background: transparent; }
-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.04); border-radius: 10px; }
-nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.06); }
+/* Styling per scrollbar orizzontale (top nav) */
+nav.top-nav::-webkit-scrollbar { height: 7px; }
+nav.top-nav::-webkit-scrollbar-track { background: transparent; }
+nav.top-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.04); border-radius: 10px; }
+nav.top-nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.06); }
 
-nav a {
+nav.top-nav a {
   color: var(--text-secondary);
   text-decoration: none;
   padding: 8px 16px;
@@ -86,18 +95,159 @@ nav a {
   white-space: nowrap;
 }
 
-nav a:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+nav.top-nav a:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
 
-nav a.nav-active {
+nav.top-nav a.nav-active {
   color: var(--text-primary);
   background: rgba(255,255,255,0.04);
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
+/* ===== BOTTOM NAVIGATION =====
+   - usa markup: <nav class="bottom-nav"> <a class="nav-item nav-active" href="..."><span class="icon-wrap"><i class="fa fa-chart-pie"></i></span><span class="label">Dashboard</span></a> ...
+   - richiede Font Awesome nella pagina (<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.x/css/all.min.css">)
+*/
+.bottom-nav {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  max-width: 760px;
+  height: var(--bottom-nav-height);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+  border: 1px solid var(--border);
+  z-index: 1200;
+  backdrop-filter: blur(6px);
+}
+
+/* singolo item: icona sopra, label sotto */
+.bottom-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--bottom-nav-text-inactive);
+  font-size: 12px;
+  line-height: 1;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 6px;
+  transition: color .18s ease;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+/* area visiva per l'icona: centrata */
+.bottom-nav .nav-item .icon-wrap {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  transition: transform .12s ease, background .12s ease;
+  position: relative;
+  z-index: 2;
+}
+
+/* icone (Font Awesome) - preferite bianche */
+.bottom-nav .nav-item .icon-wrap i,
+.bottom-nav .nav-item .icon-wrap svg {
+  font-size: 20px;
+  color: var(--text-secondary);
+  display: block;
+}
+
+/* label */
+.bottom-nav .nav-item .label {
+  font-size: 12px;
+  color: var(--bottom-nav-text-inactive);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* stato attivo: pill (cerchio allungato) dietro l'icona + icon bianca + label bold */
+.bottom-nav .nav-item.nav-active {
+  color: var(--bottom-nav-text-active);
+  font-weight: 700;
+}
+.bottom-nav .nav-item.nav-active .label { color: var(--bottom-nav-text-active); font-weight: 700; }
+
+/* pill esteso posizionato dietro l'icona */
+.bottom-nav .nav-item.nav-active::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 78px; /* allungato orizzontalmente */
+  height: 40px;
+  background: var(--bottom-nav-pill-bg);
+  border-radius: 20px;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+
+/* icone attive diventano bianche e sopra il pill */
+.bottom-nav .nav-item.nav-active .icon-wrap i,
+.bottom-nav .nav-item.nav-active .icon-wrap svg {
+  color: #fff;
+  z-index: 3;
+}
+
+/* focus accessibility */
+.bottom-nav .nav-item:focus,
+.bottom-nav .nav-item:focus-visible {
+  outline: none;
+}
+.bottom-nav .nav-item:focus-visible::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 4px;
+  width: 84px;
+  height: 44px;
+  border-radius: 22px;
+  border: 2px solid rgba(0,122,255,0.24);
+  z-index: 0;
+}
+
+/* small screens: ensure comfortable tappable area */
+@media (max-width: 420px) {
+  .bottom-nav .nav-item .icon-wrap { width: 40px; height: 40px; }
+  .bottom-nav .nav-item.nav-active::before { width: 72px; height: 36px; top: 8px; border-radius: 18px; }
+}
+
+/* nascondi top nav su schermi piccoli (usiamo bottom-nav) */
+@media (max-width: 760px) {
+  nav.top-nav { display: none; }
+}
+
+/* per schermi molto larghi, se vuoi nascondere bottom-nav puoi usare:
+   @media (min-width: 761px) { .bottom-nav { display: none; } }
+   ma per ora la manteniamo visibile anche su tablet fino a 760px width */
+@media (min-width: 761px) {
+  /* mostra top nav e lascia bottom-nav (opzionale) */
+  /* se desideri nascondere bottom nav su desktop uncomment:
+  .bottom-nav { display: none; }
+  */
+}
+
 /* Layout principale */
 main { max-width: 500px; margin: 0 auto; padding: 20px; }
 
-/* Sezioni */
+/* Sezioni (card) */
 section {
   background: var(--panel);
   margin: 18px 0;
@@ -273,7 +423,7 @@ section h2, section h3 { margin-bottom: 14px; color: var(--text-primary); font-w
   main { padding: 14px; }
   .form-row { grid-template-columns: 1fr; gap:10px; }
   header h1 { font-size:1.2rem; }
-  nav a { padding: 6px 10px; font-size: 0.88rem; min-width: auto; }
+  nav.top-nav a { padding: 6px 10px; font-size: 0.88rem; min-width: auto; }
 }
 
 /* Settings-specific */
@@ -293,4 +443,8 @@ section h2, section h3 { margin-bottom: 14px; color: var(--text-primary); font-w
   header, section, .card { box-shadow: 0 6px 20px rgba(0,0,0,0.04); }
   .btn { color: #fff; }
   #cartTable th { background: #f6f6f7; color: var(--text-primary); }
+  /* bottom nav light tweaks */
+  .bottom-nav { background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01)); border: 1px solid rgba(0,0,0,0.06); }
+  .bottom-nav .nav-item .icon-wrap i { color: var(--text-secondary); }
+  .bottom-nav .nav-item.nav-active .icon-wrap i { color: #fff; }
 }
