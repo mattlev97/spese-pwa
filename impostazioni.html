@@ -4,17 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>⚙️ Impostazioni - Gestione Spese</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="style.css" />
   <meta name="theme-color" content="#1e1e1e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
     <h1>⚙️ Impostazioni</h1>
-    <nav>
+    <nav class="top-nav" role="navigation" aria-label="Menu principale">
       <a href="index.html">Dashboard</a>
       <a href="aggiungi.html">Aggiungi</a>
       <a href="archivio.html">Archivio</a>
@@ -34,7 +36,7 @@
         <button id="addStoreBtn" class="add-store-btn">➕ Aggiungi</button>
       </div>
 
-      <div class="form-actions">
+      <div class="form-actions" style="margin-top:12px;">
         <button id="resetDefaultsBtn" class="btn btn-secondary">Ripristina valori predefiniti</button>
         <button id="saveSettingsBtn" class="save-settings-btn">💾 Salva impostazioni</button>
       </div>
@@ -93,15 +95,9 @@
     function addNewStoreFromInput() {
       const inp = document.getElementById('newStoreInput');
       const val = inp.value ? inp.value.trim() : '';
-      if (!val) {
-        alert('Inserisci il nome del supermercato');
-        return;
-      }
+      if (!val) { alert('Inserisci il nome del supermercato'); return; }
       const ok = app.addStore(val);
-      if (!ok) {
-        alert('Questo supermercato è già presente o non valido.');
-        return;
-      }
+      if (!ok) { alert('Questo supermercato è già presente o non valido.'); return; }
       inp.value = '';
       renderStoresList();
       app.populateAllStoreSelects();
@@ -110,22 +106,10 @@
     document.addEventListener('DOMContentLoaded', () => {
       renderStoresList();
 
-      document.getElementById('addStoreBtn')?.addEventListener('click', e => {
-        e.preventDefault();
-        addNewStoreFromInput();
-      });
+      document.getElementById('addStoreBtn')?.addEventListener('click', e => { e.preventDefault(); addNewStoreFromInput(); });
+      document.getElementById('newStoreInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addNewStoreFromInput(); } });
 
-      document.getElementById('newStoreInput')?.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          addNewStoreFromInput();
-        }
-      });
-
-      document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
-        app.saveStores(app.getStores());
-        alert('Impostazioni salvate.');
-      });
+      document.getElementById('saveSettingsBtn')?.addEventListener('click', () => { app.saveStores(app.getStores()); alert('Impostazioni salvate.'); });
 
       document.getElementById('resetDefaultsBtn')?.addEventListener('click', () => {
         if (!confirm('Ripristinare la lista ai valori predefiniti?')) return;
@@ -136,6 +120,36 @@
         alert('Valori predefiniti ripristinati.');
       });
     });
+  </script>
+
+  <!-- bottom navigation -->
+  <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
+    <a class="nav-item" href="index.html" aria-label="Dashboard">
+      <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
+      <span class="label">Dashboard</span>
+    </a>
+    <a class="nav-item" href="aggiungi.html" aria-label="Aggiungi">
+      <span class="icon-wrap"><i class="fa-solid fa-plus-circle"></i></span>
+      <span class="label">Aggiungi</span>
+    </a>
+    <a class="nav-item" href="archivio.html" aria-label="Archivio">
+      <span class="icon-wrap"><i class="fa-solid fa-box-archive"></i></span>
+      <span class="label">Archivio</span>
+    </a>
+    <a class="nav-item nav-active" href="impostazioni.html" aria-label="Impostazioni">
+      <span class="icon-wrap"><i class="fa-solid fa-gear"></i></span>
+      <span class="label">Impostazioni</span>
+    </a>
+  </nav>
+
+  <script>
+    (function () {
+      const path = location.pathname.split('/').pop() || 'index.html';
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
+        const href = a.getAttribute('href') || '';
+        if (href.endsWith(path)) a.classList.add('nav-active'); else a.classList.remove('nav-active');
+      });
+    })();
   </script>
 </body>
 </html>
