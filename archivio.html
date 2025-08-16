@@ -4,16 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Archivio Spese</title>
-
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="" crossorigin="anonymous">
-
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
     <h1>Archivio Spese</h1>
-    <nav class="top-nav" role="navigation" aria-label="Menu principale">
+    <nav class="top-nav">
       <a href="index.html">Dashboard</a>
       <a href="aggiungi.html">Aggiungi</a>
       <a href="archivio.html" class="nav-active">Archivio</a>
@@ -25,7 +21,6 @@
     <section>
       <h2>Tutte le Spese</h2>
 
-      <!-- Filtri con etichette chiare -->
       <div class="filters" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;align-items:end;">
         <div style="display:flex;flex-direction:column;min-width:160px;">
           <label for="filterStore" style="color:var(--text-secondary);font-weight:600;">Supermercato</label>
@@ -42,27 +37,41 @@
           <input type="text" id="filterProduct" placeholder="Cerca prodotto..." aria-label="Filtra per prodotto" />
         </div>
 
-        <!-- Azioni: solo Rimuovi filtri (ottimizzato nello spazio) -->
         <div class="filter-actions" style="display:flex;gap:8px;align-items:center;width:240px;max-width:40%;">
           <button id="clearFiltersBtn" class="btn small-btn" title="Rimuovi filtri">✖ Rimuovi filtri</button>
         </div>
       </div>
 
-      <!-- Status filtri / messaggio inline -->
       <div id="filterStatus" class="filter-status" aria-live="polite" role="status" style="margin-bottom:10px;"></div>
 
-      <!-- Contenitore spese -->
+      <!-- Lista spese: render dinamico -->
       <div id="expenseList" aria-live="polite"></div>
     </section>
   </main>
 
-  <!-- Importa la logica condivisa -->
   <script src="app.js"></script>
   <script>
-    // helper: escape HTML
-    function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text || ''; return div.innerHTML; }
-    function formatCurrencySafe(amount) { if (typeof app?.formatCurrency === 'function') return app.formatCurrency(amount || 0); try { return new Intl.NumberFormat('it-IT', { style:'currency', currency:'EUR' }).format(amount || 0); } catch { return `€${Number(amount||0).toFixed(2)}`; } }
-    function formatDateSafe(dateStr) { if (typeof app?.formatDate === 'function') return app.formatDate(dateStr); const d = dateStr ? new Date(dateStr) : new Date(); try { return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d); } catch { return d.toLocaleDateString('it-IT'); } }
+    // helper
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    function formatCurrencySafe(amount) {
+      if (typeof app?.formatCurrency === 'function') return app.formatCurrency(amount || 0);
+      try {
+        return new Intl.NumberFormat('it-IT', { style:'currency', currency:'EUR' }).format(amount || 0);
+      } catch { return `€${Number(amount||0).toFixed(2)}`; }
+    }
+
+    function formatDateSafe(dateStr) {
+      if (typeof app?.formatDate === 'function') return app.formatDate(dateStr || '');
+      const d = dateStr ? new Date(dateStr) : new Date();
+      try {
+        return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d);
+      } catch { return d.toLocaleDateString('it-IT'); }
+    }
 
     function updateFilterStatus(foundCount, totalCount, activeFilters) {
       const statusEl = document.getElementById('filterStatus');
@@ -75,7 +84,13 @@
       }
     }
 
-    // render lista spese con filtri
+    function renderProducts(exp) {
+      if (!exp || !Array.isArray(exp.products) || exp.products.length === 0) return '';
+      return `<div style="margin-top:8px; color:var(--text-secondary); font-size:0.9rem;">
+        ${exp.products.slice(0,3).map(p => escapeHtml(p.name)).join(', ')}${exp.products.length>3 ? ' …' : ''}
+      </div>`;
+    }
+
     function renderArchive() {
       const storeFilter = (document.getElementById('filterStore').value || '').trim().toLowerCase();
       const dateFilter = (document.getElementById('filterDate').value || '').trim();
@@ -84,14 +99,12 @@
       const container = document.getElementById('expenseList');
       if (!container) return;
 
-      // prendi la sorgente più aggiornata
       let expenses = (typeof app?.loadExpenses === 'function') ? app.loadExpenses() : (app.expenses || []);
       const totalCount = expenses.length;
 
-      // ordina per data (più recente prima)
+      // ordena per data desc
       expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      // applica filtri
       const activeFilters = [];
       if (storeFilter) {
         activeFilters.push(`Supermercato: ${storeFilter}`);
@@ -115,26 +128,30 @@
 
       container.innerHTML = expenses.map(exp => {
         const productCount = (exp.products || []).length;
+        // details link to dettaglio.html?id=...
+        const detailsUrl = `dettaglio.html?id=${encodeURIComponent(exp.id)}`;
         return `
-          <div style="margin-bottom:8px;">
-            <div class="recent-item" style="display:flex;justify-content:space-between;align-items:center;">
-              <div class="recent-info" style="flex:1;min-width:0;">
-                <strong>🏪 ${escapeHtml(exp.store || '')}</strong><br>
-                <small>📅 ${formatDateSafe(exp.date)} • ${productCount} prodotti</small>
+          <div style="margin-bottom:12px; padding:12px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); border:1px solid rgba(255,255,255,0.02);">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <div style="min-width:0;flex:1;">
+                <strong>🏪 ${escapeHtml(exp.store || '')}</strong>
+                <div style="color:var(--text-secondary); font-size:0.92rem;">📅 ${formatDateSafe(exp.date)} • ${productCount} prodotti</div>
+                ${renderProducts(exp)}
               </div>
 
-              <div style="display:flex;align-items:center;gap:8px;">
-                <div class="recent-amount" style="font-weight:700; margin-right:8px;">${formatCurrencySafe(exp.total)}</div>
-                <button class="delete-expense remove-btn" data-id="${exp.id}" title="Elimina spesa">🗑️</button>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                <div style="font-weight:700;">${formatCurrencySafe(exp.total)}</div>
+                <div style="display:flex;gap:8px;">
+                  <a class="btn btn-secondary" href="${detailsUrl}">Dettagli</a>
+                  <button class="delete-expense btn small-btn" data-id="${exp.id}" title="Elimina spesa">🗑️</button>
+                </div>
               </div>
             </div>
-
-            ${renderProducts(exp.products)}
           </div>
         `;
       }).join('');
-      
-      // attacca listener eliminazione dopo render
+
+      // attach delete listeners
       container.querySelectorAll('.delete-expense').forEach(btn => {
         btn.addEventListener('click', () => {
           if (!confirm('Sei sicuro di voler eliminare questa spesa?')) return;
@@ -144,21 +161,6 @@
       });
     }
 
-    function renderProducts(products = []) {
-      if (!products || !products.length) return '';
-      const rows = products.map(p => `
-        <div class="product-item" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
-          <div style="min-width:0;">
-            <strong>${escapeHtml(p.name || '')}</strong>
-            <div class="category" style="color:var(--text-secondary);font-size:0.85rem">${escapeHtml(p.category || '')}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
-          </div>
-          <div class="product-price" style="margin-left:12px;">${formatCurrencySafe(p.price)}</div>
-        </div>
-      `).join('');
-      return `<div class="product-list" style="margin:6px 0 12px 0;">${rows}</div>`;
-    }
-
-    // Reset filtri
     function clearFilters() {
       const s = document.getElementById('filterStore');
       const d = document.getElementById('filterDate');
@@ -170,7 +172,6 @@
       renderArchive();
     }
 
-    // wiring eventi
     document.addEventListener('DOMContentLoaded', () => {
       try { app.populateAllStoreSelects(); } catch (e) {}
       const filterStore = document.getElementById('filterStore');
@@ -185,43 +186,15 @@
 
       clearBtn?.addEventListener('click', (e) => { e.preventDefault(); clearFilters(); });
 
-      filterProduct?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); renderArchive(); } });
+      filterProduct?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); renderArchive(); }
+      });
 
-      document.addEventListener('app:stores-changed', () => { try { app.populateAllStoreSelects(); } catch(e) {} });
+      document.addEventListener('app:stores-changed', () => { try { app.populateAllStoreSelects(); } catch(e){} });
       document.addEventListener('app:expenses-changed', () => { renderArchive(); });
 
       renderArchive();
     });
-  </script>
-
-  <!-- bottom navigation -->
-  <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
-    <a class="nav-item" href="index.html" aria-label="Dashboard">
-      <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
-      <span class="label">Dashboard</span>
-    </a>
-    <a class="nav-item" href="aggiungi.html" aria-label="Aggiungi">
-      <span class="icon-wrap"><i class="fa-solid fa-plus-circle"></i></span>
-      <span class="label">Aggiungi</span>
-    </a>
-    <a class="nav-item nav-active" href="archivio.html" aria-label="Archivio">
-      <span class="icon-wrap"><i class="fa-solid fa-box-archive"></i></span>
-      <span class="label">Archivio</span>
-    </a>
-    <a class="nav-item" href="impostazioni.html" aria-label="Impostazioni">
-      <span class="icon-wrap"><i class="fa-solid fa-gear"></i></span>
-      <span class="label">Impostazioni</span>
-    </a>
-  </nav>
-
-  <script>
-    (function () {
-      const path = location.pathname.split('/').pop() || 'index.html';
-      document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
-        const href = a.getAttribute('href') || '';
-        if (href.endsWith(path)) a.classList.add('nav-active'); else a.classList.remove('nav-active');
-      });
-    })();
   </script>
 </body>
 </html>
