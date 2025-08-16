@@ -1,10 +1,5 @@
-// app.js - Gestione spese (versione pulita e con API completa)
-/*
-  - Chiavi esplicite (expensesKey, storesKey)
-  - Metodi mancanti aggiunti: editStore, clearExpenses, ensureDefaultStores
-  - populateAllStoreSelects aggiornata e robusta
-  - Emissione locale di event "app:stores-changed" per aggiornamenti UI immediati
-*/
+// app.js - Gestione spese (versione estesa)
+// include: gestione spese, negozi, metodi per ottenere/aggiornare singola spesa
 
 class ExpenseTracker {
   constructor() {
@@ -24,7 +19,6 @@ class ExpenseTracker {
     window.addEventListener('storage', (e) => {
       if (e.key === this.storesKey) {
         this.stores = this.loadStores();
-        // notifica DOM listeners
         this.populateAllStoreSelects();
         document.dispatchEvent(new CustomEvent('app:stores-changed', { detail: this.stores }));
       }
@@ -51,7 +45,6 @@ class ExpenseTracker {
   saveExpenses() {
     try {
       localStorage.setItem(this.expensesKey, JSON.stringify(this.expenses));
-      // notify other parts in same page
       document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: this.expenses }));
     } catch (e) {
       console.error('Errore salvataggio expenses', e);
@@ -206,7 +199,6 @@ class ExpenseTracker {
 
       localStorage.setItem(this.storesKey, JSON.stringify(cleanList));
       this.stores = cleanList;
-      // update selects in DOM immediately
       this.populateAllStoreSelects();
       document.dispatchEvent(new CustomEvent('app:stores-changed', { detail: this.stores }));
     } catch (e) {
@@ -245,7 +237,6 @@ class ExpenseTracker {
     if (!cleanNew) return false;
     const idx = this.stores.findIndex(s => s.toLowerCase() === oldName.toLowerCase());
     if (idx === -1) return false;
-    // prevent duplicates
     if (this.stores.some((s, i) => i !== idx && s.toLowerCase() === cleanNew.toLowerCase())) return false;
     this.stores[idx] = cleanNew;
     this.saveStores(this.stores);
@@ -291,6 +282,56 @@ class ExpenseTracker {
       console.error('populateAllStoreSelects error', e);
     }
   }
+
+  // -------------------------
+  // New: single-expense helpers (get/update)
+  // -------------------------
+  getExpenseById(id) {
+    if (!id) return null;
+    const found = this.expenses.find(e => e.id === id);
+    if (!found) return null;
+    // return a deep copy to avoid accidental mutation
+    return JSON.parse(JSON.stringify(found));
+  }
+
+  // replace an entire expense (must contain id)
+  updateExpense(updatedExpense) {
+    if (!updatedExpense || !updatedExpense.id) return false;
+    const idx = this.expenses.findIndex(e => e.id === updatedExpense.id);
+    if (idx === -1) return false;
+
+    // ensure products array exists and compute total
+    const prods = Array.isArray(updatedExpense.products) ? updatedExpense.products.map(p => ({ ...p })) : [];
+    const total = prods.reduce((s, p) => s + (parseFloat(p.price) || 0), 0);
+
+    // preserve createdAt if present
+    const createdAt = this.expenses[idx].createdAt || new Date().toISOString();
+
+    this.expenses[idx] = {
+      id: updatedExpense.id,
+      store: updatedExpense.store || this.expenses[idx].store || '',
+      date: updatedExpense.date || this.expenses[idx].date || new Date().toISOString().split('T')[0],
+      products: prods,
+      total,
+      createdAt
+    };
+
+    this.saveExpenses();
+    return true;
+  }
+
+  // convenience: update only products for an expense
+  updateExpenseProducts(expenseId, products) {
+    const idx = this.expenses.findIndex(e => e.id === expenseId);
+    if (idx === -1) return false;
+    const prods = Array.isArray(products) ? products.map(p => ({ ...p })) : [];
+    const total = prods.reduce((s, p) => s + (parseFloat(p.price) || 0), 0);
+    this.expenses[idx].products = prods;
+    this.expenses[idx].total = total;
+    this.saveExpenses();
+    return true;
+  }
+
 }
 
 // esponi istanza globale (usata da tutte le pagine)
