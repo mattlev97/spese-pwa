@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Archivio Spese</title>
 
-  <!-- Font Awesome (icone per bottom nav) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="" crossorigin="anonymous">
-
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -48,12 +45,10 @@
 
       <div id="filterStatus" class="filter-status" aria-live="polite" role="status" style="margin-bottom:10px;"></div>
 
-      <!-- Lista spese: render dinamico -->
       <div id="expenseList" aria-live="polite"></div>
     </section>
   </main>
 
-  <!-- bottom navigation (mobile) -->
   <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
     <a class="nav-item" href="index.html" aria-label="Dashboard">
       <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
@@ -74,29 +69,10 @@
   </nav>
 
   <script src="app.js"></script>
-
   <script>
-    // helper
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text || '';
-      return div.innerHTML;
-    }
-
-    function formatCurrencySafe(amount) {
-      if (typeof app?.formatCurrency === 'function') return app.formatCurrency(amount || 0);
-      try {
-        return new Intl.NumberFormat('it-IT', { style:'currency', currency:'EUR' }).format(amount || 0);
-      } catch { return `€${Number(amount||0).toFixed(2)}`; }
-    }
-
-    function formatDateSafe(dateStr) {
-      if (typeof app?.formatDate === 'function') return app.formatDate(dateStr || '');
-      const d = dateStr ? new Date(dateStr) : new Date();
-      try {
-        return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d);
-      } catch { return d.toLocaleDateString('it-IT'); }
-    }
+    function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text||''; return d.innerHTML; }
+    function formatCurrencySafe(amount) { if (typeof app?.formatCurrency === 'function') return app.formatCurrency(amount || 0); try { return new Intl.NumberFormat('it-IT', { style:'currency', currency:'EUR' }).format(amount || 0); } catch { return `€${Number(amount||0).toFixed(2)}`; } }
+    function formatDateSafe(dateStr) { if (typeof app?.formatDate === 'function') return app.formatDate(dateStr || ''); const d = dateStr ? new Date(dateStr) : new Date(); try { return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d); } catch { return d.toLocaleDateString('it-IT'); } }
 
     function updateFilterStatus(foundCount, totalCount, activeFilters) {
       const statusEl = document.getElementById('filterStatus');
@@ -120,47 +96,35 @@
       const storeFilter = (document.getElementById('filterStore').value || '').trim().toLowerCase();
       const dateFilter = (document.getElementById('filterDate').value || '').trim();
       const productFilter = (document.getElementById('filterProduct').value || '').trim().toLowerCase();
-
       const container = document.getElementById('expenseList');
       if (!container) return;
-
       let expenses = (typeof app?.loadExpenses === 'function') ? app.loadExpenses() : (app.expenses || []);
       const totalCount = expenses.length;
-
-      // ordena per data desc
-      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-
+      expenses.sort((a,b) => new Date(b.date) - new Date(a.date));
       const activeFilters = [];
-      if (storeFilter) {
-        activeFilters.push(`Supermercato: ${storeFilter}`);
-        expenses = expenses.filter(exp => (exp.store || '').toLowerCase() === storeFilter);
-      }
-      if (dateFilter) {
-        activeFilters.push(`Data: ${dateFilter}`);
-        expenses = expenses.filter(exp => (exp.date || '').startsWith(dateFilter));
-      }
-      if (productFilter) {
-        activeFilters.push(`Prodotto: ${productFilter}`);
-        expenses = expenses.filter(exp => Array.isArray(exp.products) && exp.products.some(p => (p.name || '').toLowerCase().includes(productFilter)));
-      }
+      if (storeFilter) { activeFilters.push(`Supermercato: ${storeFilter}`); expenses = expenses.filter(exp => (exp.store||'').toLowerCase() === storeFilter); }
+      if (dateFilter) { activeFilters.push(`Data: ${dateFilter}`); expenses = expenses.filter(exp => (exp.date||'').startsWith(dateFilter)); }
+      if (productFilter) { activeFilters.push(`Prodotto: ${productFilter}`); expenses = expenses.filter(exp => Array.isArray(exp.products) && exp.products.some(p => (p.name||'').toLowerCase().includes(productFilter))); }
 
       updateFilterStatus(expenses.length, totalCount, activeFilters);
-
-      if (!expenses.length) {
-        container.innerHTML = '<div class="no-expenses">Nessuna spesa trovata con i filtri selezionati.</div>';
-        return;
-      }
+      if (!expenses.length) { container.innerHTML = '<div class="no-expenses">Nessuna spesa trovata con i filtri selezionati.</div>'; return; }
 
       container.innerHTML = expenses.map(exp => {
         const productCount = (exp.products || []).length;
         const detailsUrl = `dettaglio.html?id=${encodeURIComponent(exp.id)}`;
+        // pick first product image if any
+        const firstImage = (exp.products||[]).find(p => p.image && p.image.length) || null;
+        const thumbHtml = firstImage ? `<img class="thumb" src="${escapeHtml(firstImage.image)}" alt="${escapeHtml(firstImage.name||'')}" style="margin-right:10px;">` : `<div class="image-placeholder" style="margin-right:10px;">No foto</div>`;
         return `
           <div style="margin-bottom:12px; padding:12px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); border:1px solid rgba(255,255,255,0.02);">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              <div style="min-width:0;flex:1;">
-                <strong>🏪 ${escapeHtml(exp.store || '')}</strong>
-                <div style="color:var(--text-secondary); font-size:0.92rem;">📅 ${formatDateSafe(exp.date)} • ${productCount} prodotti</div>
-                ${renderProducts(exp)}
+              <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                ${thumbHtml}
+                <div style="min-width:0;">
+                  <strong>🏪 ${escapeHtml(exp.store || '')}</strong>
+                  <div style="color:var(--text-secondary); font-size:0.92rem;">📅 ${formatDateSafe(exp.date)} • ${productCount} prodotti</div>
+                  ${renderProducts(exp)}
+                </div>
               </div>
 
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
@@ -175,7 +139,6 @@
         `;
       }).join('');
 
-      // attach delete listeners
       container.querySelectorAll('.delete-expense').forEach(btn => {
         btn.addEventListener('click', () => {
           if (!confirm('Sei sicuro di voler eliminare questa spesa?')) return;
@@ -196,18 +159,10 @@
       renderArchive();
     }
 
-    // sync bottom-nav active item with the current path
     (function syncBottomNavActive() {
       const path = location.pathname.split('/').pop() || 'index.html';
       document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
-        try {
-          const href = a.getAttribute('href') || '';
-          if (href.endsWith(path)) {
-            a.classList.add('nav-active');
-          } else {
-            a.classList.remove('nav-active');
-          }
-        } catch(e) {}
+        try { const href = a.getAttribute('href') || ''; if (href.endsWith(path)) a.classList.add('nav-active'); else a.classList.remove('nav-active'); } catch(e) {}
       });
     })();
 
