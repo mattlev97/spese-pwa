@@ -5,7 +5,8 @@
    - bottom navigation (mobile-first friendly) usando Font Awesome
    - regole scanner/modal/impostazioni mantenute
    - FIX: evita sovrapposizione bottom-nav su tutte le pagine (safe-area + padding main)
-   - Charts affiancati in .charts-section; titoli centrati; evita wrap per "Spesa Massima"
+   - Charts affiancati in .charts-section (affiancati anche su iPhone con overflow-x)
+   - Titoli centrati; evita wrap per "Spesa Massima"; bottoni grigio scuro
    ========================= */
 
 /* Reset e base styles */
@@ -17,7 +18,10 @@
   --text-primary: #f5f5f7;
   --text-secondary: #bfbfc4;
   --muted: #9b9b9f;
-  --accent: #007aff;
+
+  /* Modificato: rimosso il blu acceso e usato grigio scuro per i bottoni */
+  --accent: #3a3a3a;            /* colore principale bottoni (grigio scuro) */
+  --accent-hover: #4d4d4d;      /* hover per bottoni */
   --danger: #ff3b30;
   --border: rgba(255,255,255,0.04);
   --radius: 12px;
@@ -35,6 +39,9 @@
   --btn-bg: var(--accent);
   --btn-secondary-bg: #303030;
   --btn-text: #ffffff;
+
+  /* layout helpers */
+  --card-shadow: 0 6px 18px rgba(0,0,0,0.35);
 }
 
 /* core reset */
@@ -70,7 +77,7 @@ header {
 header h1 {
   text-align: center;
   margin-bottom: 0.6rem;
-  font-size: 1.6rem;
+  font-size: 1.8rem; /* leggermente più grande per maggiore gerarchia */
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.05;
@@ -218,14 +225,14 @@ section {
   margin: 18px 0;
   padding: 20px;
   border-radius: 15px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  box-shadow: var(--card-shadow);
   color: var(--text-primary);
   border: 1px solid var(--border);
 }
 
 /* Titoli centrati nelle cornici e dimensione distinta rispetto al contenuto */
-section h2 { margin-bottom: 14px; color: var(--text-primary); font-weight: 700; font-size: 1.18rem; text-align: center; }
-section h3 { margin-bottom: 12px; color: var(--text-primary); font-weight: 700; font-size: 1.04rem; text-align: center; }
+section h2 { margin-bottom: 14px; color: var(--text-primary); font-weight: 800; font-size: 1.22rem; text-align: center; }
+section h3 { margin-bottom: 12px; color: var(--text-primary); font-weight: 700; font-size: 1.06rem; text-align: center; }
 
 /* Buttons: uniformità e rimozione focus blu */
 .btn, .btn-secondary, .small-btn {
@@ -249,6 +256,7 @@ section h3 { margin-bottom: 12px; color: var(--text-primary); font-weight: 700; 
 
 /* primary */
 .btn { background: var(--btn-bg); color: var(--btn-text); }
+.btn:hover { background: var(--accent-hover); }
 
 /* secondary (grigio scuro) */
 .btn-secondary { background: var(--btn-secondary-bg); color: var(--btn-text); border: 1px solid rgba(255,255,255,0.03); }
@@ -331,26 +339,33 @@ input[type="date"] { padding-left: 12px; }
 .stat-card h3 { font-size: 0.92rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stat-card .amount { font-size: 1.3rem; font-weight: 800; color: var(--text-primary); margin-top: 4px; }
 
-/* Charts: affiancati su desktop, stack su mobile */
+/* Charts: affiancati in due blocchi separati.
+   Su schermi stretti vengono tenuti affiancati ma con scroll orizzontale
+   così non si rompono il layout e restano visibili come richiesto. */
 .charts-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 14px;
-  align-items: start;
-}
-@media (max-width: 760px) {
-  .charts-section { grid-template-columns: 1fr; }
+  align-items: flex-start;
+  width: 100%;
+  overflow-x: auto;     /* permette scorrimento orizzontale su iPhone */
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
 }
 
+/* ogni chart-container occupa metà della larghezza del contenitore
+   ma ha un min-width per evitare che il canvas si riduca troppo */
 .chart-container {
+  flex: 0 0 calc(50% - 7px);
+  min-width: 260px;
   text-align: center;
   padding: 12px;
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
   border: 1px solid rgba(255,255,255,0.02);
+  box-sizing: border-box;
 }
-.chart-container h3 { margin-top: 0; margin-bottom: 8px; text-align: center; }
-.chart-container canvas { max-width: 100%; height: auto !important; margin: 8px 0 12px; border-radius: 10px; }
+.chart-container h3 { margin-top: 0; margin-bottom: 8px; text-align: center; font-size: 1.02rem; }
+.chart-container canvas { width: 100% !important; height: auto !important; margin: 8px 0 12px; border-radius: 10px; }
 
 /* stats-list */
 .stats-list { text-align: left; margin-top: 8px; }
@@ -373,19 +388,19 @@ input[type="date"] { padding-left: 12px; }
 /* Form-actions near bottom */
 .form-actions { display:flex; gap:8px; align-items:center; margin-top:12px; margin-bottom: calc(var(--bottom-nav-height) + 8px); }
 
-/* Remove btn */
-.remove-btn { background: var(--danger); color: #fff; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; transition: transform .12s ease; height:36px; min-height:36px; display:inline-flex; align-items:center; justify-content:center; }
+/* Remove btn - uniformato alle altre dimensioni */
+.remove-btn { background: var(--danger); color: #fff; border:none; padding: 0 12px; border-radius:8px; cursor:pointer; transition: transform .12s ease; height: var(--btn-height); min-height: var(--btn-height); display:inline-flex; align-items:center; justify-content:center; }
 .remove-btn:hover { transform: scale(1.04); }
 
 /* Modal */
 .modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:2000; }
 .modal-content { background: var(--panel); color: var(--text-primary); margin: 8% auto; padding: 18px; width: 94%; max-width: 520px; border-radius: 14px; border:1px solid var(--border); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
 
-/* Scanner overlay */
+/* Scanner overlay - ridotto il blu per non contrastare con il nuovo tema dei bottoni */
 #scannerContainer { position: relative; width: 100%; height: 320px; max-height: 60vh; background: #000; border-radius: 10px; overflow: hidden; display:flex; align-items:center; justify-content:center; margin-top: 8px; }
 #scannerContainer video, #scannerVideo { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
-#scannerOverlay { position: absolute; left: 50%; top: 50%; width: 78%; height: 120px; transform: translate(-50%, -50%); border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(0,122,255,0.85); pointer-events: none; z-index: 40; }
-#scannerOverlay .scan-line { position: absolute; left: 0; top: 0; width: 100%; height: 2px; background: linear-gradient(90deg, rgba(0,122,255,0) 0%, rgba(0,122,255,0.9) 50%, rgba(0,122,255,0) 100%); animation: scanMove 1.6s linear infinite; border-radius: 1px; }
+#scannerOverlay { position: absolute; left: 50%; top: 50%; width: 78%; height: 120px; transform: translate(-50%, -50%); border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(255,255,255,0.04); pointer-events: none; z-index: 40; }
+#scannerOverlay .scan-line { position: absolute; left: 0; top: 0; width: 100%; height: 2px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0) 100%); animation: scanMove 1.6s linear infinite; border-radius: 1px; }
 @keyframes scanMove { 0% { transform: translateY(-4px); opacity: 0; } 10% { opacity: 1; } 50% { transform: translateY(calc(100% - 2px)); opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-4px); opacity: 0; } }
 
 /* Labels / small text */
@@ -418,6 +433,8 @@ input:focus, select:focus, textarea:focus { outline: none; }
   .form-row { grid-template-columns: 1fr; gap:10px; }
   header h1 { font-size:1.4rem; }
   nav.top-nav a { padding: 6px 10px; font-size: 0.88rem; min-width: auto; }
+  /* rendiamo i titoli un pelo più piccoli su schermi molto stretti */
+  section h2 { font-size: 1.08rem; }
 }
 
 /* Settings-specific */
@@ -440,6 +457,7 @@ input:focus, select:focus, textarea:focus { outline: none; }
   border-bottom: 1px solid rgba(255,255,255,0.03);
   width: 100%;
   box-sizing: border-box;
+  min-width: 0; /* evita overflow figlio in flex layouts */
 }
 
 .product-item input[type="text"],
@@ -472,7 +490,7 @@ input:focus, select:focus, textarea:focus { outline: none; }
 
 /* Light mode support */
 @media (prefers-color-scheme: light) {
-  :root{ --bg-1: #f5f7fa; --bg-2: #eef1f6; --panel: #ffffff; --input: #ffffff; --text-primary: #111214; --text-secondary: #4a4a4a; --muted: #6b6b70; --border: rgba(0,0,0,0.06); --btn-secondary-bg: #e7e9ec; }
+  :root{ --bg-1: #f5f7fa; --bg-2: #eef1f6; --panel: #ffffff; --input: #ffffff; --text-primary: #111214; --text-secondary: #4a4a4a; --muted: #6b6b70; --border: rgba(0,0,0,0.06); --btn-secondary-bg: #e7e9ec; --accent: #555; --accent-hover: #777; --btn-bg: var(--accent); }
   body { background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%); color: var(--text-primary);}
   header, section, .card { box-shadow: 0 6px 20px rgba(0,0,0,0.04); }
   .btn { color: #fff; }
@@ -480,5 +498,5 @@ input:focus, select:focus, textarea:focus { outline: none; }
   .bottom-nav { background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01)); border: 1px solid rgba(0,0,0,0.06); }
   .bottom-nav .nav-item .icon-wrap i { color: var(--text-secondary); }
   .bottom-nav .nav-item.nav-active .icon-wrap i { color: #fff; }
-  .btn-secondary { border: 1px solid rgba(0,0,0,0.06); color: var(--text-primary); }
+  .btn-secondary { border: 1px solid rgba(0,0,0,0.06); color: var(--text-primary); background: var(--btn-secondary-bg); }
 }
