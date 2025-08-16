@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Archivio Spese</title>
+
+  <!-- Font Awesome (icone per bottom nav) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="" crossorigin="anonymous">
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -49,7 +53,28 @@
     </section>
   </main>
 
+  <!-- bottom navigation (mobile) -->
+  <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
+    <a class="nav-item" href="index.html" aria-label="Dashboard">
+      <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
+      <span class="label">Dashboard</span>
+    </a>
+    <a class="nav-item" href="aggiungi.html" aria-label="Aggiungi">
+      <span class="icon-wrap"><i class="fa-solid fa-plus-circle"></i></span>
+      <span class="label">Aggiungi</span>
+    </a>
+    <a class="nav-item nav-active" href="archivio.html" aria-label="Archivio">
+      <span class="icon-wrap"><i class="fa-solid fa-box-archive"></i></span>
+      <span class="label">Archivio</span>
+    </a>
+    <a class="nav-item" href="impostazioni.html" aria-label="Impostazioni">
+      <span class="icon-wrap"><i class="fa-solid fa-gear"></i></span>
+      <span class="label">Impostazioni</span>
+    </a>
+  </nav>
+
   <script src="app.js"></script>
+
   <script>
     // helper
     function escapeHtml(text) {
@@ -128,7 +153,6 @@
 
       container.innerHTML = expenses.map(exp => {
         const productCount = (exp.products || []).length;
-        // details link to dettaglio.html?id=...
         const detailsUrl = `dettaglio.html?id=${encodeURIComponent(exp.id)}`;
         return `
           <div style="margin-bottom:12px; padding:12px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); border:1px solid rgba(255,255,255,0.02);">
@@ -171,6 +195,21 @@
       if (p) p.focus();
       renderArchive();
     }
+
+    // sync bottom-nav active item with the current path
+    (function syncBottomNavActive() {
+      const path = location.pathname.split('/').pop() || 'index.html';
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
+        try {
+          const href = a.getAttribute('href') || '';
+          if (href.endsWith(path)) {
+            a.classList.add('nav-active');
+          } else {
+            a.classList.remove('nav-active');
+          }
+        } catch(e) {}
+      });
+    })();
 
     document.addEventListener('DOMContentLoaded', () => {
       try { app.populateAllStoreSelects(); } catch (e) {}
