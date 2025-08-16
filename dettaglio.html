@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dettaglio Spesa</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Dettaglio Spesa</h1>
+    <nav class="top-nav">
+      <a href="index.html">Dashboard</a>
+      <a href="aggiungi.html">Aggiungi</a>
+      <a href="archivio.html" class="nav-active">Archivio</a>
+      <a href="impostazioni.html">Impostazioni</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="expenseHeader" style="margin-bottom:12px;">
+      <!-- info spesa (store, date, totale, num prodotti) -->
+    </section>
+
+    <section>
+      <h2>Prodotti</h2>
+      <div id="productsContainer"></div>
+
+      <h3 style="margin-top:14px;">Aggiungi prodotto dimenticato</h3>
+      <div style="display:grid;gap:10px;grid-template-columns: 1fr 1fr;">
+        <input id="newName" placeholder="Nome prodotto" />
+        <select id="newCategory">
+          <option value="">Seleziona tipologia</option>
+          <option>Carne</option><option>Pesce</option><option>Verdura</option><option>Frutta</option>
+          <option>Latticini</option><option>Pane</option><option>Bevande</option><option>Surgelati</option>
+          <option>Dolci</option><option>Pulizia</option><option>Igiene</option><option>Altro</option>
+        </select>
+        <input id="newPrice" placeholder="Prezzo (€)" inputmode="decimal" />
+        <input id="newNotes" placeholder="Note (opzionale)" />
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <button id="addNewProductBtn" class="btn">➕ Aggiungi prodotto</button>
+        <button id="saveChangesBtn" class="btn">💾 Salva modifiche</button>
+        <a id="backToArchive" class="btn btn-secondary" href="archivio.html">◀ Torna all'archivio</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // utilities
+    function q(sel, ctx=document) { return ctx.querySelector(sel); }
+    function qAll(sel, ctx=document) { return Array.from((ctx||document).querySelectorAll(sel)); }
+    function escapeHtml(text) { const d=document.createElement('div'); d.textContent = text||''; return d.innerHTML; }
+
+    // parse id from query
+    function getQueryParam(name) {
+      const params = new URLSearchParams(location.search);
+      return params.get(name);
+    }
+
+    const expenseId = getQueryParam('id');
+    if (!expenseId) {
+      alert('Nessuna spesa selezionata.');
+      location.href = 'archivio.html';
+    }
+
+    // render header info
+    function renderHeader(exp) {
+      const container = document.getElementById('expenseHeader');
+      if (!container) return;
+      container.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div>
+            <strong>🏪 ${escapeHtml(exp.store)}</strong><br>
+            <small style="color:var(--text-secondary)">📅 ${app.formatDate(exp.date)} • creato: ${new Date(exp.createdAt).toLocaleString()}</small>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:800; font-size:1.15rem;">${app.formatCurrency(exp.total)}</div>
+            <div style="color:var(--text-secondary)">${(exp.products||[]).length} prodotti</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // render editable products list
+    function renderProductsEditable(exp) {
+      const container = document.getElementById('productsContainer');
+      if (!container) return;
+      const prods = Array.isArray(exp.products) ? exp.products.slice() : [];
+      if (prods.length === 0) {
+        container.innerHTML = '<div class="no-expenses">Nessun prodotto in questa spesa.</div>';
+        return;
+      }
+
+      container.innerHTML = prods.map((p, idx) => `
+        <div class="product-item" data-idx="${idx}" style="display:grid;grid-template-columns: 1fr 120px 80px 40px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <input class="prod-name" value="${escapeHtml(p.name || '')}" />
+          <input class="prod-price" value="${Number(p.price||0).toFixed(2)}" inputmode="decimal" />
+          <input class="prod-category" value="${escapeHtml(p.category || '')}" />
+          <button class="remove-prod remove-btn" type="button" title="Rimuovi prodotto">🗑️</button>
+          <div style="grid-column: 1 / -1; color:var(--text-secondary); font-size:0.88rem;">
+            <input class="prod-notes" style="width:100%; margin-top:6px;" value="${escapeHtml(p.notes || '')}" placeholder="Note (opzionale)" />
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function loadExpenseAndRender() {
+      const exp = app.getExpenseById(expenseId);
+      if (!exp) {
+        alert('Spesa non trovata.');
+        location.href = 'archivio.html';
+        return;
+      }
+      renderHeader(exp);
+      renderProductsEditable(exp);
+    }
+
+    function collectProductsFromDOM() {
+      const container = document.getElementById('productsContainer');
+      if (!container) return [];
+      const rows = container.querySelectorAll('.product-item');
+      const products = [];
+      rows.forEach(row => {
+        const name = row.querySelector('.prod-name')?.value?.trim() || '';
+        const priceRaw = row.querySelector('.prod-price')?.value?.trim() || '';
+        const price = parseFloat(priceRaw) || 0;
+        const category = row.querySelector('.prod-category')?.value?.trim() || 'Altro';
+        const notes = row.querySelector('.prod-notes')?.value?.trim() || '';
+        if (name) products.push({ id: app.generateId(), name, price, category, notes });
+      });
+      return products;
+    }
+
+    // remove product row (DOM)
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.matches('.remove-prod')) {
+        const row = e.target.closest('.product-item');
+        if (!row) return;
+        if (!confirm('Rimuovere questo prodotto?')) return;
+        row.remove();
+      }
+    });
+
+    // add new product from bottom form
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('addNewProductBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const name = (document.getElementById('newName')?.value || '').trim();
+        const category = (document.getElementById('newCategory')?.value || '').trim() || 'Altro';
+        const priceRaw = (document.getElementById('newPrice')?.value || '').trim();
+        const price = parseFloat(priceRaw);
+        const notes = (document.getElementById('newNotes')?.value || '').trim();
+
+        if (!name || isNaN(price) || price <= 0) {
+          alert('Inserisci nome e prezzo valido per il prodotto.');
+          return;
+        }
+
+        // append a new row to productsContainer
+        const container = document.getElementById('productsContainer');
+        const idx = (container.querySelectorAll('.product-item').length) || 0;
+        const newRow = document.createElement('div');
+        newRow.className = 'product-item';
+        newRow.dataset.idx = idx;
+        newRow.style = 'display:grid;grid-template-columns: 1fr 120px 80px 40px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03);';
+
+        newRow.innerHTML = `
+          <input class="prod-name" value="${escapeHtml(name)}" />
+          <input class="prod-price" value="${Number(price).toFixed(2)}" inputmode="decimal" />
+          <input class="prod-category" value="${escapeHtml(category)}" />
+          <button class="remove-prod remove-btn" type="button" title="Rimuovi prodotto">🗑️</button>
+          <div style="grid-column: 1 / -1; color:var(--text-secondary); font-size:0.88rem;">
+            <input class="prod-notes" style="width:100%; margin-top:6px;" value="${escapeHtml(notes)}" placeholder="Note (opzionale)" />
+          </div>
+        `;
+        container.appendChild(newRow);
+
+        // clear inputs
+        document.getElementById('newName').value = '';
+        document.getElementById('newCategory').value = '';
+        document.getElementById('newPrice').value = '';
+        document.getElementById('newNotes').value = '';
+      });
+
+      document.getElementById('saveChangesBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        // build products from DOM
+        const container = document.getElementById('productsContainer');
+        if (!container) return;
+
+        const rows = container.querySelectorAll('.product-item');
+        const products = [];
+        for (const row of rows) {
+          const name = row.querySelector('.prod-name')?.value?.trim() || '';
+          const priceRaw = row.querySelector('.prod-price')?.value?.trim() || '';
+          const price = parseFloat(priceRaw);
+          const category = row.querySelector('.prod-category')?.value?.trim() || 'Altro';
+          const notes = row.querySelector('.prod-notes')?.value?.trim() || '';
+
+          if (!name) {
+            alert('Ogni prodotto deve avere un nome. Controlla i prodotti nella lista.');
+            return;
+          }
+          if (isNaN(price) || price < 0) {
+            alert('Controlla i prezzi: assicurati siano numerici e >= 0.');
+            return;
+          }
+
+          products.push({ id: app.generateId(), name, price, category, notes });
+        }
+
+        // load expense, update products and save
+        const exp = app.getExpenseById(expenseId);
+        if (!exp) { alert('Errore, spesa non trovata'); return; }
+
+        const success = app.updateExpenseProducts(expenseId, products);
+        if (!success) {
+          alert('Errore salvataggio modifiche');
+          return;
+        }
+        alert('Modifiche salvate con successo.');
+        // refresh header and list
+        loadExpenseAndRender();
+        // notify other pages
+        document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: app.expenses }));
+      });
+
+      // initial load
+      loadExpenseAndRender();
+    });
+  </script>
+</body>
+</html>
