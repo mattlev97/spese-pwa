@@ -4,6 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dettaglio Spesa</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="" crossorigin="anonymous">
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -18,9 +22,7 @@
   </header>
 
   <main>
-    <section id="expenseHeader" style="margin-bottom:12px;">
-      <!-- info spesa (store, date, totale, num prodotti) -->
-    </section>
+    <section id="expenseHeader" style="margin-bottom:12px;"></section>
 
     <section>
       <h2>Prodotti</h2>
@@ -46,6 +48,26 @@
     </section>
   </main>
 
+  <!-- bottom navigation -->
+  <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
+    <a class="nav-item" href="index.html" aria-label="Dashboard">
+      <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
+      <span class="label">Dashboard</span>
+    </a>
+    <a class="nav-item" href="aggiungi.html" aria-label="Aggiungi">
+      <span class="icon-wrap"><i class="fa-solid fa-plus-circle"></i></span>
+      <span class="label">Aggiungi</span>
+    </a>
+    <a class="nav-item" href="archivio.html" aria-label="Archivio">
+      <span class="icon-wrap"><i class="fa-solid fa-box-archive"></i></span>
+      <span class="label">Archivio</span>
+    </a>
+    <a class="nav-item nav-active" href="impostazioni.html" aria-label="Impostazioni">
+      <span class="icon-wrap"><i class="fa-solid fa-gear"></i></span>
+      <span class="label">Impostazioni</span>
+    </a>
+  </nav>
+
   <script src="app.js"></script>
   <script>
     // utilities
@@ -53,7 +75,6 @@
     function qAll(sel, ctx=document) { return Array.from((ctx||document).querySelectorAll(sel)); }
     function escapeHtml(text) { const d=document.createElement('div'); d.textContent = text||''; return d.innerHTML; }
 
-    // parse id from query
     function getQueryParam(name) {
       const params = new URLSearchParams(location.search);
       return params.get(name);
@@ -61,11 +82,10 @@
 
     const expenseId = getQueryParam('id');
     if (!expenseId) {
-      alert('Nessuna spesa selezionata.');
+      // redirect back to archive if no id
       location.href = 'archivio.html';
     }
 
-    // render header info
     function renderHeader(exp) {
       const container = document.getElementById('expenseHeader');
       if (!container) return;
@@ -83,7 +103,6 @@
       `;
     }
 
-    // render editable products list
     function renderProductsEditable(exp) {
       const container = document.getElementById('productsContainer');
       if (!container) return;
@@ -117,34 +136,30 @@
       renderProductsEditable(exp);
     }
 
-    function collectProductsFromDOM() {
-      const container = document.getElementById('productsContainer');
-      if (!container) return [];
-      const rows = container.querySelectorAll('.product-item');
-      const products = [];
-      rows.forEach(row => {
-        const name = row.querySelector('.prod-name')?.value?.trim() || '';
-        const priceRaw = row.querySelector('.prod-price')?.value?.trim() || '';
-        const price = parseFloat(priceRaw) || 0;
-        const category = row.querySelector('.prod-category')?.value?.trim() || 'Altro';
-        const notes = row.querySelector('.prod-notes')?.value?.trim() || '';
-        if (name) products.push({ id: app.generateId(), name, price, category, notes });
-      });
-      return products;
-    }
-
-    // remove product row (DOM)
-    document.addEventListener('click', (e) => {
-      if (e.target && e.target.matches('.remove-prod')) {
-        const row = e.target.closest('.product-item');
-        if (!row) return;
-        if (!confirm('Rimuovere questo prodotto?')) return;
-        row.remove();
-      }
-    });
-
-    // add new product from bottom form
     document.addEventListener('DOMContentLoaded', () => {
+      // sync bottom-nav active item with the current path
+      (function syncBottomNavActive() {
+        const path = location.pathname.split('/').pop() || 'index.html';
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
+          const href = a.getAttribute('href') || '';
+          if (href.endsWith(path)) {
+            a.classList.add('nav-active');
+          } else {
+            a.classList.remove('nav-active');
+          }
+        });
+      })();
+
+      // remove product row
+      document.addEventListener('click', (e) => {
+        if (e.target && e.target.matches('.remove-prod')) {
+          const row = e.target.closest('.product-item');
+          if (!row) return;
+          if (!confirm('Rimuovere questo prodotto?')) return;
+          row.remove();
+        }
+      });
+
       document.getElementById('addNewProductBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
         const name = (document.getElementById('newName')?.value || '').trim();
@@ -158,7 +173,6 @@
           return;
         }
 
-        // append a new row to productsContainer
         const container = document.getElementById('productsContainer');
         const idx = (container.querySelectorAll('.product-item').length) || 0;
         const newRow = document.createElement('div');
@@ -177,7 +191,6 @@
         `;
         container.appendChild(newRow);
 
-        // clear inputs
         document.getElementById('newName').value = '';
         document.getElementById('newCategory').value = '';
         document.getElementById('newPrice').value = '';
@@ -186,7 +199,6 @@
 
       document.getElementById('saveChangesBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
-        // build products from DOM
         const container = document.getElementById('productsContainer');
         if (!container) return;
 
@@ -199,21 +211,11 @@
           const category = row.querySelector('.prod-category')?.value?.trim() || 'Altro';
           const notes = row.querySelector('.prod-notes')?.value?.trim() || '';
 
-          if (!name) {
-            alert('Ogni prodotto deve avere un nome. Controlla i prodotti nella lista.');
-            return;
-          }
-          if (isNaN(price) || price < 0) {
-            alert('Controlla i prezzi: assicurati siano numerici e >= 0.');
-            return;
-          }
+          if (!name) { alert('Ogni prodotto deve avere un nome.'); return; }
+          if (isNaN(price) || price < 0) { alert('Controlla i prezzi: assicurati siano numerici e >= 0.'); return; }
 
           products.push({ id: app.generateId(), name, price, category, notes });
         }
-
-        // load expense, update products and save
-        const exp = app.getExpenseById(expenseId);
-        if (!exp) { alert('Errore, spesa non trovata'); return; }
 
         const success = app.updateExpenseProducts(expenseId, products);
         if (!success) {
@@ -221,9 +223,7 @@
           return;
         }
         alert('Modifiche salvate con successo.');
-        // refresh header and list
         loadExpenseAndRender();
-        // notify other pages
         document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: app.expenses }));
       });
 
