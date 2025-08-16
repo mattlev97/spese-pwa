@@ -106,7 +106,6 @@ nav.top-nav a.nav-active { color: var(--text-primary); background: rgba(255,255,
 /* ===== BOTTOM NAVIGATION ===== */
 .bottom-nav {
   position: fixed;
-  /* safe area on devices with notch: bottom uses env() */
   bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
@@ -278,7 +277,7 @@ section h3 { margin-bottom: 12px; color: var(--text-primary); font-weight: 700; 
 
 /* inputs / selects / textarea: unified modern look */
 .form-group input, .form-group select, .form-group textarea,
-input[type="text"], input[type="number"], input[type="date"], select, textarea {
+input[type="text"], input[type="number"], input[type="date"], select, textarea, .form-input {
   width: 100%;
   padding: 12px 14px;
   border: 1px solid rgba(255,255,255,0.04);
@@ -441,7 +440,8 @@ input:focus, select:focus, textarea:focus { outline: none; }
 }
 
 /* notes field spans full width */
-.product-item .prod-notes { grid-column: 1 / -1; margin-top: 8px; }
+.product-item > div { grid-column: 1 / -1; margin-top: 8px; }
+.product-item .prod-notes { margin-top: 6px; }
 
 /* responsive adjustments */
 @media (max-width: 640px) {
