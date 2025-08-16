@@ -4,7 +4,6 @@
    - nav no-wrap + scrolling orizzontale
    - bottom navigation (mobile-first friendly) usando Font Awesome
    - regole scanner/modal/impostazioni mantenute
-   - CORREZIONE: evita che elementi/btn siano coperti dalla bottom-nav (safe area + padding extra)
    ========================= */
 
 /* Reset e base styles */
@@ -28,19 +27,13 @@
   --bottom-nav-text-inactive: var(--text-secondary);
   --bottom-nav-text-active: var(--text-primary);
 
-  /* extra spacing to keep content visibly above bottom nav */
-  --bottom-safe-gap: 20px;
+  /* safe area fallback (iOS) */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* core reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-html, body { height: 100%; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html,body { height:100%; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -48,13 +41,9 @@ body {
   color: var(--text-primary);
   background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
   min-height: 100vh;
-
-  /* spazio per la bottom navigation + considerazione iPhone safe-area */
-  /* env(safe-area-inset-bottom) for iOS devices with notch/home indicator */
-  padding-bottom: calc(var(--bottom-nav-height) + var(--bottom-safe-gap) + env(safe-area-inset-bottom, 0px));
+  /* spazio per la bottom navigation + safe-area */
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 12px);
   -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  -ms-touch-action: manipulation;
 }
 
 /* Header e navigazione (top) */
@@ -119,13 +108,12 @@ nav.top-nav a.nav-active {
 
 /* ===== BOTTOM NAVIGATION =====
    - usa markup: <nav class="bottom-nav"> <a class="nav-item nav-active" href="..."><span class="icon-wrap"><i class="fa fa-chart-pie"></i></span><span class="label">Dashboard</span></a> ...
-   - richiede Font Awesome nella pagina:
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   - richiede Font Awesome nella pagina (<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.x/css/all.min.css">)
 */
 .bottom-nav {
   position: fixed;
-  /* place above safe area inset */
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  /* account for safe area at bottom */
+  bottom: calc(10px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 20px);
@@ -141,7 +129,7 @@ nav.top-nav a.nav-active {
   border: 1px solid var(--border);
   z-index: 1200;
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* singolo item: icona sopra, label sotto */
@@ -158,7 +146,6 @@ nav.top-nav a.nav-active {
   min-width: 0;
   padding: 6px 6px;
   transition: color .18s ease;
-  -webkit-tap-highlight-color: transparent;
   position: relative;
 }
 
@@ -190,7 +177,6 @@ nav.top-nav a.nav-active {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0 2px;
 }
 
 /* stato attivo: pill (cerchio allungato) dietro l'icona + icon bianca + label bold */
@@ -263,13 +249,13 @@ nav.top-nav a.nav-active {
 }
 
 /* Layout principale */
-/* Nota: padding-bottom aggiuntivo per garantire che contenuti e bottoni
-   non vengano coperti dalla bottom-nav (ridondante con body ma più specifico) */
+/* IMPORTANT: main ha maggiore padding-bottom per essere sicuro che i contenuti
+   siano sempre accessibili e non nascosti dalla bottom nav */
 main {
   max-width: 500px;
   margin: 0 auto;
   padding: 20px;
-  padding-bottom: calc(var(--bottom-nav-height) + var(--bottom-safe-gap) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 24px);
 }
 
 /* Sezioni (card) */
@@ -307,16 +293,16 @@ section h2, section h3 { margin-bottom: 14px; color: var(--text-primary); font-w
 .btn-danger { background: var(--danger); color: #fff; border: none; }
 .btn:disabled { background: rgba(255,255,255,0.02); color: var(--muted); cursor: not-allowed; box-shadow: none; transform: none; }
 
-/* ensure bottom action groups are visible above the nav */
+/* Ensure important action areas are visible above bottom nav (extra margin) */
 .form-actions {
-  margin-top: 12px;
-  margin-bottom: calc(var(--bottom-nav-height) + var(--bottom-safe-gap) / 2);
   display: flex;
   gap: 8px;
   align-items: center;
-  flex-wrap: wrap;
-  z-index: 2; /* ensure above main content but below modal/bottom-nav */
-  position: relative;
+  justify-content: flex-start;
+  margin-top: 8px;
+  /* margin-bottom to keep away from bottom nav */
+  margin-bottom: calc(var(--safe-bottom) + 8px);
+  z-index: 1;
 }
 
 /* Form styles */
@@ -415,11 +401,8 @@ section h2, section h3 { margin-bottom: 14px; color: var(--text-primary); font-w
 .remove-btn:hover { transform: scale(1.04); }
 
 /* Modal */
-.modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 1400; }
+.modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:2000; }
 .modal-content { background: var(--panel); color: var(--text-primary); margin: 12% auto; padding: 20px; width: 92%; max-width: 420px; border-radius: 14px; border:1px solid var(--border); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
-
-/* ensure any overlays (modal/toast) are above bottom-nav */
-.toast, .modal { z-index: 1400; }
 
 /* Scanner overlay */
 #scannerContainer { position: relative; width: 100%; height: 320px; max-height: 60vh; background: #000; border-radius: 10px; overflow: hidden; display:flex; align-items:center; justify-content:center; margin-top: 8px; }
@@ -449,21 +432,6 @@ section h2, section h3 { margin-bottom: 14px; color: var(--text-primary); font-w
 /* No-expenses */
 .no-expenses { text-align:center; color:var(--text-secondary); padding: 28px 6px; }
 
-/* Toast (small notifications) */
-.toast {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(var(--bottom-nav-height) + var(--bottom-safe-gap) + env(safe-area-inset-bottom, 0px) + 8px);
-  background: rgba(0,0,0,0.75);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 10px;
-  z-index: 1450;
-  display: none;
-  font-size: 0.95rem;
-}
-
 /* Scrollbar custom */
 ::-webkit-scrollbar { width:8px; height:8px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -475,7 +443,7 @@ section h2, section h3 { margin-bottom: 14px; color: var(--text-primary); font-w
 
 /* Responsive tweaks */
 @media (max-width: 480px) {
-  main { padding: 14px; padding-bottom: calc(var(--bottom-nav-height) + var(--bottom-safe-gap) + env(safe-area-inset-bottom, 0px)); }
+  main { padding: 14px; padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 18px); }
   .form-row { grid-template-columns: 1fr; gap:10px; }
   header h1 { font-size:1.2rem; }
   nav.top-nav a { padding: 6px 10px; font-size: 0.88rem; min-width: auto; }
@@ -493,17 +461,8 @@ section h2, section h3 { margin-bottom: 14px; color: var(--text-primary); font-w
 
 /* Light mode support */
 @media (prefers-color-scheme: light) {
-  :root{
-    --bg-1: #f5f7fa;
-    --bg-2: #eef1f6;
-    --panel: #ffffff;
-    --input: #ffffff;
-    --text-primary: #111214;
-    --text-secondary: #4a4a4a;
-    --muted: #6b6b70;
-    --border: rgba(0,0,0,0.06);
-  }
-  body { background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%); color: var(--text-primary); }
+  :root{ --bg-1: #f5f7fa; --bg-2: #eef1f6; --panel: #ffffff; --input: #ffffff; --text-primary: #111214; --text-secondary: #4a4a4a; --muted: #6b6b70; --border: rgba(0,0,0,0.06);}
+  body { background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%); color: var(--text-primary);}
   header, section, .card { box-shadow: 0 6px 20px rgba(0,0,0,0.04); }
   .btn { color: #fff; }
   #cartTable th { background: #f6f6f7; color: var(--text-primary); }
@@ -512,5 +471,3 @@ section h2, section h3 { margin-bottom: 14px; color: var(--text-primary); font-w
   .bottom-nav .nav-item .icon-wrap i { color: var(--text-secondary); }
   .bottom-nav .nav-item.nav-active .icon-wrap i { color: #fff; }
 }
-
-/* End file */
