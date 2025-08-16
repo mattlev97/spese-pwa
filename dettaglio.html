@@ -13,7 +13,7 @@
 <body>
   <header>
     <h1>Dettaglio Spesa</h1>
-    <nav class="top-nav">
+    <nav class="top-nav" role="navigation" aria-label="Menu principale">
       <a href="index.html">Dashboard</a>
       <a href="aggiungi.html">Aggiungi</a>
       <a href="archivio.html" class="nav-active">Archivio</a>
@@ -26,23 +26,42 @@
 
     <section>
       <h2>Prodotti</h2>
-      <div id="productsContainer"></div>
+      <div id="productsContainer" aria-live="polite"></div>
 
       <h3 style="margin-top:14px;">Aggiungi prodotto dimenticato</h3>
-      <div style="display:grid;gap:10px;grid-template-columns: 1fr 1fr;">
-        <input id="newName" placeholder="Nome prodotto" />
-        <select id="newCategory">
-          <option value="">Seleziona tipologia</option>
-          <option>Carne</option><option>Pesce</option><option>Verdura</option><option>Frutta</option>
-          <option>Latticini</option><option>Pane</option><option>Bevande</option><option>Surgelati</option>
-          <option>Dolci</option><option>Pulizia</option><option>Igiene</option><option>Altro</option>
-        </select>
-        <input id="newPrice" placeholder="Prezzo (€)" inputmode="decimal" />
-        <input id="newNotes" placeholder="Note (opzionale)" />
+
+      <div class="form-row" style="margin-bottom:8px;">
+        <div class="form-group">
+          <label for="newName">Nome prodotto</label>
+          <input id="newName" class="form-input" type="text" placeholder="Es. Latte" aria-label="Nome prodotto" />
+        </div>
+
+        <div class="form-group">
+          <label for="newCategory">Tipologia</label>
+          <select id="newCategory" class="form-input" aria-label="Tipologia prodotto">
+            <option value="">Seleziona tipologia</option>
+            <option>Carne</option><option>Pesce</option><option>Verdura</option><option>Frutta</option>
+            <option>Latticini</option><option>Pane</option><option>Bevande</option><option>Surgelati</option>
+            <option>Dolci</option><option>Pulizia</option><option>Igiene</option><option>Altro</option>
+          </select>
+        </div>
       </div>
-      <div style="margin-top:10px; display:flex; gap:8px;">
-        <button id="addNewProductBtn" class="btn">➕ Aggiungi prodotto</button>
-        <button id="saveChangesBtn" class="btn">💾 Salva modifiche</button>
+
+      <div class="form-row" style="margin-bottom:6px;">
+        <div class="form-group">
+          <label for="newPrice">Prezzo (€)</label>
+          <input id="newPrice" class="form-input" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal" aria-label="Prezzo prodotto" />
+        </div>
+
+        <div class="form-group">
+          <label for="newNotes">Note (opzionale)</label>
+          <input id="newNotes" class="form-input" type="text" placeholder="Note (opzionale)" aria-label="Note prodotto" />
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="addNewProductBtn" class="btn" type="button">➕ Aggiungi prodotto</button>
+        <button id="saveChangesBtn" class="btn" type="button">💾 Salva modifiche</button>
         <a id="backToArchive" class="btn btn-secondary" href="archivio.html">◀ Torna all'archivio</a>
       </div>
     </section>
@@ -90,13 +109,13 @@
       const container = document.getElementById('expenseHeader');
       if (!container) return;
       container.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-          <div>
-            <strong>🏪 ${escapeHtml(exp.store)}</strong><br>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="min-width:0;flex:1;">
+            <strong style="font-size:1.05rem;">🏪 ${escapeHtml(exp.store)}</strong><br>
             <small style="color:var(--text-secondary)">📅 ${app.formatDate(exp.date)} • creato: ${new Date(exp.createdAt).toLocaleString()}</small>
           </div>
-          <div style="text-align:right;">
-            <div style="font-weight:800; font-size:1.15rem;">${app.formatCurrency(exp.total)}</div>
+          <div style="text-align:right; min-width:140px;">
+            <div style="font-weight:800; font-size:1.18rem;">${app.formatCurrency(exp.total)}</div>
             <div style="color:var(--text-secondary)">${(exp.products||[]).length} prodotti</div>
           </div>
         </div>
@@ -113,20 +132,20 @@
       }
 
       container.innerHTML = prods.map((p, idx) => `
-        <div class="product-item" data-idx="${idx}" style="display:grid;grid-template-columns: 1fr 120px 80px 40px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
-          <input class="prod-name" value="${escapeHtml(p.name || '')}" />
-          <input class="prod-price" value="${Number(p.price||0).toFixed(2)}" inputmode="decimal" />
-          <input class="prod-category" value="${escapeHtml(p.category || '')}" />
+        <div class="product-item" data-idx="${idx}">
+          <input class="prod-name" type="text" aria-label="Nome prodotto ${idx+1}" value="${escapeHtml(p.name || '')}" />
+          <input class="prod-price" type="number" step="0.01" min="0" aria-label="Prezzo prodotto ${idx+1}" value="${Number(p.price||0).toFixed(2)}" inputmode="decimal" />
+          <input class="prod-category" type="text" aria-label="Categoria prodotto ${idx+1}" value="${escapeHtml(p.category || '')}" />
           <button class="remove-prod remove-btn" type="button" title="Rimuovi prodotto">🗑️</button>
-          <div style="grid-column: 1 / -1; color:var(--text-secondary); font-size:0.88rem;">
-            <input class="prod-notes" style="width:100%; margin-top:6px;" value="${escapeHtml(p.notes || '')}" placeholder="Note (opzionale)" />
+          <div>
+            <input class="prod-notes" type="text" aria-label="Note prodotto ${idx+1}" placeholder="Note (opzionale)" value="${escapeHtml(p.notes || '')}" />
           </div>
         </div>
       `).join('');
     }
 
     function loadExpenseAndRender() {
-      const exp = app.getExpenseById(expenseId);
+      const exp = (typeof app?.getExpenseById === 'function') ? app.getExpenseById(expenseId) : null;
       if (!exp) {
         alert('Spesa non trovata.');
         location.href = 'archivio.html';
@@ -142,11 +161,7 @@
         const path = location.pathname.split('/').pop() || 'index.html';
         document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
           const href = a.getAttribute('href') || '';
-          if (href.endsWith(path)) {
-            a.classList.add('nav-active');
-          } else {
-            a.classList.remove('nav-active');
-          }
+          a.classList.toggle('nav-active', href.endsWith(path));
         });
       })();
 
@@ -168,7 +183,7 @@
         const price = parseFloat(priceRaw);
         const notes = (document.getElementById('newNotes')?.value || '').trim();
 
-        if (!name || isNaN(price) || price <= 0) {
+        if (!name || isNaN(price) || price < 0) {
           alert('Inserisci nome e prezzo valido per il prodotto.');
           return;
         }
@@ -178,15 +193,14 @@
         const newRow = document.createElement('div');
         newRow.className = 'product-item';
         newRow.dataset.idx = idx;
-        newRow.style = 'display:grid;grid-template-columns: 1fr 120px 80px 40px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03);';
 
         newRow.innerHTML = `
-          <input class="prod-name" value="${escapeHtml(name)}" />
-          <input class="prod-price" value="${Number(price).toFixed(2)}" inputmode="decimal" />
-          <input class="prod-category" value="${escapeHtml(category)}" />
+          <input class="prod-name" type="text" aria-label="Nome prodotto nuovo" value="${escapeHtml(name)}" />
+          <input class="prod-price" type="number" step="0.01" min="0" aria-label="Prezzo prodotto nuovo" value="${Number(price).toFixed(2)}" inputmode="decimal" />
+          <input class="prod-category" type="text" aria-label="Categoria prodotto nuovo" value="${escapeHtml(category)}" />
           <button class="remove-prod remove-btn" type="button" title="Rimuovi prodotto">🗑️</button>
-          <div style="grid-column: 1 / -1; color:var(--text-secondary); font-size:0.88rem;">
-            <input class="prod-notes" style="width:100%; margin-top:6px;" value="${escapeHtml(notes)}" placeholder="Note (opzionale)" />
+          <div>
+            <input class="prod-notes" type="text" aria-label="Note prodotto nuovo" placeholder="Note (opzionale)" value="${escapeHtml(notes)}" />
           </div>
         `;
         container.appendChild(newRow);
@@ -214,14 +228,21 @@
           if (!name) { alert('Ogni prodotto deve avere un nome.'); return; }
           if (isNaN(price) || price < 0) { alert('Controlla i prezzi: assicurati siano numerici e >= 0.'); return; }
 
-          products.push({ id: app.generateId(), name, price, category, notes });
+          products.push({ id: (typeof app?.generateId === 'function' ? app.generateId() : String(Math.random())), name, price, category, notes });
         }
 
-        const success = app.updateExpenseProducts(expenseId, products);
+        // usa la funzione app.updateExpenseProducts se presente
+        const success = (typeof app?.updateExpenseProducts === 'function') ? app.updateExpenseProducts(expenseId, products) : false;
         if (!success) {
-          alert('Errore salvataggio modifiche');
+          // se la funzione non esiste segnalalo ma non bloccare tutto (comportamento di fallback)
+          if (typeof app?.updateExpenseProducts !== 'function') {
+            alert('Salvataggio non disponibile: funzione mancante. Verifica app.js.');
+          } else {
+            alert('Errore salvataggio modifiche');
+          }
           return;
         }
+
         alert('Modifiche salvate con successo.');
         loadExpenseAndRender();
         document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: app.expenses }));
