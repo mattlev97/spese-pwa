@@ -37,6 +37,31 @@
     .small-btn { padding:8px 10px; border-radius:8px; font-size:0.9rem; }
     .openfood-link { display:block; margin-top:10px; color: var(--accent); text-decoration: none; font-weight:600; }
     .openfood-link:hover { text-decoration: underline; }
+
+    /* Stili per immagine in carrello */
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cart-img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.04);
+      flex: 0 0 64px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+    }
+    .cart-item-details { display:flex; flex-direction:column; gap:4px; min-width:0; }
+    .cart-item-details .name { font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cart-item-details .meta { color:var(--text-secondary); font-size:0.88rem; }
+
+    /* Celle della tabella compatte per accomodare immagine */
+    #cartTable td { vertical-align: middle; }
+    @media (max-width:520px) {
+      .cart-img { width:48px; height:48px; flex:0 0 48px; }
+    }
   </style>
 </head>
 <body>
@@ -367,6 +392,10 @@
         if (!res.ok) throw new Error('Network response not ok');
         const json = await res.json();
 
+        // reset any previous scanned image by default
+        app.setLastScannedImage(null);
+        app.setLastScannedBarcode(barcode);
+
         if (json && json.status === 1 && json.product) {
           const p = json.product;
           const nameField = document.getElementById('productName');
@@ -390,8 +419,24 @@
             if (found) categoryField.value = found;
           }
 
+          // try to pick the best available image URL from OpenFoodFacts
+          const imageCandidates = [
+            p.image_front_small_url,
+            p.image_front_thumb_url,
+            p.image_small_url,
+            p.image_url,
+            p.image_front_url
+          ].filter(Boolean);
+          const chosenImage = imageCandidates.length ? imageCandidates[0] : null;
+          if (chosenImage) {
+            app.setLastScannedImage(chosenImage);
+          } else {
+            app.setLastScannedImage(null);
+          }
+
           showToast('Dati trovati e compilati (verifica prima di aggiungere)', 2200);
         } else {
+          app.setLastScannedImage(null);
           const manual = confirm('Prodotto non trovato in Open Food Facts. Vuoi cercarlo manualmente sul sito?');
           if (manual) {
             window.open('https://world.openfoodfacts.org', '_blank', 'noopener');
@@ -399,6 +444,7 @@
         }
       } catch (err) {
         console.error('OpenFoodFacts fetch error', err);
+        app.setLastScannedImage(null);
         alert('Errore nel recupero dei dati. Controlla la connessione o inserisci manualmente.');
       } finally {
         setTimeout(async () => {
@@ -437,7 +483,8 @@
       }
     }
 
-    function addProductToCart() {
+    // Aggiorna: usa app.addProductToCart e salva immagine se presente
+    function addProductToCartLocal() {
       const categoryEl = document.getElementById('productCategory');
       const nameEl = document.getElementById('productName');
       const priceEl = document.getElementById('productPrice');
@@ -458,8 +505,11 @@
         return;
       }
 
+      // se lo scanner ha fornito un'immagine, la usiamo e poi la resettiamo
+      const scannedImage = (typeof app.getLastScannedImage === 'function') ? app.getLastScannedImage() : null;
+      const scannedBarcode = (typeof app.getLastScannedBarcode === 'function') ? app.getLastScannedBarcode() : null;
+
       const product = {
-        id: app.generateId(),
         category,
         name,
         price,
@@ -467,7 +517,17 @@
         notes
       };
 
-      app.currentCart.push(product);
+      if (scannedImage) {
+        product.image = scannedImage;
+        // opzionale: puoi salvare anche il barcode su prodotto se ti serve
+        if (scannedBarcode) product.barcode = scannedBarcode;
+      }
+
+      // usa l'API dell'app (dispatta event + mantiene stato)
+      const added = app.addProductToCart(product);
+      // pulisci last-scanned per evitare riutili
+      try { app.setLastScannedImage(null); app.setLastScannedBarcode(null); } catch(e){}
+
       updateCartDisplay();
       clearProductForm();
       nameEl.focus();
@@ -483,7 +543,9 @@
       const saveBtn = document.getElementById('saveExpenseBtn');
       if (!cartSection || !cartBody || !cartTotal || !saveBtn) return;
 
-      if (!app.currentCart || app.currentCart.length === 0) {
+      const cart = app.currentCart || [];
+
+      if (!cart || cart.length === 0) {
         cartSection.style.display = 'none';
         saveBtn.disabled = true;
         cartBody.innerHTML = '';
@@ -494,18 +556,32 @@
       cartSection.style.display = 'block';
       saveBtn.disabled = false;
 
-      cartBody.innerHTML = app.currentCart.map(p => `
-        <tr>
-          <td>
-            <strong>${escapeHtml(p.name)}</strong>
-            <div style="color: ${'#bfbfc4'}; font-size:0.85rem">${escapeHtml(p.category)}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
-          </td>
-          <td><strong>${app.formatCurrency(p.price)}</strong></td>
-          <td><button type="button" class="remove-btn" onclick="removeFromCart('${p.id}')">🗑️</button></td>
-        </tr>
-      `).join('');
+      cartBody.innerHTML = cart.map(p => {
+        // image html (only if p.image present)
+        const imgHtml = p.image ? `<img class="cart-img" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" />` : '';
+        const detailsHtml = `
+          <div class="cart-item">
+            ${imgHtml}
+            <div class="cart-item-details">
+              <div class="name">${escapeHtml(p.name)}</div>
+              <div class="meta">${escapeHtml(p.category || '')}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
+            </div>
+          </div>
+        `;
+        return `
+          <tr>
+            <td style="min-width:0; width:70%;">
+              ${detailsHtml}
+            </td>
+            <td style="white-space:nowrap;"><strong>${app.formatCurrency(p.price)}</strong></td>
+            <td style="white-space:nowrap;">
+              <button type="button" class="remove-btn" onclick="removeFromCart('${p.id}')">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
 
-      const total = app.currentCart.reduce((s, it) => s + (parseFloat(it.price) || 0), 0);
+      const total = app.getCartTotal ? app.getCartTotal() : (cart.reduce((s, it) => s + (parseFloat(it.price) || 0), 0));
       cartTotal.textContent = app.formatCurrency(total);
     }
 
@@ -517,16 +593,25 @@
     }
 
     function removeFromCart(id) {
-      app.currentCart = app.currentCart.filter(p => p.id !== id);
+      if (app.removeProductFromCart) {
+        app.removeProductFromCart(id);
+      } else {
+        app.currentCart = (app.currentCart || []).filter(p => p.id !== id);
+        document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: app.currentCart }));
+      }
       updateCartDisplay();
     }
 
     function clearCart() {
       if (!app.currentCart || app.currentCart.length === 0) return;
-      if (confirm('Svuotare il carrello?')) {
+      if (!confirm('Svuotare il carrello?')) return;
+      if (app.clearCart) {
+        app.clearCart();
+      } else {
         app.currentCart = [];
-        updateCartDisplay();
+        document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: app.currentCart }));
       }
+      updateCartDisplay();
     }
 
     function saveExpense() {
@@ -545,7 +630,8 @@
       if (date > today) { alert('La data non può essere futura'); return; }
 
       try {
-        app.addExpense(store, date, app.currentCart);
+        // usa la API dell'app
+        app.saveCartAsExpense ? app.saveCartAsExpense(store, date) : app.addExpense(store, date, app.currentCart);
         try {
           const inList = app.getStores().some(s => s.toLowerCase() === store.toLowerCase());
           if (!inList && store !== 'Altro') app.addStore(store);
@@ -553,7 +639,7 @@
 
         alert('Spesa salvata con successo');
         document.getElementById('expenseForm').reset();
-        app.currentCart = [];
+        if (app.clearCart) app.clearCart(); else app.currentCart = [];
         updateCartDisplay();
         toggleCustomStore();
         dateEl.value = today;
@@ -574,7 +660,7 @@
 
       // wire UI
       document.getElementById('storeSelect')?.addEventListener('change', toggleCustomStore);
-      document.getElementById('addProductBtn')?.addEventListener('click', e => { e.preventDefault(); addProductToCart(); });
+      document.getElementById('addProductBtn')?.addEventListener('click', e => { e.preventDefault(); addProductToCartLocal(); });
       document.getElementById('clearCartBtn')?.addEventListener('click', e => { e.preventDefault(); clearCart(); });
       document.getElementById('saveExpenseBtn')?.addEventListener('click', e => { e.preventDefault(); saveExpense(); });
       document.getElementById('expenseForm')?.addEventListener('submit', e => { e.preventDefault(); saveExpense(); });
@@ -594,10 +680,16 @@
       document.getElementById('scannerCancelBtn')?.addEventListener('click', () => { closeScannerModal(); });
       document.getElementById('switchCameraBtn')?.addEventListener('click', async () => { await switchCamera(); });
 
-      // init cart state
+      // init cart state (sync con app)
       app.currentCart = app.currentCart || [];
       updateCartDisplay();
       toggleCustomStore();
+
+      // ascolta cambi carte dall'API in caso qualcuno modifichi
+      document.addEventListener('app:cart-changed', (e) => {
+        // app.currentCart è la fonte di verità
+        updateCartDisplay();
+      });
 
       // Ensure main has enough bottom padding for the bottom nav (JS fallback in case env() is not supported)
       const bottomNav = document.querySelector('.bottom-nav');
