@@ -1,9 +1,10 @@
-/* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, eventi */
+/* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, eventi, archivio prodotti */
 
 class ExpenseTracker {
   constructor() {
     this.expensesKey = 'expenses';
     this.storesKey = 'stores';
+    this.productsArchiveKey = 'productsArchive'; // nuovo archivio prodotti
 
     this.defaultStores = [
       "Conad", "Coop", "Esselunga", "Eurospin",
@@ -11,10 +12,10 @@ class ExpenseTracker {
     ];
 
     this.expenses = this.loadExpenses();
-    this.currentCart = []; // prodotti non ancora salvati come spesa
+    this.currentCart = [];
     this.stores = this.loadStores();
+    this.productsArchive = this.loadProductsArchive(); // caricamento archivio prodotti
 
-    // ultimo barcode / immagine recuperata dall'API (url) — usato da aggiungi pagina
     this._lastScannedImage = null;
     this._lastScannedBarcode = null;
 
@@ -28,11 +29,14 @@ class ExpenseTracker {
         this.expenses = this.loadExpenses();
         document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: this.expenses }));
       }
+      if (e.key === this.productsArchiveKey) {
+        this.productsArchive = this.loadProductsArchive();
+      }
     });
   }
 
   // -------------------------
-  // Expenses (CRUD) + helpers
+  // Expenses (CRUD)
   // -------------------------
   loadExpenses() {
     try {
@@ -95,6 +99,54 @@ class ExpenseTracker {
     this.expenses[idx].total = total;
     this.saveExpenses();
     return true;
+  }
+
+  // -------------------------
+  // Products Archive (nuovo)
+  // -------------------------
+  loadProductsArchive() {
+    try {
+      const raw = localStorage.getItem(this.productsArchiveKey);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.error('Errore parsing productsArchive', e);
+      return {};
+    }
+  }
+
+  saveProductsArchive() {
+    try {
+      localStorage.setItem(this.productsArchiveKey, JSON.stringify(this.productsArchive));
+    } catch (e) {
+      console.error('Errore salvataggio productsArchive', e);
+    }
+  }
+
+  updateProductArchive(product) {
+    if (!product || !product.name) return;
+    const key = product.name.trim().toLowerCase();
+    const price = parseFloat(product.price) || 0;
+    if (!this.productsArchive[key]) {
+      this.productsArchive[key] = { name: product.name.trim(), minPrice: price };
+      this.saveProductsArchive();
+      return;
+    }
+    if (price < this.productsArchive[key].minPrice) {
+      this.productsArchive[key].minPrice = price;
+      this.saveProductsArchive();
+    }
+  }
+
+  getProductPriceDifference(product) {
+    if (!product || !product.name) return null;
+    const key = product.name.trim().toLowerCase();
+    const archiveEntry = this.productsArchive[key];
+    if (!archiveEntry) return null;
+    const current = parseFloat(product.price) || 0;
+    const ref = parseFloat(archiveEntry.minPrice) || 0;
+    if (ref <= 0) return null;
+    const diff = ((current - ref) / ref) * 100;
+    return { differencePercent: diff.toFixed(1), referencePrice: ref };
   }
 
   // -------------------------
@@ -265,13 +317,21 @@ class ExpenseTracker {
   }
 
   // -------------------------
-  // CART API (event-driven)
+  // CART API
   // -------------------------
   addProductToCart(product) {
-    // product: { id?, name, price, category, notes, image? }
     const p = { id: product.id || this.generateId(), ...product };
+
+    // aggiorna archivio prodotti
+    this.updateProductArchive(p);
+
+    // dispatch evento anche con differenza prezzo
+    const diff = this.getProductPriceDifference(p);
     this.currentCart.push(p);
     document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
+    if (diff) {
+      document.dispatchEvent(new CustomEvent('app:price-difference', { detail: { product: p, diff } }));
+    }
     return p;
   }
 
@@ -311,9 +371,7 @@ class ExpenseTracker {
 // esponi istanza globale
 const app = new ExpenseTracker();
 
-// on DOM ready, populate selects
 document.addEventListener('DOMContentLoaded', () => {
   try { app.populateAllStoreSelects(); } catch (e) {}
-  // emit initial cart state
   document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: app.currentCart }));
 });
