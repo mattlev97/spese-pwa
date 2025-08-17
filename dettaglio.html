@@ -6,6 +6,7 @@
   <title>Dettaglio Spesa</title>
 
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
 </head>
 <body>
   <header>
@@ -99,6 +100,7 @@
         return;
       }
 
+      // Each product shows image (if available) on the left.
       container.innerHTML = prods.map((p, idx) => `
         <div class="product-item" data-idx="${idx}" style="display:grid;grid-template-columns: 64px 1fr 100px 40px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
           <div>
