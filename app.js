@@ -1,10 +1,10 @@
-/* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, eventi, archivio prodotti */
+/* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, eventi, archivio prezzi */
 
 class ExpenseTracker {
   constructor() {
     this.expensesKey = 'expenses';
     this.storesKey = 'stores';
-    this.productsArchiveKey = 'productsArchive'; // nuovo archivio prodotti
+    this.productsKey = 'productsReference'; // archivio interno prezzi
 
     this.defaultStores = [
       "Conad", "Coop", "Esselunga", "Eurospin",
@@ -14,11 +14,13 @@ class ExpenseTracker {
     this.expenses = this.loadExpenses();
     this.currentCart = [];
     this.stores = this.loadStores();
-    this.productsArchive = this.loadProductsArchive(); // caricamento archivio prodotti
+    this.productsReference = this.loadProductsReference();
 
+    // ultimo barcode / immagine recuperata dall'API (url) — usato da aggiungi pagina
     this._lastScannedImage = null;
     this._lastScannedBarcode = null;
 
+    // keep storage sync across tabs
     window.addEventListener('storage', (e) => {
       if (e.key === this.storesKey) {
         this.stores = this.loadStores();
@@ -29,14 +31,92 @@ class ExpenseTracker {
         this.expenses = this.loadExpenses();
         document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: this.expenses }));
       }
-      if (e.key === this.productsArchiveKey) {
-        this.productsArchive = this.loadProductsArchive();
+      if (e.key === this.productsKey) {
+        this.productsReference = this.loadProductsReference();
+        document.dispatchEvent(new CustomEvent('app:productsReference-changed', { detail: this.productsReference }));
       }
     });
   }
 
   // -------------------------
-  // Expenses (CRUD)
+  // Archivio prodotti
+  // -------------------------
+  loadProductsReference() {
+    try {
+      const raw = localStorage.getItem(this.productsKey);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.error("Errore loadProductsReference", e);
+      return {};
+    }
+  }
+
+  saveProductsReference() {
+    try {
+      localStorage.setItem(this.productsKey, JSON.stringify(this.productsReference || {}));
+      document.dispatchEvent(new CustomEvent('app:productsReference-changed', { detail: this.productsReference }));
+    } catch (e) {
+      console.error("Errore saveProductsReference", e);
+    }
+  }
+
+  /**
+   * Aggiorna l'archivio referenze prodotto. Registra solo il prezzo minimo osservato.
+   * product: { name, price, priceKg?, ... }
+   */
+  updateProductReference(product) {
+    try {
+      if (!product || !product.name) return;
+      const name = product.name.trim().toLowerCase();
+      const price = parseFloat(product.price) || 0;
+      if (!name || !price) return;
+
+      if (!this.productsReference) this.productsReference = {};
+      if (!this.productsReference[name]) {
+        this.productsReference[name] = { minPrice: price, lastSeen: new Date().toISOString() };
+      } else {
+        if (price < (this.productsReference[name].minPrice || Infinity)) {
+          this.productsReference[name].minPrice = price;
+        }
+        this.productsReference[name].lastSeen = new Date().toISOString();
+      }
+      this.saveProductsReference();
+    } catch (e) {
+      console.error('updateProductReference error', e);
+    }
+  }
+
+  getProductReference(name) {
+    if (!name) return null;
+    try {
+      const key = name.trim().toLowerCase();
+      return (this.productsReference && this.productsReference[key]) ? this.productsReference[key] : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * Confronta il prodotto passato con la referenza (minPrice).
+   * Ritorna { reference: number, difference: number } oppure null
+   */
+  compareWithReference(product) {
+    try {
+      if (!product || !product.name) return null;
+      const ref = this.getProductReference(product.name);
+      if (!ref || typeof ref.minPrice === 'undefined') return null;
+      const current = parseFloat(product.price) || 0;
+      if (!current || !ref.minPrice) return null;
+      const diff = ((current - ref.minPrice) / ref.minPrice) * 100;
+      return { reference: ref.minPrice, difference: diff };
+    } catch (e) {
+      console.error('compareWithReference error', e);
+      return null;
+    }
+  }
+
+  // -------------------------
+  // Expenses (CRUD) + helpers
   // -------------------------
   loadExpenses() {
     try {
@@ -50,7 +130,7 @@ class ExpenseTracker {
 
   saveExpenses() {
     try {
-      localStorage.setItem(this.expensesKey, JSON.stringify(this.expenses));
+      localStorage.setItem(this.expensesKey, JSON.stringify(this.expenses || []));
       document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: this.expenses }));
     } catch (e) {
       console.error('Errore salvataggio expenses', e);
@@ -73,13 +153,24 @@ class ExpenseTracker {
 
     this.expenses.push(expense);
     this.saveExpenses();
+
+    // aggiorna archivio prezzi usando i prodotti salvati (non si modifica spese passate,
+    // ma l'archivio rappresenta il prezzo minimo osservato)
+    (expense.products || []).forEach(p => {
+      try { this.updateProductReference(p); } catch (e) { /* ignore per singolo prodotto */ }
+    });
+
     return expense;
   }
 
   deleteExpense(id) {
-    const before = this.expenses.length;
-    this.expenses = this.expenses.filter(expense => expense.id !== id);
-    if (this.expenses.length !== before) this.saveExpenses();
+    try {
+      const before = this.expenses.length;
+      this.expenses = this.expenses.filter(expense => expense.id !== id);
+      if (this.expenses.length !== before) this.saveExpenses();
+    } catch (e) {
+      console.error('deleteExpense error', e);
+    }
   }
 
   clearExpenses() {
@@ -99,54 +190,6 @@ class ExpenseTracker {
     this.expenses[idx].total = total;
     this.saveExpenses();
     return true;
-  }
-
-  // -------------------------
-  // Products Archive (nuovo)
-  // -------------------------
-  loadProductsArchive() {
-    try {
-      const raw = localStorage.getItem(this.productsArchiveKey);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      console.error('Errore parsing productsArchive', e);
-      return {};
-    }
-  }
-
-  saveProductsArchive() {
-    try {
-      localStorage.setItem(this.productsArchiveKey, JSON.stringify(this.productsArchive));
-    } catch (e) {
-      console.error('Errore salvataggio productsArchive', e);
-    }
-  }
-
-  updateProductArchive(product) {
-    if (!product || !product.name) return;
-    const key = product.name.trim().toLowerCase();
-    const price = parseFloat(product.price) || 0;
-    if (!this.productsArchive[key]) {
-      this.productsArchive[key] = { name: product.name.trim(), minPrice: price };
-      this.saveProductsArchive();
-      return;
-    }
-    if (price < this.productsArchive[key].minPrice) {
-      this.productsArchive[key].minPrice = price;
-      this.saveProductsArchive();
-    }
-  }
-
-  getProductPriceDifference(product) {
-    if (!product || !product.name) return null;
-    const key = product.name.trim().toLowerCase();
-    const archiveEntry = this.productsArchive[key];
-    if (!archiveEntry) return null;
-    const current = parseFloat(product.price) || 0;
-    const ref = parseFloat(archiveEntry.minPrice) || 0;
-    if (ref <= 0) return null;
-    const diff = ((current - ref) / ref) * 100;
-    return { differencePercent: diff.toFixed(1), referencePrice: ref };
   }
 
   // -------------------------
@@ -173,8 +216,8 @@ class ExpenseTracker {
     const amounts = expenses.map(e => parseFloat(e.total)||0);
     const maxAmount = Math.max(...amounts);
     const minAmount = Math.min(...amounts);
-    const maxExpense = expenses.find(e => e.total === maxAmount) || {};
-    const minExpense = expenses.find(e => e.total === minAmount) || {};
+    const maxExpense = expenses.find(e => parseFloat(e.total) === maxAmount) || {};
+    const minExpense = expenses.find(e => parseFloat(e.total) === minAmount) || {};
     const storeStats = {};
     const categoryStats = {};
     expenses.forEach(exp => {
@@ -255,6 +298,7 @@ class ExpenseTracker {
   }
 
   getStores() { return Array.isArray(this.stores) ? [...this.stores] : []; }
+
   addStore(name) {
     if (!name || typeof name !== 'string') return false;
     const clean = name.trim();
@@ -266,6 +310,7 @@ class ExpenseTracker {
     this.saveStores(this.stores);
     return true;
   }
+
   removeStore(name) {
     if (!name) return false;
     const before = this.stores.length;
@@ -274,6 +319,7 @@ class ExpenseTracker {
     this.saveStores(this.stores);
     return true;
   }
+
   editStore(oldName, newName) {
     if (!oldName || !newName) return false;
     const cleanNew = newName.trim();
@@ -285,6 +331,7 @@ class ExpenseTracker {
     this.saveStores(this.stores);
     return true;
   }
+
   ensureDefaultStores() { if (!this.stores || !this.stores.length) this.saveStores(this.defaultStores.slice()); }
 
   populateAllStoreSelects() {
@@ -317,21 +364,19 @@ class ExpenseTracker {
   }
 
   // -------------------------
-  // CART API
+  // CART API (event-driven)
   // -------------------------
   addProductToCart(product) {
+    // product: { id?, name, price, category, notes, image? }
     const p = { id: product.id || this.generateId(), ...product };
+    // attach price comparison if possible
+    try {
+      const comparison = this.compareWithReference(p);
+      if (comparison) p._priceComparison = comparison;
+    } catch (e) { /* ignore */ }
 
-    // aggiorna archivio prodotti
-    this.updateProductArchive(p);
-
-    // dispatch evento anche con differenza prezzo
-    const diff = this.getProductPriceDifference(p);
     this.currentCart.push(p);
     document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
-    if (diff) {
-      document.dispatchEvent(new CustomEvent('app:price-difference', { detail: { product: p, diff } }));
-    }
     return p;
   }
 
@@ -351,9 +396,18 @@ class ExpenseTracker {
 
   saveCartAsExpense(store, date) {
     if (!store || !date) return null;
-    const saved = this.addExpense(store, date, this.currentCart);
-    this.clearCart();
-    return saved;
+    // before saving, ensure we don't mutate past expenses but update reference archive with current cart prices
+    try {
+      // Create copy of products to persist in expense
+      const toSaveProducts = (this.currentCart || []).map(p => ({ ...p }));
+      const saved = this.addExpense(store, date, toSaveProducts);
+      // clear cart after save
+      this.clearCart();
+      return saved;
+    } catch (e) {
+      console.error('saveCartAsExpense error', e);
+      return null;
+    }
   }
 
   // -------------------------
@@ -371,7 +425,11 @@ class ExpenseTracker {
 // esponi istanza globale
 const app = new ExpenseTracker();
 
+// on DOM ready, populate selects and emit initial state
 document.addEventListener('DOMContentLoaded', () => {
   try { app.populateAllStoreSelects(); } catch (e) {}
+  // emit initial cart state
   document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: app.currentCart }));
+  // emit productsReference changed (initial)
+  document.dispatchEvent(new CustomEvent('app:productsReference-changed', { detail: app.productsReference }));
 });
