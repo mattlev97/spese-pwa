@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Archivio Spese</title>
 
+  <!-- Font Awesome (icone bottom nav) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -109,17 +112,15 @@
       updateFilterStatus(expenses.length, totalCount, activeFilters);
       if (!expenses.length) { container.innerHTML = '<div class="no-expenses">Nessuna spesa trovata con i filtri selezionati.</div>'; return; }
 
+      // NOTE: no image is shown in the archive list (images are only in dettaglio.html)
       container.innerHTML = expenses.map(exp => {
         const productCount = (exp.products || []).length;
         const detailsUrl = `dettaglio.html?id=${encodeURIComponent(exp.id)}`;
-        // pick first product image if any
-        const firstImage = (exp.products||[]).find(p => p.image && p.image.length) || null;
-        const thumbHtml = firstImage ? `<img class="thumb" src="${escapeHtml(firstImage.image)}" alt="${escapeHtml(firstImage.name||'')}" style="margin-right:10px;">` : `<div class="image-placeholder" style="margin-right:10px;">No foto</div>`;
+
         return `
-          <div style="margin-bottom:12px; padding:12px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); border:1px solid rgba(255,255,255,0.02);">
+          <div class="archive-card" style="margin-bottom:12px; padding:12px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); border:1px solid rgba(255,255,255,0.02);">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
               <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
-                ${thumbHtml}
                 <div style="min-width:0;">
                   <strong>🏪 ${escapeHtml(exp.store || '')}</strong>
                   <div style="color:var(--text-secondary); font-size:0.92rem;">📅 ${formatDateSafe(exp.date)} • ${productCount} prodotti</div>
