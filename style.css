@@ -7,6 +7,8 @@
    - FIX: evita sovrapposizione bottom-nav su tutte le pagine (safe-area + padding main)
    - Charts affiancati in .charts-section (affiancati anche su iPhone con overflow-x)
    - Titoli centrati; evita wrap per "Spesa Massima"; bottoni grigio scuro
+   - FIX: nasconde immagini nella lista archivio ma le mostra nel dettaglio / carrello
+   - FIX: aumenta z-index della bottom-nav; fornisce fallback visibile per label senza icone
    ========================= */
 
 /* Reset e base styles */
@@ -128,7 +130,7 @@ nav.top-nav a.nav-active { color: var(--text-primary); background: rgba(255,255,
   padding: 8px 10px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.55);
   border: 1px solid var(--border);
-  z-index: 1200;
+  z-index: 99999; /* INCREMENTATO: assicura che la nav resti sopra altri elementi / UI */
   backdrop-filter: blur(6px);
 }
 
@@ -150,6 +152,7 @@ nav.top-nav a.nav-active { color: var(--text-primary); background: rgba(255,255,
   position: relative;
 }
 
+/* forziamo dimensioni e visibilità dell'icon-wrap/label per fallback quando FA non è presente */
 .bottom-nav .nav-item .icon-wrap {
   width: 44px;
   height: 44px;
@@ -160,13 +163,16 @@ nav.top-nav a.nav-active { color: var(--text-primary); background: rgba(255,255,
   transition: transform .12s ease, background .12s ease;
   position: relative;
   z-index: 2;
+  /* fallback visibile se icona non caricata */
+  background: transparent;
 }
-
 .bottom-nav .nav-item .icon-wrap i,
-.bottom-nav .nav-item .icon-wrap svg { font-size:20px; color: var(--text-secondary); display:block; }
+.bottom-nav .nav-item .icon-wrap svg { font-size:20px; color: var(--text-secondary); display:block; line-height:1; }
 
-.bottom-nav .nav-item .label { font-size: 12px; color: var(--bottom-nav-text-inactive); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* assicurati che la label sia sempre visibile anche se l'icona manca */
+.bottom-nav .nav-item .label { font-size: 12px; color: var(--bottom-nav-text-inactive); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:block; }
 
+/* stato attivo */
 .bottom-nav .nav-item.nav-active { color: var(--bottom-nav-text-active); font-weight: 700; }
 .bottom-nav .nav-item.nav-active .label { color: var(--bottom-nav-text-active); font-weight: 700; }
 
@@ -447,10 +453,12 @@ input:focus, select:focus, textarea:focus { outline: none; }
 .add-store-btn { display:flex; gap:8px; align-items:center; justify-content:center; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--text-primary); border: 1px solid var(--border); cursor: pointer; }
 .save-settings-btn { margin-top: 12px; background: var(--btn-bg); color: white; font-weight: 700; border-radius: 10px; padding: 12px 14px; }
 
-/* PRODUCT ITEM (DETTAGLIO) - FIX overflow + modern inputs */
+/* PRODUCT ITEM (DETTAGLIO) - FIX overflow + modern inputs
+   Modificato: prima colonna riservata alla thumbnail (64px)
+*/
 .product-item {
   display: grid;
-  grid-template-columns: 1fr 120px 90px 40px;
+  grid-template-columns: 64px 1fr 100px 40px; /* prima colonna per immagine */
   gap: 8px;
   align-items: center;
   padding: 10px 0;
@@ -460,6 +468,32 @@ input:focus, select:focus, textarea:focus { outline: none; }
   min-width: 0; /* evita overflow figlio in flex layouts */
 }
 
+/* thumb styles - applicate in dettaglio e carrello */
+.thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+/* Placeholder per prodotti senza foto (coerente con layout) */
+.image-placeholder {
+  width: 56px;
+  height: 56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,255,255,0.02);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  border: 1px dashed rgba(255,255,255,0.02);
+}
+
+/* INPUTS in product-item */
 .product-item input[type="text"],
 .product-item input[type="number"],
 .product-item .prod-name,
@@ -482,11 +516,28 @@ input:focus, select:focus, textarea:focus { outline: none; }
 
 /* responsive adjustments */
 @media (max-width: 640px) {
-  .product-item { grid-template-columns: 1fr 96px 80px 36px; }
+  .product-item { grid-template-columns: 56px 1fr 80px 36px; }
   .product-item .prod-price { text-align: right; }
   .product-item .prod-category { display: none; }
   .product-item .prod-notes { font-size: 0.88rem; }
 }
+
+/* === IMPORTANT: NASCONDI IMMAGINI NELLA LISTA ARCHIVIO ===
+   Qui nascondiamo le thumb SOLO dentro il container #expenseList (lista)
+   => le immagini restano visibili nelle pagine di dettaglio (#productsContainer)
+*/
+#expenseList .thumb,
+#expenseList .image-placeholder,
+#expenseList img.thumb {
+  display: none !important;
+}
+
+/* Se invece vuoi mostrare una piccola icona/placeholder nella lista,
+   puoi rimuovere la regola qui sopra e usare un CSS meno drastico. */
+
+/* stats-list */
+.stats-list { text-align: left; margin-top: 8px; }
+.stats-list div { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.02); color:var(--text-primary); }
 
 /* Light mode support */
 @media (prefers-color-scheme: light) {
