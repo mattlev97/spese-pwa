@@ -2,10 +2,10 @@
 style.css (VERSIONE AGGIORNATA)
 
 Changelog:
-- Rimosse le label dal bottom-nav per un design minimalista senza testi.
-- Modificati stili del bottom-nav: sfondo nero, icone bianche in cerchi scuri, rimossa pill active per un look più pulito e simile all'immagine (cerchi rotondi, nav arrotondata).
-- Aggiustate dimensioni e colori per icone (tutti bianchi, active scalato), height nav ridotta a 60px per matchare il design compatto della foto.
-- Rimossi stati colore label e pill, aggiunto var(--icon-bg) e (--icon-bg-active) per cerchi.
+- Reso il bottom-nav più compatto riducendo l'altezza a 55px e le dimensioni dei cerchi icone a 36px con spacing ridotto.
+- Spostato il bottom-nav leggermente più in alto impostando bottom a calc(20px + env(safe-area-inset-bottom)).
+- Aumentata la dimensione delle icone a 24px per renderle leggermente più grandi.
+- Aggiunto effetto trasparenza al background del bottom-nav (rgba(0,0,0,0.85) per dark, adattato per light).
 
 - 2x2 grid per dashboard compatibile con iPhone moderni
 - nav no-wrap + scrolling orizzontale
@@ -36,7 +36,7 @@ Changelog:
   --radius: 12px;
 
   /* bottom nav sizes */
-  --bottom-nav-height: 60px;
+  --bottom-nav-height: 55px;
   --bottom-nav-pill-bg: rgba(255,255,255,0.06);
   --bottom-nav-bg: var(--panel);
   --bottom-nav-text-inactive: var(--text-secondary);
@@ -146,18 +146,18 @@ nav.top-nav a.nav-active {
 /* ===== BOTTOM NAVIGATION ===== */
 .bottom-nav {
   position: fixed;
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 20px);
   max-width: 760px;
   height: var(--bottom-nav-height);
-  background: #000;
+  background: rgba(0,0,0,0.85);
   border-radius: 30px;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 8px 10px;
+  padding: 6px 8px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.55);
   border: 1px solid var(--border);
   z-index: 99999; /* INCREMENTATO: assicura che la nav resti sopra altri elementi / UI */
@@ -176,7 +176,7 @@ nav.top-nav a.nav-active {
   line-height: 1;
   flex: 1;
   min-width: 0;
-  padding: 6px 6px;
+  padding: 4px 4px;
   transition: color .18s ease;
   -webkit-tap-highlight-color: transparent;
   position: relative;
@@ -184,8 +184,8 @@ nav.top-nav a.nav-active {
 
 /* forziamo dimensioni e visibilità dell’icon-wrap/label per fallback quando FA non è presente */
 .bottom-nav .nav-item .icon-wrap {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -199,7 +199,7 @@ nav.top-nav a.nav-active {
 
 .bottom-nav .nav-item .icon-wrap i,
 .bottom-nav .nav-item .icon-wrap svg {
-  font-size: 20px;
+  font-size: 24px;
   color: #fff;
   display: block;
   line-height: 1;
@@ -244,8 +244,8 @@ nav.top-nav a.nav-active {
 /* small screens: tappable area */
 @media (max-width: 420px) {
   .bottom-nav .nav-item .icon-wrap {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -1047,7 +1047,7 @@ puoi rimuovere la regola qui sopra e usare un CSS meno drastico. */
   }
 
   .bottom-nav {
-    background: #fff;
+    background: rgba(255,255,255,0.85);
     border: 1px solid rgba(0,0,0,0.06);
   }
 
@@ -1065,3 +1065,8 @@ puoi rimuovere la regola qui sopra e usare un CSS meno drastico. */
     background: var(--btn-secondary-bg);
   }
 }
+
+/* Per testare localmente: 
+- Salva questo file e apri una pagina HTML dell'app (es. index.html) in un browser mobile o emulatore iPhone. 
+- Verifica che il bottom-nav sia più compatto, spostato su, con icone più grandi e sfondo trasparente. 
+- Controlla l'accessibilità tappando le icone e assicurati che non ci sia sovrapposizione con il contenuto. */
