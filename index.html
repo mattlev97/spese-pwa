@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GroceryHub - Dashboard</title>
 
   <link rel="manifest" href="manifest.json">
@@ -11,74 +11,264 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#ffffff">
 
-  <!-- Font Awesome (icone) -->
+  <!-- Icone -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Stile principale -->
+  <!-- Manteniamo style.css (se presente) ma tutto il look specifico della dashboard è inline qui -->
   <link rel="stylesheet" href="style.css?v=20250816">
+
+  <style>
+    /* Palette e override per la dashboard (forzato light mode) */
+    :root{
+      --gh-bg: #ffffff;
+      --gh-salvia: #7aa986;
+      --gh-mustard: #d6a63f;
+      --gh-terracotta: #c7683c;
+      --gh-terracotta-light: rgba(199,104,60,0.12);
+      --gh-text-strong: #222428;
+      --gh-muted: #5b5f63;
+    }
+
+    /* Forza luce e palette indipendente */
+    html, body { background: var(--gh-bg) !important; color: var(--gh-text-strong) !important; color-scheme: light !important; -webkit-font-smoothing:antialiased; }
+    * { box-sizing: border-box; }
+
+    /* Header fisso */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 88px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.98);
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      z-index: 3000;
+    }
+
+    .hamburger {
+      width: 44px;
+      height: 44px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:10px;
+      background: rgba(0,0,0,0.04);
+      cursor:pointer;
+    }
+    .hamburger i { color: var(--gh-text-strong); font-size:18px; }
+
+    .title-wrap { display:flex; flex-direction:column; align-items:flex-start; gap:4px; flex:1; }
+    .title-row { display:flex; align-items:baseline; gap:6px; }
+    /* GroceryHub attaccato e piu' grande */
+    .groceryhub { font-weight:700; color:var(--gh-text-strong); font-size:3.0rem; margin:0; line-height:1; letter-spacing:-0.6px; }
+    /* rendi "Hub" salvia e in grassetto */
+    .groceryhub .hub { font-weight:900; color:var(--gh-salvia); margin-left:4px; display:inline-block; }
+
+    .payoff { font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:2px; }
+
+    /* Main spacing: lascia spazio per header */
+    main.dashboard { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: calc(88px + 12px); }
+
+    /* Calendar slider */
+    .calendar-wrap { margin-top: 4px; margin-bottom: 14px; display:flex; flex-direction:column; gap:8px; }
+    .calendar-row {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-start;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:10px 14px;
+      scroll-behavior:smooth;
+      scroll-snap-type:x proximity;
+    }
+    .calendar-row::-webkit-scrollbar { height:8px; }
+    .calendar-row::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius:6px; }
+
+    .day-pill{
+      scroll-snap-align:center;
+      flex: 0 0 auto;
+      min-width:86px;
+      max-width:140px;
+      padding:12px 10px;
+      border-radius:28px;
+      background:#fff;
+      border:1px solid rgba(0,0,0,0.04);
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      cursor:pointer;
+      transition:transform .12s ease, background .12s ease, box-shadow .12s ease;
+      color: var(--gh-text-strong);
+      text-align:center;
+    }
+
+    .day-num { font-size:1.9rem; font-weight:800; line-height:1; }
+    .day-name { font-size:1.02rem; font-weight:700; text-transform:capitalize; }
+    .month { font-size:0.78rem; color:var(--gh-muted); }
+
+    /* adjacent sizes */
+    .day-pill.adjacent { padding:10px 8px; min-width:78px; }
+    .day-pill.adjacent .day-num { font-size:1.45rem; }
+    .day-pill.adjacent .day-name { font-size:0.92rem; }
+    .day-pill.adjacent-2 { padding:8px 6px; min-width:64px; opacity:0.95; }
+    .day-pill.adjacent-2 .day-num { font-size:1.15rem; }
+
+    /* selected: salvia and white text */
+    .day-pill.selected {
+      background: var(--gh-salvia);
+      color: #fff;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(122,169,134,0.14);
+      border-color: rgba(0,0,0,0.04);
+    }
+    .day-pill.selected .has-expense-dot { background: rgba(255,255,255,0.95) !important; }
+
+    .has-expense-dot { width:8px;height:8px;border-radius:50%; background:var(--gh-salvia); margin-top:4px; }
+    .has-expense-dot.hidden { opacity:0; }
+
+    /* daySummary should always be visible (shows message if empty or content if not) */
+    .day-summary { display:block; margin-top:8px; padding:12px; background:var(--gh-terracotta-light); color:var(--gh-text-strong); border-radius:10px; }
+    .day-summary .empty { color:var(--gh-muted); }
+
+    /* Blocks */
+    .blocks { display:flex; gap:12px; margin-top:12px; align-items:stretch; flex-wrap:wrap; }
+    .block {
+      flex: 1 1 180px;
+      border-radius: 12px;
+      padding: 12px;
+      color: #fff;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+      min-height:84px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+    .block .label { font-size:0.86rem; opacity:0.95; }
+    .block .value { font-size:1.3rem; font-weight:800; }
+
+    .block.total { background: var(--gh-salvia); }
+    .block.max { background: var(--gh-mustard); color:#111; }
+    .block.min { background: #ffa87f; }
+    .block.count { background: var(--gh-terracotta); }
+
+    /* Charts */
+    .charts-section { display:flex; gap:14px; align-items:flex-start; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px; margin-top:18px; }
+    .chart-container { flex:0 0 calc(50% - 7px); min-width:260px; text-align:left; padding:0; background:transparent; border:none; box-shadow:none; }
+    .chart-container h3 { margin:0 0 8px 0; font-weight:700; color:var(--gh-text-strong); }
+    .chart-legend { margin-top:8px; color:var(--gh-muted); }
+
+    /* Recent */
+    .recent-list { margin-top:8px; }
+
+    /* bottom nav: white rounded pill, icon-only */
+    .bottom-nav {
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:28px;
+      width: calc(100% - 24px);
+      max-width:720px;
+      height:72px;
+      background:#fff;
+      border-radius:999px;
+      display:flex;
+      justify-content:space-around;
+      align-items:center;
+      padding:10px;
+      box-shadow:0 18px 40px rgba(0,0,0,0.08);
+      z-index:1200;
+    }
+    .bottom-nav .nav-item { flex:1; display:flex; justify-content:center; align-items:center; text-decoration:none; }
+    .bottom-nav .nav-item .label { display:none; }
+
+    .bottom-nav .icon-wrap { width:52px; height:52px; border-radius:999px; display:flex; align-items:center; justify-content:center; transition:all .12s ease; background:transparent; }
+    .bottom-nav .icon-wrap i { font-size:20px; color:#1f2223; }
+
+    .bottom-nav .nav-item.nav-active .icon-wrap { background: var(--gh-salvia); box-shadow: 0 8px 18px rgba(122,169,134,0.18); }
+    .bottom-nav .nav-item.nav-active .icon-wrap i { color:#fff; }
+
+    @media (max-width:880px) {
+      .groceryhub { font-size:2.2rem; }
+    }
+
+    /* ------------ enriched side menu internal styling ------------- */
+    #sideMenu { font-family: inherit; }
+    #sideMenu .menu-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+    #sideMenu .menu-logo { width:44px; height:44px; border-radius:10px; background:var(--gh-salvia); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; }
+    #sideMenu .menu-section { margin:12px 0; }
+    #sideMenu a { color:var(--gh-text-strong); text-decoration:none; display:block; padding:8px 6px; border-radius:8px; }
+    #sideMenu a:hover { background: rgba(122,169,134,0.06); }
+    #storesList { margin-top:6px; padding-left:12px; color:var(--gh-muted); }
+  </style>
 </head>
 <body>
-  <!-- HEADER (fisso) -->
   <header>
-    <button id="menuToggle" class="hamburger" aria-label="Apri menu" title="Apri menu">
-      <i class="fa-solid fa-bars" aria-hidden="true"></i>
-    </button>
+    <div class="hamburger" id="menuToggle" aria-label="Apri menu" title="Apri menu">
+      <i class="fa-solid fa-bars"></i>
+    </div>
 
     <div class="title-wrap" role="banner">
       <!-- GroceryHub attaccato -->
-      <h1 class="groceryhub" aria-label="GroceryHub">
-        <span class="grocery">Grocery</span><span class="hub">Hub</span>
-      </h1>
+      <div class="title-row" aria-hidden="true">
+        <h1 class="groceryhub">Grocery<span class="hub">Hub</span></h1>
+      </div>
       <div class="payoff">Controlla, risparmia, vivi meglio</div>
     </div>
   </header>
 
-  <!-- OFF-CANVAS SIDE MENU (arricchito) -->
-  <nav id="sideMenu" aria-hidden="true">
+  <!-- off-canvas menu (arricchito) -->
+  <nav id="sideMenu" style="display:none; position:fixed; left:0; top:0; bottom:0; width:78%; max-width:340px; background:#fff; z-index:3500; box-shadow: 6px 0 30px rgba(0,0,0,0.12); padding:18px;">
     <div class="menu-header">
-      <div class="menu-logo" aria-hidden="true">GH</div>
+      <div class="menu-logo">GH</div>
       <div>
-        <div style="font-weight:800;font-size:1rem;color:var(--gh-text-strong)">GroceryHub</div>
-        <div style="font-size:0.9rem;color:var(--gh-muted)">Controlla, risparmia, vivi meglio</div>
+        <div style="font-weight:800;">GroceryHub</div>
+        <div style="font-size:0.9rem;color:var(--gh-muted)">La tua gestione spese</div>
       </div>
     </div>
-    <button id="menuClose" aria-label="Chiudi menu" style="background:none;border:none;font-size:16px;display:block;margin-bottom:12px;cursor:pointer;">Chiudi ✕</button>
 
     <div class="menu-section">
-      <h4 style="margin:8px 0;color:var(--gh-muted);font-size:0.9rem">Navigazione</h4>
-      <ul style="list-style:none;padding:0;margin:0;">
-        <li><a href="index.html">Dashboard</a></li>
-        <li><a href="aggiungi.html">Aggiungi</a></li>
-        <li><a href="archivio.html">Archivio</a></li>
-        <li><a href="impostazioni.html">Impostazioni</a></li>
-      </ul>
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Navigazione</div>
+      <a href="index.html"><i class="fa-solid fa-house" style="width:18px;margin-right:8px;"></i> Dashboard</a>
+      <a href="aggiungi.html"><i class="fa-solid fa-plus" style="width:18px;margin-right:8px;"></i> Aggiungi spesa</a>
+      <a href="archivio.html"><i class="fa-solid fa-archive" style="width:18px;margin-right:8px;"></i> Archivio</a>
+      <a href="impostazioni.html"><i class="fa-solid fa-gear" style="width:18px;margin-right:8px;"></i> Impostazioni</a>
     </div>
 
-    <div class="menu-section" style="margin-top:18px;">
-      <h4 style="margin:8px 0;color:var(--gh-muted);font-size:0.9rem">Store rapidi</h4>
-      <div id="menuStores" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Supermercati</div>
+      <div id="storesList">Caricamento…</div>
+      <div style="margin-top:8px;">
+        <button id="addStoreBtn" style="padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer;">Aggiungi supermercato</button>
+      </div>
     </div>
 
-    <div style="margin-top:18px;color:var(--gh-muted);font-size:0.9rem">
-      <strong>Info</strong>
-      <p style="margin-top:6px">App local-first: i dati sono memorizzati nel browser.</p>
+    <div class="menu-section" style="margin-top:auto;">
+      <div style="font-size:0.9rem;color:var(--gh-muted)">Versione app</div>
+      <div style="font-weight:700">1.0.0</div>
+      <div style="margin-top:8px;"><button id="menuClose" style="padding:8px 10px;border-radius:8px;border:none;background:var(--gh-terracotta);color:#fff;cursor:pointer;">Chiudi menu</button></div>
     </div>
   </nav>
 
-  <!-- MAIN -->
-  <main class="dashboard" role="main">
-    <!-- CALENDAR SLIDER -->
+  <main class="dashboard" role="main" aria-live="polite">
+    <!-- calendar -->
     <section class="calendar-wrap" aria-label="Selezione giorno">
-      <div id="calendarRow" class="calendar-row" role="list" aria-label="Giorni"></div>
+      <div class="calendar-row" id="calendarRow" aria-hidden="false"></div>
       <div id="daySummary" class="day-summary" aria-live="polite"></div>
     </section>
 
-    <!-- RIEPILOGO blocchi -->
-    <section aria-label="Riepilogo">
+    <!-- Riepilogo -->
+    <section>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="font-weight:700;font-size:1.06rem;color:var(--gh-text-strong)">Riepilogo</div>
+        <div style="font-weight:700;font-size:1.06rem;">Riepilogo</div>
         <div>
-          <label for="periodSelect" style="margin-right:8px;color:var(--gh-muted);font-size:0.95rem;">Periodo</label>
           <select id="periodSelect" style="padding:6px 8px;border-radius:8px;border:1px solid #ddd;">
             <option value="settimana">Settimana</option>
             <option value="mese" selected>Mese</option>
@@ -87,32 +277,32 @@
         </div>
       </div>
 
-      <div class="blocks" role="region" aria-label="Statistiche principali">
-        <div class="block total" role="img" aria-label="Totale spese">
+      <div class="blocks">
+        <div class="block total">
           <div>
             <div class="label">Totale spese</div>
             <div id="totalAmountBlock" class="value">€0.00</div>
           </div>
-          <div class="donut-wrap" aria-hidden="true"></div>
+          <!-- rimosso grafico ad anello (voluto) -->
         </div>
 
-        <div class="block max" role="img" aria-label="Spesa massima">
+        <div class="block max">
           <div>
             <div class="label">Spesa massima</div>
             <div id="maxAmountBlock" class="value">€0.00</div>
-            <div id="maxStoreBlock" style="font-size:0.85rem;color:rgba(0,0,0,0.7)"></div>
+            <div style="font-size:0.85rem;color:rgba(0,0,0,0.7)" id="maxStoreBlock"></div>
           </div>
         </div>
 
-        <div class="block min" role="img" aria-label="Spesa minima">
+        <div class="block min">
           <div>
             <div class="label">Spesa minima</div>
             <div id="minAmountBlock" class="value">€0.00</div>
-            <div id="minStoreBlock" style="font-size:0.85rem;color:rgba(0,0,0,0.7)"></div>
+            <div style="font-size:0.85rem;color:rgba(0,0,0,0.7)" id="minStoreBlock"></div>
           </div>
         </div>
 
-        <div class="block count" role="img" aria-label="Numero spese">
+        <div class="block count">
           <div>
             <div class="label">Numero spese</div>
             <div id="countBlock" class="value">0</div>
@@ -121,7 +311,7 @@
       </div>
     </section>
 
-    <!-- CHARTS -->
+    <!-- charts -->
     <section class="charts-section" aria-label="Grafici comparativi">
       <div class="chart-container">
         <h3>Supermercati più usati</h3>
@@ -136,286 +326,328 @@
       </div>
     </section>
 
-    <!-- RECENT LIST -->
-    <section style="margin-top:18px;" aria-label="Ultime spese">
-      <h3 style="margin-bottom:8px;">Ultime spese</h3>
+    <!-- recent -->
+    <section style="margin-top:18px;">
+      <h3>Ultime spese</h3>
       <div id="recentList" class="recent-list"></div>
     </section>
   </main>
 
-  <!-- BOTTOM NAV (icon-only) -->
+  <!-- bottom nav -->
   <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
     <a href="index.html" class="nav-item nav-active" aria-label="Dashboard">
-      <span class="icon-wrap" aria-hidden="true"><i class="fa-solid fa-house"></i></span>
-      <span class="label">Dashboard</span>
+      <span class="icon-wrap"><i class="fa-solid fa-house"></i></span>
     </a>
     <a href="aggiungi.html" class="nav-item" aria-label="Aggiungi">
-      <span class="icon-wrap" aria-hidden="true"><i class="fa-solid fa-plus-circle"></i></span>
-      <span class="label">Aggiungi</span>
+      <span class="icon-wrap"><i class="fa-solid fa-plus-circle"></i></span>
     </a>
     <a href="archivio.html" class="nav-item" aria-label="Archivio">
-      <span class="icon-wrap" aria-hidden="true"><i class="fa-solid fa-box-archive"></i></span>
-      <span class="label">Archivio</span>
+      <span class="icon-wrap"><i class="fa-solid fa-box-archive"></i></span>
     </a>
     <a href="impostazioni.html" class="nav-item" aria-label="Impostazioni">
-      <span class="icon-wrap" aria-hidden="true"><i class="fa-solid fa-gear"></i></span>
-      <span class="label">Impostazioni</span>
+      <span class="icon-wrap"><i class="fa-solid fa-gear"></i></span>
     </a>
   </nav>
 
-  <!-- App core (expense tracker) -->
+  <!-- App core (non modificato) -->
   <script src="app.js"></script>
 
-  <!-- Dashboard script (keeps logic but uses classes, no inline style reliance) -->
   <script>
-    (function () {
-      if (!window.app) {
-        console.warn('app non trovato (assicurati app.js sia caricato prima).');
-        return;
+    /* ===== Helpers & settings (local) ===== */
+    const SETTINGS_KEY = 'gh_settings';
+    function loadSettings() {
+      try {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (!raw) {
+          const def = { weeklyBudget: 100 };
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(def));
+          return def;
+        }
+        return JSON.parse(raw);
+      } catch (e) { return { weeklyBudget:100 }; }
+    }
+    function getBudgetForPeriod(period) {
+      const s = loadSettings();
+      const w = parseFloat(s.weeklyBudget) || 0;
+      switch(period) {
+        case 'settimana': return w;
+        case 'mese': return w * 4;
+        case 'anno': return w * 52;
+        default: return w * 4;
+      }
+    }
+
+    /* ===== Calendar rendering (exact 5 pills) ===== */
+    const calendarRow = document.getElementById('calendarRow');
+    const daySummary = document.getElementById('daySummary');
+    let selectedDateKey = null; // YYYY-MM-DD
+
+    function formatKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    }
+    function shortDayName(d) {
+      return d.toLocaleDateString('it-IT', { weekday: 'short' }); // "lun"
+    }
+    function longMonth(d) {
+      return d.toLocaleDateString('it-IT', { month: 'long' }); // "agosto"
+    }
+
+    function getExpensesForKey(key) {
+      return (app.expenses || []).filter(e => e.date === key);
+    }
+
+    function renderCalendar() {
+      if (!calendarRow) return;
+      calendarRow.innerHTML = '';
+
+      // Exactly 5 pills: -2, -1, 0(today), +1, +2
+      const today = new Date();
+      for (let offset = -2; offset <= 2; offset++) {
+        const d = new Date();
+        d.setDate(today.getDate() + offset);
+        const key = formatKey(d);
+        const isToday = (formatKey(today) === key);
+        const hasExpenses = getExpensesForKey(key).length > 0;
+
+        const pill = document.createElement('button');
+        pill.className = 'day-pill';
+        if (offset === -2 || offset === 2) pill.classList.add('adjacent-2');
+        else if (offset === -1 || offset === 1) pill.classList.add('adjacent');
+        pill.dataset.key = key;
+        pill.type = 'button';
+        pill.setAttribute('aria-pressed', 'false');
+
+        // initial selection: today if none
+        if (isToday && selectedDateKey === null) {
+          pill.classList.add('selected');
+          selectedDateKey = key;
+        } else if (key === selectedDateKey) {
+          pill.classList.add('selected');
+        }
+
+        pill.innerHTML = `
+          <div class="day-num">${d.getDate()}</div>
+          <div class="day-name">${shortDayName(d)}</div>
+          <div class="month">${longMonth(d)}</div>
+          <div class="has-expense-dot ${hasExpenses ? '' : 'hidden'}" aria-hidden="true"></div>
+        `;
+        pill.addEventListener('click', () => onDayClick(key, pill));
+        calendarRow.appendChild(pill);
       }
 
-      // elements
-      const calendarRow = document.getElementById('calendarRow');
-      const daySummary = document.getElementById('daySummary');
-      const periodSelect = document.getElementById('periodSelect');
+      // center the selected pill in view (only on render)
+      setTimeout(centerSelectedPill, 80);
+
+      // initial summary
+      if (selectedDateKey) showDaySummary(selectedDateKey);
+    }
+
+    function centerSelectedPill() {
+      const selected = document.querySelector('.day-pill.selected');
+      if (!selected || !calendarRow) return;
+      const containerRect = calendarRow.getBoundingClientRect();
+      const pillRect = selected.getBoundingClientRect();
+      const offset = (pillRect.left + pillRect.width/2) - (containerRect.left + containerRect.width/2);
+      calendarRow.scrollLeft += offset;
+    }
+
+    function onDayClick(key, pillEl) {
+      const prev = document.querySelector('.day-pill.selected');
+      if (prev && prev !== pillEl) prev.classList.remove('selected');
+      pillEl.classList.add('selected');
+      selectedDateKey = key;
+      showDaySummary(key);
+      // intentionally DO NOT scroll page — user remains at same position
+    }
+
+    function showDaySummary(key) {
+      const exps = getExpensesForKey(key);
+      if (!exps || exps.length === 0) {
+        daySummary.classList.remove('show');
+        daySummary.innerHTML = `<div class="empty">Nessuna spesa registrata per ${key}</div>`;
+        return;
+      }
+      const total = exps.reduce((s,e)=> s + (parseFloat(e.total)||0), 0);
+      daySummary.classList.add('show');
+      daySummary.innerHTML = `<strong>Hai fatto ${exps.length} spesa${exps.length>1?'e':''} spendendo un totale di ${app.formatCurrency(total)}</strong>
+        <div style="margin-top:8px;color:var(--gh-muted);font-size:0.95rem">
+          ${exps.map(e => `${app.formatDate(e.date)} — ${e.store}: ${app.formatCurrency(e.total)}`).join('<br>')}
+        </div>`;
+    }
+
+    /* ===== Drag/touch for calendar row (slider) ===== */
+    (function() {
+      const container = document.querySelector('.calendar-row');
+      if (!container) return;
+      let isDown = false, startX = 0, scrollLeft = 0;
+      container.addEventListener('mousedown', (e) => {
+        isDown = true;
+        startX = e.pageX - container.offsetLeft;
+        scrollLeft = container.scrollLeft;
+        container.classList.add('dragging');
+      });
+      container.addEventListener('mouseleave', () => { isDown = false; container.classList.remove('dragging'); });
+      container.addEventListener('mouseup', () => { isDown = false; container.classList.remove('dragging'); });
+      container.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - container.offsetLeft;
+        const walk = (x - startX) * 1.2;
+        container.scrollLeft = scrollLeft - walk;
+      });
+
+      // touch
+      let touchStartX = 0, touchStartScroll = 0;
+      container.addEventListener('touchstart', e => {
+        touchStartX = e.touches[0].pageX;
+        touchStartScroll = container.scrollLeft;
+      }, { passive: true });
+      container.addEventListener('touchmove', e => {
+        const x = e.touches[0].pageX;
+        const walk = (touchStartX - x);
+        container.scrollLeft = touchStartScroll + walk;
+      }, { passive: true });
+    })();
+
+    /* ===== Pie drawing (keeps previous behaviour) ===== */
+    function drawPieChart(canvasId, data, statsId, palette) {
+      const canvas = document.getElementById(canvasId);
+      const statsDiv = document.getElementById(statsId);
+      if (!canvas || !statsDiv) return;
+      const ctx = canvas.getContext('2d');
+      const entries = Object.entries(data || {}).sort((a,b)=> b[1].total - a[1].total).slice(0,6);
+      if (entries.length === 0) {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#666'; ctx.font = '14px Arial'; ctx.textAlign = 'center'; ctx.fillText('Nessun dato', canvas.width/2, canvas.height/2);
+        statsDiv.innerHTML = '<div style="text-align:center;color:#666">Nessun dato disponibile</div>';
+        return;
+      }
+      const total = entries.reduce((s,[,d]) => s + d.total, 0);
+      let currentAngle = -Math.PI/2;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const cx = canvas.width/2, cy = canvas.height/2, radius = Math.min(cx,cy)-20;
+      entries.forEach(([label,d], idx) => {
+        const slice = (d.total / total) * 2*Math.PI;
+        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,radius,currentAngle,currentAngle+slice); ctx.closePath();
+        ctx.fillStyle = palette[idx % palette.length]; ctx.fill();
+        currentAngle += slice;
+      });
+      statsDiv.innerHTML = entries.map(([label,d], idx) =>
+        `<div style="display:flex;justify-content:space-between;"><div><span style="color:${palette[idx % palette.length]};margin-right:6px">●</span>${label}</div><div>${app.formatCurrency(d.total)}</div></div>`
+      ).join('');
+    }
+
+    /* ===== Update dashboard content (no donut) ===== */
+    function updateDashboard() {
+      const period = document.getElementById('periodSelect')?.value || 'mese';
+      const filtered = app.filterByPeriod(period);
+      const stats = app.getStats(filtered);
+
+      document.getElementById('totalAmountBlock').textContent = app.formatCurrency(stats.total);
+      document.getElementById('maxAmountBlock').textContent = app.formatCurrency(stats.max.amount);
+      document.getElementById('minAmountBlock').textContent = app.formatCurrency(stats.min.amount);
+      document.getElementById('countBlock').textContent = stats.count;
+      document.getElementById('maxStoreBlock').textContent = stats.max.store || '';
+      document.getElementById('minStoreBlock').textContent = stats.min.store || '';
+
+      const palette = [
+        (getComputedStyle(document.documentElement).getPropertyValue('--gh-salvia') || '#7aa986').trim(),
+        (getComputedStyle(document.documentElement).getPropertyValue('--gh-mustard') || '#d6a63f').trim(),
+        (getComputedStyle(document.documentElement).getPropertyValue('--gh-terracotta') || '#c7683c').trim(),
+        '#f6cfa7','#8fb9a0','#f3b25b'
+      ];
+
+      drawPieChart('storeChart', stats.storeStats, 'storeStats', palette);
+      drawPieChart('categoryChart', stats.categoryStats, 'categoryStats', palette);
+    }
+
+    function loadRecentExpenses(expenses) {
+      const recentList = document.getElementById('recentList');
+      if (!recentList) return;
+      const recent = (expenses || []).slice(-6).reverse();
+      if (!recent.length) {
+        recentList.innerHTML = '<div class="no-expenses">Nessuna spesa recente</div>';
+        return;
+      }
+      recentList.innerHTML = recent.map(exp => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+          <div>
+            <strong style="display:block">${exp.store}</strong>
+            <small style="color:var(--gh-muted)">${app.formatDate(exp.date)} • ${exp.products?.length || 0} prodotti</small>
+          </div>
+          <div style="font-weight:700">${app.formatCurrency(exp.total)}</div>
+        </div>
+      `).join('');
+    }
+
+    /* ===== Side menu helpers: populate store list dynamically ===== */
+    function populateSideMenuStores() {
+      const container = document.getElementById('storesList');
+      if (!container) return;
+      const stores = (app.getStores && typeof app.getStores === 'function') ? app.getStores() : [];
+      if (!stores || !stores.length) {
+        container.innerHTML = '<div style="color:var(--gh-muted)">Nessun supermercato</div>';
+        return;
+      }
+      container.innerHTML = '';
+      stores.forEach(s => {
+        const el = document.createElement('div');
+        el.style.padding = '6px 0';
+        el.textContent = s;
+        container.appendChild(el);
+      });
+    }
+
+    /* ===== Wiring ===== */
+    document.addEventListener('DOMContentLoaded', () => {
+      // side menu open/close
       const menuToggle = document.getElementById('menuToggle');
       const sideMenu = document.getElementById('sideMenu');
       const menuClose = document.getElementById('menuClose');
+      menuToggle?.addEventListener('click', () => { sideMenu.style.display = 'block'; });
+      menuClose?.addEventListener('click', () => { sideMenu.style.display = 'none'; });
 
-      let selectedDateKey = null;
-
-      // date helpers
-      function formatKey(d) {
-        const y = d.getFullYear();
-        const m = String(d.getMonth()+1).padStart(2,'0');
-        const day = String(d.getDate()).padStart(2,'0');
-        return `${y}-${m}-${day}`;
-      }
-      function shortDayName(d) {
-        return d.toLocaleDateString('it-IT', { weekday: 'short' });
-      }
-      function longMonth(d) {
-        return d.toLocaleDateString('it-IT', { month: 'long' });
-      }
-
-      function getExpensesForKey(key) {
-        return (app.expenses || []).filter(e => e.date === key);
-      }
-
-      // render exactly 5 pills (2 prev, today, 2 next)
-      function renderCalendar() {
-        if (!calendarRow) return;
-        calendarRow.innerHTML = '';
-
-        const today = new Date();
-        const visible = 5;
-        const half = Math.floor(visible / 2);
-
-        for (let offset = -half; offset <= half; offset++) {
-          const d = new Date();
-          d.setDate(today.getDate() + offset);
-          const key = formatKey(d);
-          const isToday = (formatKey(today) === key);
-          const hasExpenses = getExpensesForKey(key).length > 0;
-
-          const pill = document.createElement('button');
-          pill.className = 'day-pill';
-          if (offset === -2 || offset === 2) pill.classList.add('adjacent-2');
-          else if (offset === -1 || offset === 1) pill.classList.add('adjacent');
-
-          pill.type = 'button';
-          pill.dataset.key = key;
-          pill.setAttribute('aria-pressed', 'false');
-
-          if (selectedDateKey === null && isToday) selectedDateKey = key;
-          if (key === selectedDateKey) pill.classList.add('selected');
-
-          pill.innerHTML = `
-            <div class="day-num">${d.getDate()}</div>
-            <div class="day-name">${shortDayName(d)}</div>
-            <div class="month">${longMonth(d)}</div>
-            <div class="has-expense-dot ${hasExpenses ? '' : 'hidden'}" aria-hidden="true"></div>
-          `;
-
-          pill.addEventListener('click', () => onDayClick(key, pill));
-          calendarRow.appendChild(pill);
+      // add store button (simple prompt)
+      document.getElementById('addStoreBtn')?.addEventListener('click', () => {
+        const name = prompt('Nome supermercato da aggiungere:');
+        if (!name) return;
+        const ok = app.addStore ? app.addStore(name) : false;
+        if (ok) {
+          populateSideMenuStores();
+          alert('Supermercato aggiunto');
+        } else {
+          alert('Non è stato possibile aggiungere (potrebbe già esistere).');
         }
-
-        if (selectedDateKey) showDaySummary(selectedDateKey);
-        // ensure center pill is visible: scroll calendar so selected pill is centered
-        const sel = document.querySelector('.day-pill.selected');
-        if (sel) {
-          // calculate scroll to center selected pill
-          const parent = calendarRow;
-          const parentRect = parent.getBoundingClientRect();
-          const selRect = sel.getBoundingClientRect();
-          const offset = (selRect.left + selRect.width/2) - (parentRect.left + parentRect.width/2);
-          parent.scrollBy({ left: offset, behavior: 'smooth' });
-        }
-      }
-
-      function onDayClick(key, pillEl) {
-        const prev = document.querySelector('.day-pill.selected');
-        if (prev && prev !== pillEl) prev.classList.remove('selected');
-        pillEl.classList.add('selected');
-        selectedDateKey = key;
-        showDaySummary(key);
-        // intentionally DO NOT scroll the whole page (user requested)
-      }
-
-      function showDaySummary(key) {
-        const exps = getExpensesForKey(key);
-        if (!exps || exps.length === 0) {
-          daySummary.innerHTML = `<div class="empty">Nessuna spesa registrata per ${key}</div>`;
-          daySummary.classList.remove('has-data');
-          return;
-        }
-
-        const total = exps.reduce((s,e)=> s + (parseFloat(e.total)||0), 0);
-        const lines = exps.map(e => `${app.formatDate(e.date)} — ${e.store}: ${app.formatCurrency(e.total)}`).join('<br>');
-        daySummary.innerHTML = `
-          <div style="font-weight:700">Hai fatto ${exps.length} spesa${exps.length>1 ? 'e' : ''} spendendo un totale di ${app.formatCurrency(total)}</div>
-          <div style="margin-top:8px;color:var(--gh-muted);font-size:0.95rem">${lines}</div>
-        `;
-        daySummary.classList.add('has-data');
-      }
-
-      // draw pie charts (palette)
-      function drawPieChart(canvasId, data, statsId, palette) {
-        const canvas = document.getElementById(canvasId);
-        const statsDiv = document.getElementById(statsId);
-        if (!canvas || !statsDiv) return;
-        const ctx = canvas.getContext('2d');
-        const entries = Object.entries(data || {}).sort((a,b)=> b[1].total - a[1].total).slice(0,6);
-        if (entries.length === 0) {
-          ctx.clearRect(0,0,canvas.width,canvas.height);
-          ctx.fillStyle = '#ccc';
-          ctx.font = '14px system-ui';
-          ctx.textAlign = 'center';
-          ctx.fillText('Nessun dato', canvas.width/2, canvas.height/2);
-          statsDiv.innerHTML = '<div style="text-align:center;color:var(--gh-muted)">Nessun dato disponibile</div>';
-          return;
-        }
-        const total = entries.reduce((s,[,d]) => s + d.total, 0);
-        let current = -Math.PI/2;
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        const cx = canvas.width/2;
-        const cy = canvas.height/2;
-        const radius = Math.min(cx,cy) - 20;
-        entries.forEach(([label,d], idx) => {
-          const slice = (d.total / total) * 2*Math.PI;
-          ctx.beginPath();
-          ctx.moveTo(cx,cy);
-          ctx.arc(cx,cy,radius,current,current+slice);
-          ctx.closePath();
-          ctx.fillStyle = palette[idx % palette.length];
-          ctx.fill();
-          current += slice;
-        });
-        statsDiv.innerHTML = entries.map(([label,d], idx) =>
-          `<div style="display:flex;justify-content:space-between;padding:6px 0;">
-             <div><span style="color:${palette[idx % palette.length]};margin-right:8px">●</span>${label}</div>
-             <div>${app.formatCurrency(d.total)}</div>
-           </div>`
-        ).join('');
-      }
-
-      function updateDashboard() {
-        const period = periodSelect?.value || 'mese';
-        const filtered = app.filterByPeriod(period);
-        const stats = app.getStats(filtered);
-
-        document.getElementById('totalAmountBlock').textContent = app.formatCurrency(stats.total);
-        document.getElementById('maxAmountBlock').textContent = app.formatCurrency(stats.max.amount);
-        document.getElementById('minAmountBlock').textContent = app.formatCurrency(stats.min.amount);
-        document.getElementById('countBlock').textContent = stats.count;
-        document.getElementById('maxStoreBlock').textContent = stats.max.store || '';
-        document.getElementById('minStoreBlock').textContent = stats.min.store || '';
-
-        const palette = [
-          getComputedStyle(document.documentElement).getPropertyValue('--gh-salvia').trim() || '#7aa986',
-          getComputedStyle(document.documentElement).getPropertyValue('--gh-mustard').trim() || '#d6a63f',
-          getComputedStyle(document.documentElement).getPropertyValue('--gh-terracotta').trim() || '#c7683c',
-          '#f6cfa7','#8fb9a0','#f3b25b'
-        ];
-        drawPieChart('storeChart', stats.storeStats, 'storeStats', palette);
-        drawPieChart('categoryChart', stats.categoryStats, 'categoryStats', palette);
-
-        loadRecentExpenses(filtered);
-      }
-
-      function loadRecentExpenses(expenses) {
-        const recentList = document.getElementById('recentList');
-        if (!recentList) return;
-        const recent = (expenses || []).slice(-6).reverse();
-        if (!recent.length) {
-          recentList.innerHTML = '<div class="no-expenses">Nessuna spesa recente</div>';
-          return;
-        }
-        recentList.innerHTML = recent.map(exp => `
-          <div class="recent-item">
-            <div>
-              <strong style="display:block">${exp.store}</strong>
-              <small style="color:var(--gh-muted)">${app.formatDate(exp.date)} • ${exp.products?.length || 0} prodotti</small>
-            </div>
-            <div style="font-weight:700">${app.formatCurrency(exp.total)}</div>
-          </div>
-        `).join('');
-      }
-
-      function populateSideStores() {
-        const container = document.getElementById('menuStores');
-        if (!container) return;
-        container.innerHTML = '';
-        (app.getStores() || []).slice(0,8).forEach(s => {
-          const a = document.createElement('a');
-          a.href = '#';
-          a.textContent = s;
-          a.className = 'side-store';
-          a.addEventListener('click', (ev) => { ev.preventDefault(); sideMenu.classList.remove('open'); });
-          container.appendChild(a);
-        });
-      }
-
-      // menu open/close (use class open so no inline style required)
-      menuToggle?.addEventListener('click', () => {
-        sideMenu.classList.add('open');
-        sideMenu.setAttribute('aria-hidden','false');
-      });
-      menuClose?.addEventListener('click', () => {
-        sideMenu.classList.remove('open');
-        sideMenu.setAttribute('aria-hidden','true');
       });
 
       // initial
       renderCalendar();
       updateDashboard();
-      populateSideStores();
+      loadRecentExpenses(app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese'));
+      populateSideMenuStores();
 
       // listeners
-      window.addEventListener('resize', () => renderCalendar());
-      periodSelect?.addEventListener('change', updateDashboard);
-
+      window.addEventListener('resize', () => setTimeout(renderCalendar, 120));
+      document.getElementById('periodSelect')?.addEventListener('change', () => { updateDashboard(); });
       document.addEventListener('app:expenses-changed', () => {
         renderCalendar();
         updateDashboard();
+        loadRecentExpenses(app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese'));
+        populateSideMenuStores();
       });
-      document.addEventListener('app:stores-changed', () => populateSideStores());
 
-      // bottom nav sync
-      (function syncBottomNav() {
+      // sync bottom-nav active state
+      (function () {
         const path = location.pathname.split('/').pop() || 'index.html';
         document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
           const href = a.getAttribute('href') || '';
           a.classList.toggle('nav-active', href.endsWith(path));
         });
       })();
-
-      // service worker attempt
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW register failed', err));
-      }
-    })();
+    });
   </script>
 </body>
 </html>
