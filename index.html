@@ -63,8 +63,11 @@
 
     .title-wrap { display:flex; flex-direction:column; align-items:flex-start; gap:4px; flex:1; }
     .title-row { display:flex; align-items:baseline; gap:6px; }
-    .grocery { font-weight:400; color:var(--gh-text-strong); font-size:2.8rem; margin:0; line-height:1; letter-spacing:-0.6px; }
-    .hub { font-weight:800; color:var(--gh-salvia); font-size:2.8rem; margin:0; line-height:1; }
+    /* GroceryHub attaccato e piu' grande */
+    .groceryhub { font-weight:700; color:var(--gh-text-strong); font-size:3.0rem; margin:0; line-height:1; letter-spacing:-0.6px; }
+    /* rendi "Hub" salvia e in grassetto */
+    .groceryhub .hub { font-weight:900; color:var(--gh-salvia); margin-left:4px; display:inline-block; }
+
     .payoff { font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:2px; }
 
     /* Main spacing: lascia spazio per header */
@@ -130,8 +133,9 @@
     .has-expense-dot { width:8px;height:8px;border-radius:50%; background:var(--gh-salvia); margin-top:4px; }
     .has-expense-dot.hidden { opacity:0; }
 
-    .day-summary { display:none; margin-top:8px; padding:12px; background:var(--gh-terracotta-light); color:var(--gh-text-strong); border-radius:10px; }
-    .day-summary.show { display:block; }
+    /* daySummary should always be visible (shows message if empty or content if not) */
+    .day-summary { display:block; margin-top:8px; padding:12px; background:var(--gh-terracotta-light); color:var(--gh-text-strong); border-radius:10px; }
+    .day-summary .empty { color:var(--gh-muted); }
 
     /* Blocks */
     .blocks { display:flex; gap:12px; margin-top:12px; align-items:stretch; flex-wrap:wrap; }
@@ -154,8 +158,6 @@
     .block.max { background: var(--gh-mustard); color:#111; }
     .block.min { background: #ffa87f; }
     .block.count { background: var(--gh-terracotta); }
-
-    .donut-wrap { width:110px; height:110px; display:flex; align-items:center; justify-content:center; border-radius:8px; background: rgba(255,255,255,0.06); padding:8px; }
 
     /* Charts */
     .charts-section { display:flex; gap:14px; align-items:flex-start; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px; margin-top:18px; }
@@ -194,10 +196,17 @@
     .bottom-nav .nav-item.nav-active .icon-wrap i { color:#fff; }
 
     @media (max-width:880px) {
-      .grocery, .hub { font-size:2.2rem; }
-      .donut-wrap { width:88px; height:88px; }
+      .groceryhub { font-size:2.2rem; }
     }
 
+    /* ------------ enriched side menu internal styling ------------- */
+    #sideMenu { font-family: inherit; }
+    #sideMenu .menu-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+    #sideMenu .menu-logo { width:44px; height:44px; border-radius:10px; background:var(--gh-salvia); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; }
+    #sideMenu .menu-section { margin:12px 0; }
+    #sideMenu a { color:var(--gh-text-strong); text-decoration:none; display:block; padding:8px 6px; border-radius:8px; }
+    #sideMenu a:hover { background: rgba(122,169,134,0.06); }
+    #storesList { margin-top:6px; padding-left:12px; color:var(--gh-muted); }
   </style>
 </head>
 <body>
@@ -207,22 +216,45 @@
     </div>
 
     <div class="title-wrap" role="banner">
+      <!-- GroceryHub attaccato -->
       <div class="title-row" aria-hidden="true">
-        <h1 class="grocery">Grocery<span style="display:inline-block;width:4px;"></span><span class="hub">Hub</span></h1>
+        <h1 class="groceryhub">Grocery<span class="hub">Hub</span></h1>
       </div>
       <div class="payoff">Controlla, risparmia, vivi meglio</div>
     </div>
   </header>
 
-  <!-- off-canvas menu -->
-  <nav id="sideMenu" style="display:none; position:fixed; left:0; top:0; bottom:0; width:78%; max-width:320px; background:#fff; z-index:3500; box-shadow: 6px 0 30px rgba(0,0,0,0.12); padding:18px;">
-    <button id="menuClose" style="background:none;border:none;font-size:18px;display:block;margin-bottom:12px;cursor:pointer;">Chiudi ✕</button>
-    <ul style="list-style:none;padding:0;margin:0;font-weight:700;">
-      <li style="margin:10px 0;"><a href="index.html">Dashboard</a></li>
-      <li style="margin:10px 0;"><a href="aggiungi.html">Aggiungi</a></li>
-      <li style="margin:10px 0;"><a href="archivio.html">Archivio</a></li>
-      <li style="margin:10px 0;"><a href="impostazioni.html">Impostazioni</a></li>
-    </ul>
+  <!-- off-canvas menu (arricchito) -->
+  <nav id="sideMenu" style="display:none; position:fixed; left:0; top:0; bottom:0; width:78%; max-width:340px; background:#fff; z-index:3500; box-shadow: 6px 0 30px rgba(0,0,0,0.12); padding:18px;">
+    <div class="menu-header">
+      <div class="menu-logo">GH</div>
+      <div>
+        <div style="font-weight:800;">GroceryHub</div>
+        <div style="font-size:0.9rem;color:var(--gh-muted)">La tua gestione spese</div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Navigazione</div>
+      <a href="index.html"><i class="fa-solid fa-house" style="width:18px;margin-right:8px;"></i> Dashboard</a>
+      <a href="aggiungi.html"><i class="fa-solid fa-plus" style="width:18px;margin-right:8px;"></i> Aggiungi spesa</a>
+      <a href="archivio.html"><i class="fa-solid fa-archive" style="width:18px;margin-right:8px;"></i> Archivio</a>
+      <a href="impostazioni.html"><i class="fa-solid fa-gear" style="width:18px;margin-right:8px;"></i> Impostazioni</a>
+    </div>
+
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Supermercati</div>
+      <div id="storesList">Caricamento…</div>
+      <div style="margin-top:8px;">
+        <button id="addStoreBtn" style="padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer;">Aggiungi supermercato</button>
+      </div>
+    </div>
+
+    <div class="menu-section" style="margin-top:auto;">
+      <div style="font-size:0.9rem;color:var(--gh-muted)">Versione app</div>
+      <div style="font-weight:700">1.0.0</div>
+      <div style="margin-top:8px;"><button id="menuClose" style="padding:8px 10px;border-radius:8px;border:none;background:var(--gh-terracotta);color:#fff;cursor:pointer;">Chiudi menu</button></div>
+    </div>
   </nav>
 
   <main class="dashboard" role="main" aria-live="polite">
@@ -251,9 +283,7 @@
             <div class="label">Totale spese</div>
             <div id="totalAmountBlock" class="value">€0.00</div>
           </div>
-          <div class="donut-wrap" aria-hidden="true">
-            <canvas id="budgetChart" width="120" height="120"></canvas>
-          </div>
+          <!-- rimosso grafico ad anello (voluto) -->
         </div>
 
         <div class="block max">
@@ -361,9 +391,6 @@
     function shortDayName(d) {
       return d.toLocaleDateString('it-IT', { weekday: 'short' }); // "lun"
     }
-    function shortMonth(d) {
-      return d.toLocaleDateString('it-IT', { month: 'short' }); // "ago"
-    }
     function longMonth(d) {
       return d.toLocaleDateString('it-IT', { month: 'long' }); // "agosto"
     }
@@ -376,7 +403,7 @@
       if (!calendarRow) return;
       calendarRow.innerHTML = '';
 
-      // Always render exactly 5 pills: -2, -1, 0(today), +1, +2
+      // Exactly 5 pills: -2, -1, 0(today), +1, +2
       const today = new Date();
       for (let offset = -2; offset <= 2; offset++) {
         const d = new Date();
@@ -387,7 +414,6 @@
 
         const pill = document.createElement('button');
         pill.className = 'day-pill';
-        // assign adjacent classes for sizing
         if (offset === -2 || offset === 2) pill.classList.add('adjacent-2');
         else if (offset === -1 || offset === 1) pill.classList.add('adjacent');
         pill.dataset.key = key;
@@ -412,7 +438,7 @@
         calendarRow.appendChild(pill);
       }
 
-      // center the selected pill in view (only on render, do not auto-scroll on click)
+      // center the selected pill in view (only on render)
       setTimeout(centerSelectedPill, 80);
 
       // initial summary
@@ -422,7 +448,6 @@
     function centerSelectedPill() {
       const selected = document.querySelector('.day-pill.selected');
       if (!selected || !calendarRow) return;
-      // center the selected pill inside the scroll container
       const containerRect = calendarRow.getBoundingClientRect();
       const pillRect = selected.getBoundingClientRect();
       const offset = (pillRect.left + pillRect.width/2) - (containerRect.left + containerRect.width/2);
@@ -435,14 +460,14 @@
       pillEl.classList.add('selected');
       selectedDateKey = key;
       showDaySummary(key);
-      // NOTA: non effettuiamo scroll della pagina verso il basso — l'utente rimane nella stessa posizione
+      // intentionally DO NOT scroll page — user remains at same position
     }
 
     function showDaySummary(key) {
       const exps = getExpensesForKey(key);
       if (!exps || exps.length === 0) {
         daySummary.classList.remove('show');
-        daySummary.innerHTML = `<div style="color:var(--gh-muted)">Nessuna spesa registrata per ${key}</div>`;
+        daySummary.innerHTML = `<div class="empty">Nessuna spesa registrata per ${key}</div>`;
         return;
       }
       const total = exps.reduce((s,e)=> s + (parseFloat(e.total)||0), 0);
@@ -453,7 +478,7 @@
         </div>`;
     }
 
-    /* ===== Drag/touch for calendar row ===== */
+    /* ===== Drag/touch for calendar row (slider) ===== */
     (function() {
       const container = document.querySelector('.calendar-row');
       if (!container) return;
@@ -487,23 +512,7 @@
       }, { passive: true });
     })();
 
-    /* ===== Donut + pie drawing (reuse functions) ===== */
-    function drawDonut(canvasId, percent, color) {
-      const c = document.getElementById(canvasId);
-      if (!c) return;
-      const ctx = c.getContext('2d');
-      const w = c.width, h = c.height;
-      ctx.clearRect(0,0,w,h);
-      const cx = w/2, cy = h/2, radius = Math.min(cx,cy) - 10;
-      // bg ring
-      ctx.beginPath(); ctx.arc(cx,cy,radius,0,2*Math.PI); ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 12; ctx.stroke();
-      // arc
-      const end = -Math.PI/2 + (percent/100) * 2*Math.PI;
-      ctx.beginPath(); ctx.arc(cx,cy,radius,-Math.PI/2,end); ctx.strokeStyle = color || '#7aa986'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.stroke();
-      // text
-      ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.font = '700 14px system-ui,Segoe UI,Roboto,Arial'; ctx.textAlign = 'center'; ctx.fillText(Math.round(percent) + '%', cx, cy + 6);
-    }
-
+    /* ===== Pie drawing (keeps previous behaviour) ===== */
     function drawPieChart(canvasId, data, statsId, palette) {
       const canvas = document.getElementById(canvasId);
       const statsDiv = document.getElementById(statsId);
@@ -531,7 +540,7 @@
       ).join('');
     }
 
-    /* ===== Update dashboard content ===== */
+    /* ===== Update dashboard content (no donut) ===== */
     function updateDashboard() {
       const period = document.getElementById('periodSelect')?.value || 'mese';
       const filtered = app.filterByPeriod(period);
@@ -543,10 +552,6 @@
       document.getElementById('countBlock').textContent = stats.count;
       document.getElementById('maxStoreBlock').textContent = stats.max.store || '';
       document.getElementById('minStoreBlock').textContent = stats.min.store || '';
-
-      const budget = getBudgetForPeriod(period);
-      const percent = budget > 0 ? Math.min(100, (stats.total / budget) * 100) : 0;
-      drawDonut('budgetChart', percent, getComputedStyle(document.documentElement).getPropertyValue('--gh-salvia') || '#7aa986');
 
       const palette = [
         (getComputedStyle(document.documentElement).getPropertyValue('--gh-salvia') || '#7aa986').trim(),
@@ -578,19 +583,51 @@
       `).join('');
     }
 
+    /* ===== Side menu helpers: populate store list dynamically ===== */
+    function populateSideMenuStores() {
+      const container = document.getElementById('storesList');
+      if (!container) return;
+      const stores = (app.getStores && typeof app.getStores === 'function') ? app.getStores() : [];
+      if (!stores || !stores.length) {
+        container.innerHTML = '<div style="color:var(--gh-muted)">Nessun supermercato</div>';
+        return;
+      }
+      container.innerHTML = '';
+      stores.forEach(s => {
+        const el = document.createElement('div');
+        el.style.padding = '6px 0';
+        el.textContent = s;
+        container.appendChild(el);
+      });
+    }
+
     /* ===== Wiring ===== */
     document.addEventListener('DOMContentLoaded', () => {
-      // menu open/close
+      // side menu open/close
       const menuToggle = document.getElementById('menuToggle');
       const sideMenu = document.getElementById('sideMenu');
       const menuClose = document.getElementById('menuClose');
       menuToggle?.addEventListener('click', () => { sideMenu.style.display = 'block'; });
       menuClose?.addEventListener('click', () => { sideMenu.style.display = 'none'; });
 
+      // add store button (simple prompt)
+      document.getElementById('addStoreBtn')?.addEventListener('click', () => {
+        const name = prompt('Nome supermercato da aggiungere:');
+        if (!name) return;
+        const ok = app.addStore ? app.addStore(name) : false;
+        if (ok) {
+          populateSideMenuStores();
+          alert('Supermercato aggiunto');
+        } else {
+          alert('Non è stato possibile aggiungere (potrebbe già esistere).');
+        }
+      });
+
       // initial
       renderCalendar();
       updateDashboard();
       loadRecentExpenses(app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese'));
+      populateSideMenuStores();
 
       // listeners
       window.addEventListener('resize', () => setTimeout(renderCalendar, 120));
@@ -599,6 +636,7 @@
         renderCalendar();
         updateDashboard();
         loadRecentExpenses(app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese'));
+        populateSideMenuStores();
       });
 
       // sync bottom-nav active state
