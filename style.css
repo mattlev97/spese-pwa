@@ -1,8 +1,8 @@
 /* =========================
-   style.css - GroceryHub unified (FULL)
+   style.css - GroceryHub (replica delle regole inline)
    Palette: bianco, salvia, senape, terracotta
    Forza light-mode e layout unificato
-   Mantiene charts affiancati, scanner/modal, archivio, ecc.
+   Ripristina esattamente lo stile che avevi in index
    ========================= */
 
 /* Palette e variabili */
@@ -15,30 +15,18 @@
   --gh-text-strong: #222428;
   --gh-muted: #5b5f63;
 
-  /* legacy vars for compatibility */
-  --bg-1: #ffffff;
-  --bg-2: #ffffff;
-  --panel: #ffffff;
-  --input: #ffffff;
-  --text-primary: var(--gh-text-strong);
-  --text-secondary: var(--gh-muted);
-  --muted: #9b9b9f;
-
-  --accent: var(--gh-salvia);
-  --accent-hover: #6ea574;
-  --danger: #ff3b30;
-  --border: rgba(0,0,0,0.06);
-  --radius: 12px;
+  --border: rgba(0,0,0,0.04);
+  --card-shadow: 0 6px 18px rgba(0,0,0,0.06);
 
   --bottom-nav-height: 72px;
-  --card-shadow: 0 10px 30px rgba(0,0,0,0.06);
 }
 
-/* Basic reset + force light-mode */
-* { box-sizing: border-box; margin:0; padding:0; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+/* Basic reset / light-mode forced */
+* { box-sizing: border-box; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 html,body { height:100%; }
-html { font-size:15px; color-scheme: light; }
+html { font-size: 15px; color-scheme: light; }
 body {
+  margin:0;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: var(--gh-bg);
   color: var(--gh-text-strong);
@@ -48,182 +36,235 @@ body {
   line-height:1.45;
 }
 
-/* Header fixed and title */
+/* ===================== Header ===================== */
 header {
   position: fixed;
+  top: 0;
   left: 0;
   right: 0;
-  top: 0;
-  height: 92px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding: 14px 18px;
-  background: rgba(255,255,255,0.99);
+  height: 88px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.98);
   border-bottom: 1px solid var(--border);
   z-index: 3000;
 }
 
 /* hamburger */
 .hamburger{
-  width:48px;height:48px;
-  display:inline-flex;align-items:center;justify-content:center;
-  border-radius:12px;background:rgba(0,0,0,0.04);cursor:pointer;border:none;
+  width: 44px;
+  height: 44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background: rgba(0,0,0,0.04);
+  cursor:pointer;
+  border: none;
 }
-.hamburger i{ font-size:18px;color:var(--gh-text-strong); }
+.hamburger i { color: var(--gh-text-strong); font-size:18px; }
 
-/* GroceryHub title: attached, bigger and left-aligned */
-.title-wrap{ display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex:1; }
-.groceryhub{
-  font-size:2.6rem; font-weight:700; color:var(--gh-text-strong);
-  line-height:1; letter-spacing:-0.6px; margin:0; display:inline-block; white-space:nowrap;
+/* Title */
+.title-wrap { display:flex; flex-direction:column; align-items:flex-start; gap:4px; flex:1; }
+.title-row { display:flex; align-items:baseline; gap:6px; }
+
+/* GroceryHub attaccato e più grande */
+.groceryhub {
+  font-weight:700;
+  color:var(--gh-text-strong);
+  font-size:3.0rem;
+  margin:0;
+  line-height:1;
+  letter-spacing:-0.6px;
+  white-space:nowrap;
 }
-.groceryhub .grocery,
-.groceryhub .hub{ display:inline-block; margin:0; padding:0; vertical-align:baseline; }
-.groceryhub .grocery{ font-weight:400; color:var(--gh-text-strong); }
-.groceryhub .hub{ font-weight:900; color:var(--gh-salvia); padding-left:6px; } /* visually attached but slightly offset */
+.groceryhub .hub { font-weight:900; color:var(--gh-salvia); margin-left:4px; display:inline-block; }
+.payoff { font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:2px; }
 
-/* payoff under title */
-.payoff{ font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:4px; }
+/* main spacing (leave room for header) */
+main.dashboard { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: calc(88px + 12px); }
 
-/* main container - leave space for fixed header */
-main.dashboard{ max-width:920px; margin:0 auto; padding:16px; padding-top: calc(92px + 10px); }
+/* ===================== Calendar ===================== */
+.calendar-wrap { margin-top: 4px; margin-bottom: 14px; display:flex; flex-direction:column; gap:8px; }
 
-/* Calendar slider / pills */
-.calendar-wrap{ margin-top:6px; margin-bottom:12px; display:flex; flex-direction:column; gap:8px; }
-.calendar-row{
-  display:flex; gap:10px; align-items:center; overflow-x:auto; -webkit-overflow-scrolling:touch;
-  padding:8px 12px; scroll-snap-type:x mandatory; scroll-behavior:smooth;
+/* row: scroll-snap + slider */
+.calendar-row {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-start;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:10px 14px;
+  scroll-behavior:smooth;
+  scroll-snap-type:x proximity;
 }
-.calendar-row::-webkit-scrollbar{ height:8px; }
-.calendar-row::-webkit-scrollbar-thumb{ background: rgba(0,0,0,0.06); border-radius:6px; }
+.calendar-row::-webkit-scrollbar { height:8px; }
+.calendar-row::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius:6px; }
 
-/* Day pill base */
+/* pill base */
 .day-pill{
   scroll-snap-align:center;
   flex: 0 0 auto;
-  min-width:90px;
+  min-width:86px;
   max-width:140px;
-  padding:12px 12px;
+  padding:12px 10px;
   border-radius:28px;
   background:#fff;
-  border:1px solid rgba(0,0,0,0.04);
+  border:1px solid var(--border);
   box-shadow: var(--card-shadow);
-  display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
   transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
-  text-align:center; color:var(--gh-text-strong);
+  color: var(--gh-text-strong);
+  text-align:center;
 }
-.day-num{ font-size:1.9rem; font-weight:800; line-height:1; }
-.day-name{ font-size:1.05rem; font-weight:700; text-transform:capitalize; }
-.month{ font-size:0.82rem; color:var(--gh-muted); }
+.day-num { font-size:1.9rem; font-weight:800; line-height:1; }
+.day-name { font-size:1.02rem; font-weight:700; text-transform:capitalize; }
+.month { font-size:0.78rem; color:var(--gh-muted); }
 
-/* Adjacent days smaller — we render five visible (JS) */
-.day-pill.adjacent{ min-width:78px; padding:10px 8px; }
-.day-pill.adjacent .day-num{ font-size:1.45rem; }
-.day-pill.adjacent .day-name{ font-size:0.95rem; }
-.day-pill.adjacent-2{ min-width:64px; padding:8px 6px; opacity:0.98; }
-.day-pill.adjacent-2 .day-num{ font-size:1.15rem; }
+/* adjacent sizes */
+.day-pill.adjacent { padding:10px 8px; min-width:78px; }
+.day-pill.adjacent .day-num { font-size:1.45rem; }
+.day-pill.adjacent .day-name { font-size:0.92rem; }
+.day-pill.adjacent-2 { padding:8px 6px; min-width:64px; opacity:0.95; }
+.day-pill.adjacent-2 .day-num { font-size:1.15rem; }
 
-/* Selected pill: salvia background + white text */
-.day-pill.selected{
+/* selected pill: salvia + white */
+.day-pill.selected {
   background: var(--gh-salvia);
-  color: #ffffff;
+  color: #fff;
   transform: translateY(-4px);
-  box-shadow: 0 12px 36px rgba(122,169,134,0.14);
+  box-shadow: 0 10px 30px rgba(122,169,134,0.14);
   border-color: rgba(0,0,0,0.04);
 }
-.day-pill.selected .day-num,
-.day-pill.selected .day-name,
-.day-pill.selected .month{ color:#fff; }
+.day-pill.selected .has-expense-dot { background: rgba(255,255,255,0.95) !important; }
 
-/* Dot indicator for days which have expenses */
-.has-expense-dot{ width:8px;height:8px;border-radius:50%;background:var(--gh-mustard); margin-top:6px; }
-.has-expense-dot.hidden{ opacity:0; }
+/* dot indicator */
+.has-expense-dot { width:8px;height:8px;border-radius:50%; background:var(--gh-salvia); margin-top:4px; }
+.has-expense-dot.hidden { opacity:0; }
 
-/* Day summary area (always visible block, message when empty) */
-.day-summary{ margin-top:8px; padding:12px; background: var(--gh-terracotta-light); color:var(--gh-text-strong); border-radius:10px; display:block; }
-.day-summary .empty{ color:var(--gh-muted); }
-
-/* Blocks (totale, max, min, count) — same height */
-.blocks{ display:flex; gap:12px; margin-top:12px; align-items:stretch; flex-wrap:wrap; }
-.block{
-  flex: 1 1 180px;
-  border-radius:12px;
+/* summary block */
+.day-summary {
+  display:block;
+  margin-top:8px;
   padding:12px;
-  color:#fff;
+  background:var(--gh-terracotta-light);
+  color:var(--gh-text-strong);
+  border-radius:10px;
+}
+.day-summary .empty { color:var(--gh-muted); }
+
+/* ===================== Blocks (totale, max, min, count) ===================== */
+.blocks { display:flex; gap:12px; margin-top:12px; align-items:stretch; flex-wrap:wrap; }
+.block {
+  flex: 1 1 180px;
+  border-radius: 12px;
+  padding: 12px;
+  color: #fff;
   display:flex;
-  gap:12px;
+  gap:8px;
   align-items:center;
   justify-content:space-between;
-  min-height:96px;
-  box-shadow:var(--card-shadow);
+  min-height:84px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
 }
-.block .label{ font-size:0.86rem; opacity:0.95; }
-.block .value{ font-size:1.35rem; font-weight:800; }
+.block .label { font-size:0.86rem; opacity:0.95; }
+.block .value { font-size:1.3rem; font-weight:800; }
 
-/* color blocks */
-.block.total{ background:var(--gh-salvia); }
-.block.max{ background:var(--gh-mustard); color:#111; }
-.block.min{ background:#f09a76; color:#111; } /* soft terracotta fallback */
-.block.count{ background:var(--gh-terracotta); }
+.block.total { background: var(--gh-salvia); }
+.block.max { background: var(--gh-mustard); color:#111; }
+.block.min { background: #ffa87f; color:#111; }
+.block.count { background: var(--gh-terracotta); }
 
-/* remove donut visuals (not used) */
-.donut-wrap{ display:none !important; }
+/* remove any donut visuals (not used) */
+.donut-wrap { display:none !important; }
 
-/* Charts section */
-.charts-section{ display:flex; gap:14px; align-items:flex-start; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px; margin-top:18px; }
-.chart-container{ flex:0 0 calc(50% - 7px); min-width:260px; text-align:left; padding:0; background:transparent; border:none; box-shadow:none; }
-.chart-container h3{ margin:0 0 8px 0; font-weight:700; color:var(--gh-text-strong); }
+/* ===================== Charts ===================== */
+.charts-section { display:flex; gap:14px; align-items:flex-start; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px; margin-top:18px; }
+.chart-container { flex:0 0 calc(50% - 7px); min-width:260px; text-align:left; padding:0; background:transparent; border:none; box-shadow:none; }
+.chart-container h3 { margin:0 0 8px 0; font-weight:700; color:var(--gh-text-strong); }
+.chart-legend { margin-top:8px; color:var(--gh-muted); }
 
-/* recent list */
-.recent-list{ margin-top:8px; }
-.recent-item{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.04); }
+/* recent */
+.recent-list { margin-top:8px; }
+.recent-item { padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.04); }
 
-/* side menu (off-canvas) */
-#sideMenu{
-  position:fixed; left:0; top:0; bottom:0; width:78%; max-width:360px;
-  background:#fff; z-index:3500; box-shadow: 8px 0 40px rgba(0,0,0,0.12);
-  padding:18px; overflow:auto; transform:translateX(-110%); transition:transform .28s ease;
+/* ===================== Side menu ===================== */
+/* In index hai inline 'display:none' and inline positioning — here we provide the proper visual rules.
+   JS in index toggles style.display or sets block; this CSS handles the transitions if class-based used. */
+#sideMenu {
+  /* default hidden visually; index may set display:none inline - both are fine */
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 78%;
+  max-width: 340px;
+  background: #fff;
+  z-index: 3500;
+  box-shadow: 6px 0 30px rgba(0,0,0,0.12);
+  padding: 18px;
+  overflow: auto;
+  transform: translateX(-110%);
+  transition: transform .28s ease;
 }
-#sideMenu.open{ transform:translateX(0); }
-#sideMenu .menu-header{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-#sideMenu .menu-logo{ width:44px;height:44px;border-radius:10px;background:var(--gh-salvia);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800; }
-#sideMenu a{ color:var(--gh-text-strong); text-decoration:none; display:block; padding:10px 6px; border-radius:8px; }
-#sideMenu a:hover{ background: rgba(122,169,134,0.06); }
-#sideMenu .menu-section{ margin:12px 0; }
+#sideMenu.open { transform: translateX(0); }
 
-/* Modal + scanner z-index preserved and above bottom-nav */
-.modal{ display:none; position:fixed; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.45); z-index:4000; }
-.modal-content{ background:#fff; color:var(--gh-text-strong); margin:8% auto; padding:18px; width:94%; max-width:640px; border-radius:12px; border:1px solid var(--border); box-shadow:0 30px 60px rgba(0,0,0,0.12); }
+/* menu internal */
+#sideMenu .menu-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+#sideMenu .menu-logo { width:44px; height:44px; border-radius:10px; background:var(--gh-salvia); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; }
+#sideMenu .menu-section { margin:12px 0; }
+#sideMenu a { color:var(--gh-text-strong); text-decoration:none; display:block; padding:8px 6px; border-radius:8px; }
+#sideMenu a:hover { background: rgba(122,169,134,0.06); }
 
-/* scanner overlay kept (z-index low) */
-#scannerContainer{ position:relative; width:100%; height:320px; max-height:60vh; background:#000; border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-top:8px; }
-#scannerOverlay{ z-index:40; }
+/* stores list */
+#storesList { margin-top:6px; padding-left:12px; color:var(--gh-muted); }
 
-/* Bottom nav: white rounded pill, icon-only */
+/* ===================== Bottom nav ===================== */
 .bottom-nav{
-  position:fixed; left:50%; transform:translateX(-50%); bottom:28px;
-  width: calc(100% - 24px); max-width:720px; height: var(--bottom-nav-height);
-  background:#fff; border-radius:999px; display:flex; justify-content:space-around; align-items:center; padding:10px; box-shadow:0 18px 40px rgba(0,0,0,0.08); z-index:1600;
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:28px;
+  width: calc(100% - 24px);
+  max-width:720px;
+  height:72px;
+  background:#fff;
+  border-radius:999px;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  padding:10px;
+  box-shadow:0 18px 40px rgba(0,0,0,0.08);
+  z-index:1200;
 }
-.bottom-nav .nav-item{ flex:1; display:flex; justify-content:center; align-items:center; text-decoration:none; }
-.bottom-nav .nav-item .label{ display:none; }
-.bottom-nav .icon-wrap{ width:56px; height:56px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:transparent; transition:all .12s ease; }
-.bottom-nav .icon-wrap i{ font-size:20px; color:#222; }
-.bottom-nav .nav-item.nav-active .icon-wrap{ background:var(--gh-salvia); box-shadow:0 8px 18px rgba(122,169,134,0.18); }
-.bottom-nav .nav-item.nav-active .icon-wrap i{ color:#fff; }
+.bottom-nav .nav-item { flex:1; display:flex; justify-content:center; align-items:center; text-decoration:none; }
+.bottom-nav .nav-item .label { display:none; }
+.bottom-nav .icon-wrap { width:52px; height:52px; border-radius:999px; display:flex; align-items:center; justify-content:center; transition:all .12s ease; background:transparent; }
+.bottom-nav .icon-wrap i { font-size:20px; color:#1f2223; }
+.bottom-nav .nav-item.nav-active .icon-wrap { background: var(--gh-salvia); box-shadow: 0 8px 18px rgba(122,169,134,0.18); }
+.bottom-nav .nav-item.nav-active .icon-wrap i { color:#fff; }
 
-/* Accessibility / small screens */
-@media (max-width:880px){
-  .groceryhub{ font-size:2.0rem; }
-  .day-num{ font-size:1.6rem; }
-  .chart-container{ min-width:220px; }
+/* ===================== Utility / responsive ===================== */
+@media (max-width:880px) {
+  .groceryhub { font-size:2.2rem; }
+  .day-num { font-size:1.6rem; }
+  .chart-container { min-width:220px; }
 }
-@media (max-width:480px){
-  main.dashboard{ padding:12px; padding-top: calc(92px + 8px); }
-  .groceryhub{ font-size:1.6rem; }
+@media (max-width:480px) {
+  main.dashboard { padding:12px; padding-top: calc(88px + 8px); }
+  .groceryhub { font-size:1.6rem; }
 }
 
-/* keep scrollbars unobtrusive */
-::-webkit-scrollbar{ width:8px; height:8px; }
-::-webkit-scrollbar-thumb{ background: rgba(0,0,0,0.06); border-radius:8px; }
+/* scrollbars */
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.06); border-radius:8px; }
+
+/* small extra: focus styles for keyboard users */
+button:focus, a:focus { outline: 3px solid rgba(122,169,134,0.12); outline-offset: 2px; }
