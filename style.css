@@ -1,576 +1,697 @@
 /* =========================
-style.css (VERSIONE AGGIORNATA)
+style.css (VERSIONE MODERNA DARK)
 
 CHANGELOG:
 
-- Bottom nav trasformata in stile iPhone: sfondo nero, icone bianche, niente label
-- Icone più grandi (26px) con maggiore padding per area touch
-- Pill di attivazione più evidente con sfondo semi-trasparente bianco
-- Rimossi tutti i riferimenti alle label nella bottom nav
+- RIMOSSA completamente modalità light - solo toni scuri eleganti
+- Migliorati gradienti e effetti glassmorphism come nell’immagine iPhone
+- Aggiunto blur e ombre più sofisticate per look premium
+- Menu iPhone nero mantenuto con effetti moderni
+- Micro-animazioni e transizioni fluide
   ========================= */
 
 /* Reset e base styles */
-:root{
-–bg-1: #1e1e1e;
-–bg-2: #262626;
-–panel: #2a2a2a;
-–input: #232323;
-–text-primary: #f5f5f7;
-–text-secondary: #bfbfc4;
-–muted: #9b9b9f;
+:root {
+/* Palette scura elegante - ispirata all’immagine iPhone */
+–bg-primary: #0a0a0a;          /* nero profondo */
+–bg-secondary: #1a1a1a;        /* grigio molto scuro */
+–panel: #1e1e1e;               /* pannelli principali */
+–panel-elevated: #252525;       /* pannelli sollevati */
+–input-bg: #1c1c1c;            /* background input */
+–text-primary: #ffffff;         /* testo principale */
+–text-secondary: #a1a1a6;      /* testo secondario iOS */
+–text-muted: #8e8e93;          /* testo disabilitato iOS */
 
-/* Modificato: rimosso il blu acceso e usato grigio scuro per i bottoni */
-–accent: #3a3a3a;            /* colore principale bottoni (grigio scuro) */
-–accent-hover: #4d4d4d;      /* hover per bottoni */
-–danger: #ff3b30;
-–border: rgba(255,255,255,0.04);
-–radius: 12px;
+/* Accenti moderni */
+–accent: #2c2c2e;              /* bottoni principali */
+–accent-hover: #3a3a3c;        /* hover bottoni */
+–accent-bright: #007aff;        /* accento blu iOS (occasionale) */
+–danger: #ff3b30;              /* rosso iOS */
+–success: #30d158;             /* verde iOS */
+–warning: #ff9500;             /* arancione iOS */
 
-/* bottom nav sizes - AGGIORNATO per design iPhone */
+/* Bordi e ombre moderne */
+–border-subtle: rgba(255,255,255,0.08);
+–border-strong: rgba(255,255,255,0.15);
+–shadow-soft: 0 4px 20px rgba(0,0,0,0.5);
+–shadow-strong: 0 8px 40px rgba(0,0,0,0.7);
+–shadow-glow: 0 0 20px rgba(255,255,255,0.05);
+
+/* Glassmorphism */
+–glass-bg: rgba(30,30,30,0.8);
+–glass-border: rgba(255,255,255,0.1);
+–blur: blur(20px);
+
+/* Layout */
+–radius: 16px;
+–radius-small: 12px;
 –bottom-nav-height: 80px;
-–bottom-nav-pill-bg: rgba(255,255,255,0.2);  /* pill più evidente */
-–bottom-nav-bg: #000000;                     /* sfondo nero puro */
-–bottom-nav-text-inactive: #8e8e93;          /* grigio iOS per icone inattive */
-–bottom-nav-text-active: #ffffff;            /* bianco puro per icone attive */
+–btn-height: 48px;
 
-/* buttons / spacing */
-–btn-height: 44px;
-–btn-padding-h: 18px;
-–btn-bg: var(–accent);
-–btn-secondary-bg: #303030;
-–btn-text: #ffffff;
-
-/* layout helpers */
-–card-shadow: 0 6px 18px rgba(0,0,0,0.35);
+/* Bottom nav specifico */
+–nav-bg: #000000;
+–nav-pill: rgba(255,255,255,0.18);
+–nav-icon-inactive: #636366;
+–nav-icon-active: #ffffff;
 }
 
-/* core reset */
+/* Core reset con miglioramenti */
 
-- { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-  html,body { height:100%; }
+- {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  }
 
-html { font-size: 15px; } /* base */
+html {
+font-size: 16px;
+scroll-behavior: smooth;
+}
+
 body {
-font-family: -apple-system, BlinkMacSystemFont, “SF Pro Text”, “Segoe UI”, Roboto, “Helvetica Neue”, Arial, sans-serif;
+font-family: -apple-system, BlinkMacSystemFont, “SF Pro Display”, “SF Pro Text”, “Helvetica Neue”, Arial, sans-serif;
 line-height: 1.5;
 color: var(–text-primary);
-background: linear-gradient(135deg, var(–bg-1) 0%, var(–bg-2) 100%);
+background:
+radial-gradient(circle at 20% 50%, rgba(120,119,198,0.3) 0%, transparent 50%),
+radial-gradient(circle at 80% 20%, rgba(255,119,198,0.15) 0%, transparent 50%),
+radial-gradient(circle at 40% 80%, rgba(120,200,255,0.1) 0%, transparent 50%),
+linear-gradient(135deg, var(–bg-primary) 0%, var(–bg-secondary) 100%);
 min-height: 100vh;
-
-/* spazio per la bottom navigation + safe-area per iPhone con notch */
-padding-bottom: calc(var(–bottom-nav-height) + 24px + env(safe-area-inset-bottom, 0px));
+padding-bottom: calc(var(–bottom-nav-height) + 30px + env(safe-area-inset-bottom, 0px));
 -webkit-tap-highlight-color: transparent;
-font-size: 0.98rem;
+overflow-x: hidden;
 }
 
-/* Header e navigazione (top) */
+/* Header moderno con glassmorphism */
 header {
-background: var(–panel);
+background: var(–glass-bg);
 color: var(–text-primary);
-padding: 1rem;
-box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+padding: 1.5rem 1rem;
+backdrop-filter: var(–blur);
+-webkit-backdrop-filter: var(–blur);
+border-bottom: 1px solid var(–glass-border);
 position: sticky;
 top: 0;
 z-index: 100;
-border-bottom: 1px solid var(–border);
+box-shadow: var(–shadow-soft);
 }
 
 header h1 {
 text-align: center;
-margin-bottom: 0.6rem;
-font-size: 1.8rem; /* leggermente più grande per maggiore gerarchia */
-font-weight: 700;
+margin-bottom: 1rem;
+font-size: 2rem;
+font-weight: 800;
 color: var(–text-primary);
-line-height: 1.05;
+line-height: 1.1;
+letter-spacing: -0.02em;
+background: linear-gradient(135deg, var(–text-primary) 0%, var(–text-secondary) 100%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
 }
 
-/* TOP NAV (kept for large screens) */
+/* Top navigation migliorata */
 nav.top-nav {
 display: flex;
 justify-content: center;
-gap: 10px;
-flex-wrap: nowrap;
+gap: 8px;
 overflow-x: auto;
 -webkit-overflow-scrolling: touch;
-max-width: 760px;
+max-width: 800px;
 margin: 0 auto;
-padding-bottom: 6px;
+padding: 0 0 8px 0;
 }
 
 nav.top-nav a {
 color: var(–text-secondary);
 text-decoration: none;
-padding: 8px 16px;
-border-radius: 20px;
-transition: all 0.18s ease;
+padding: 12px 20px;
+border-radius: var(–radius);
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 font-weight: 600;
-font-size: 0.94rem;
-background: transparent;
-flex: 0 0 auto;
+font-size: 0.95rem;
+background: rgba(255,255,255,0.05);
+backdrop-filter: blur(10px);
+border: 1px solid var(–border-subtle);
+flex-shrink: 0;
 white-space: nowrap;
 }
-nav.top-nav a:hover { color: var(–text-primary); background: rgba(255,255,255,0.03); }
-nav.top-nav a.nav-active { color: var(–text-primary); background: rgba(255,255,255,0.04); box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
 
-/* ===== BOTTOM NAVIGATION - STILE IPHONE ===== */
+nav.top-nav a:hover {
+color: var(–text-primary);
+background: rgba(255,255,255,0.1);
+transform: translateY(-2px);
+box-shadow: var(–shadow-soft);
+}
+
+nav.top-nav a.nav-active {
+color: var(–text-primary);
+background: var(–accent);
+box-shadow: var(–shadow-strong);
+}
+
+/* ===== BOTTOM NAVIGATION - IPHONE STYLE MODERNO ===== */
 .bottom-nav {
 position: fixed;
-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+bottom: calc(12px + env(safe-area-inset-bottom, 0px));
 left: 50%;
 transform: translateX(-50%);
-width: calc(100% - 20px);
-max-width: 760px;
+width: calc(100% - 24px);
+max-width: 800px;
 height: var(–bottom-nav-height);
-background: var(–bottom-nav-bg);  /* nero puro */
-border-radius: 22px;               /* bordi più arrotondati */
+background: var(–nav-bg);
+border-radius: 24px;
 display: flex;
 justify-content: space-around;
 align-items: center;
-padding: 12px 16px;
-box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 0 0.5px rgba(255,255,255,0.1);
+padding: 16px 20px;
+box-shadow:
+var(–shadow-strong),
+0 0 0 1px rgba(255,255,255,0.1),
+var(–shadow-glow);
 z-index: 99999;
-backdrop-filter: blur(20px);        /* blur più intenso */
+backdrop-filter: blur(30px);
+-webkit-backdrop-filter: blur(30px);
+border: 1px solid rgba(255,255,255,0.08);
 }
 
-/* singolo item: SOLO ICONA, niente label */
 .bottom-nav .nav-item {
 display: flex;
 align-items: center;
 justify-content: center;
 text-decoration: none;
-color: var(–bottom-nav-text-inactive);
+color: var(–nav-icon-inactive);
 flex: 1;
-min-width: 0;
-padding: 14px;                      /* area touch più ampia */
-transition: all 0.2s ease;
--webkit-tap-highlight-color: transparent;
+padding: 16px;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 position: relative;
-border-radius: 16px;
+border-radius: 18px;
 }
 
-/* contenitore icona - dimensioni aumentate */
 .bottom-nav .nav-item .icon-wrap {
-width: 52px;                        /* più grande */
-height: 52px;                       /* più grande */
+width: 56px;
+height: 56px;
 display: flex;
 align-items: center;
 justify-content: center;
-border-radius: 16px;
-transition: all 0.2s ease;
+border-radius: 18px;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 position: relative;
 z-index: 2;
 }
 
-/* icone più grandi e bianche/grigie */
 .bottom-nav .nav-item .icon-wrap i,
 .bottom-nav .nav-item .icon-wrap svg {
-font-size: 26px;                    /* icone più grandi */
-color: var(–bottom-nav-text-inactive);
+font-size: 28px;
+color: inherit;
 display: block;
 line-height: 1;
-transition: color 0.2s ease;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* NASCONDI COMPLETAMENTE LE LABEL */
+/* Nascondi label completamente */
 .bottom-nav .nav-item .label {
 display: none !important;
 }
 
-/* stato attivo - icona bianca */
+/* Stato attivo con effetto glassmorphism */
 .bottom-nav .nav-item.nav-active .icon-wrap i,
 .bottom-nav .nav-item.nav-active .icon-wrap svg {
-color: var(–bottom-nav-text-active);
-transform: scale(1.1);               /* leggero ingrandimento */
+color: var(–nav-icon-active);
+transform: scale(1.1);
 }
 
-/* pill active - sfondo semi-trasparente bianco */
 .bottom-nav .nav-item.nav-active::before {
 content: “”;
 position: absolute;
 top: 50%;
 left: 50%;
 transform: translate(-50%, -50%);
-width: 64px;
-height: 40px;
-background: var(–bottom-nav-pill-bg);  /* bianco semi-trasparente */
-border-radius: 20px;
+width: 72px;
+height: 44px;
+background: var(–nav-pill);
+border-radius: 22px;
 z-index: 1;
 pointer-events: none;
-box-shadow: 0 4px 20px rgba(255,255,255,0.1);
-transition: all 0.2s ease;
+box-shadow:
+0 4px 20px rgba(255,255,255,0.1),
+inset 0 1px 1px rgba(255,255,255,0.2);
+backdrop-filter: blur(10px);
 }
 
-/* hover effect per desktop */
+/* Hover elegante */
 .bottom-nav .nav-item:hover:not(.nav-active) .icon-wrap i,
 .bottom-nav .nav-item:hover:not(.nav-active) .icon-wrap svg {
 color: rgba(255,255,255,0.8);
 transform: scale(1.05);
 }
 
-/* focus accessibility */
+/* Focus accessibility */
 .bottom-nav .nav-item:focus-visible::after {
 content: “”;
 position: absolute;
-left: 50%;
-top: 50%;
-transform: translate(-50%, -50%);
-width: 68px;
-height: 44px;
-border-radius: 22px;
+inset: 4px;
+border-radius: 18px;
 border: 2px solid rgba(255,255,255,0.3);
 z-index: 0;
 }
 
-/* small screens: dimensioni leggermente ridotte */
 @media (max-width: 420px) {
-.bottom-nav { padding: 10px 12px; }
+.bottom-nav {
+padding: 12px 16px;
+border-radius: 20px;
+}
 .bottom-nav .nav-item { padding: 12px; }
-.bottom-nav .nav-item .icon-wrap { width: 48px; height: 48px; }
-.bottom-nav .nav-item .icon-wrap i,
-.bottom-nav .nav-item .icon-wrap svg { font-size: 24px; }
-.bottom-nav .nav-item.nav-active::before { width: 60px; height: 36px; }
+.bottom-nav .nav-item .icon-wrap { width: 52px; height: 52px; }
+.bottom-nav .nav-item .icon-wrap i { font-size: 26px; }
+.bottom-nav .nav-item.nav-active::before { width: 68px; height: 40px; }
 }
 
-/* hide top-nav on narrow screens */
 @media (max-width: 760px) {
 nav.top-nav { display: none; }
 }
 
-/* Layout principale */
-main { max-width: 500px; margin: 0 auto; padding: 20px;
-/* garantisce spazio finale per evitare sovrapposizione con bottom-nav */
-padding-bottom: calc(var(–bottom-nav-height) + 36px + env(safe-area-inset-bottom, 0px));
+/* Layout principale con miglioramenti */
+main {
+max-width: 600px;
+margin: 0 auto;
+padding: 24px 20px;
+padding-bottom: calc(var(–bottom-nav-height) + 40px + env(safe-area-inset-bottom, 0px));
 }
 
-/* Sezioni (card) */
+/* Sezioni moderne con glassmorphism */
 section {
-background: var(–panel);
-margin: 18px 0;
-padding: 20px;
-border-radius: 15px;
-box-shadow: var(–card-shadow);
+background: var(–glass-bg);
+backdrop-filter: var(–blur);
+-webkit-backdrop-filter: var(–blur);
+margin: 24px 0;
+padding: 24px;
+border-radius: var(–radius);
+border: 1px solid var(–glass-border);
+box-shadow: var(–shadow-soft);
 color: var(–text-primary);
-border: 1px solid var(–border);
+transition: all 0.3s ease;
 }
 
-/* Titoli centrati nelle cornici e dimensione distinta rispetto al contenuto */
-section h2 { margin-bottom: 14px; color: var(–text-primary); font-weight: 800; font-size: 1.22rem; text-align: center; }
-section h3 { margin-bottom: 12px; color: var(–text-primary); font-weight: 700; font-size: 1.06rem; text-align: center; }
+section:hover {
+transform: translateY(-2px);
+box-shadow: var(–shadow-strong);
+}
 
-/* Buttons: uniformità e rimozione focus blu */
+section h2 {
+margin-bottom: 20px;
+color: var(–text-primary);
+font-weight: 800;
+font-size: 1.4rem;
+text-align: center;
+letter-spacing: -0.01em;
+}
+
+section h3 {
+margin-bottom: 16px;
+color: var(–text-primary);
+font-weight: 700;
+font-size: 1.1rem;
+text-align: center;
+}
+
+/* Bottoni moderni con effetti iOS */
 .btn, .btn-secondary, .small-btn {
 height: var(–btn-height);
 min-height: var(–btn-height);
-padding: 0 var(–btn-padding-h);
-border-radius: 10px;
+padding: 0 24px;
+border-radius: var(–radius-small);
 display: inline-flex;
 align-items: center;
 justify-content: center;
 gap: 8px;
 cursor: pointer;
-font-size: 0.95rem;
+font-size: 1rem;
 font-weight: 600;
 line-height: 1;
 border: none;
-transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 box-sizing: border-box;
 user-select: none;
+letter-spacing: -0.01em;
 }
 
-/* primary */
-.btn { background: var(–btn-bg); color: var(–btn-text); }
-.btn:hover { background: var(–accent-hover); }
-
-/* secondary (grigio scuro) */
-.btn-secondary { background: var(–btn-secondary-bg); color: var(–btn-text); border: 1px solid rgba(255,255,255,0.03); }
-
-/* danger */
-.btn-danger { background: var(–danger); color: #fff; }
-
-/* disabled */
-.btn:disabled, .btn[disabled] { opacity: 0.55; cursor: not-allowed; transform: none; }
-
-/* hover/active */
-.btn:hover, .btn-secondary:hover, .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.45); }
-.btn:active, .btn-secondary:active { transform: translateY(0); box-shadow: none; }
-
-/* subtle neutral focus ring (no bright blue) */
-.btn:focus, .btn:focus-visible, .btn-secondary:focus, .btn-secondary:focus-visible {
-outline: none;
-box-shadow: 0 0 0 4px rgba(0,0,0,0.25) inset, 0 0 0 3px rgba(255,255,255,0.02);
-}
-
-/* Form styles: modern inputs */
-.form-group { margin-bottom: 18px; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-/* labels */
-.form-group label { display: block; margin-bottom: 6px; color: var(–text-secondary); font-weight: 700; font-size: 0.92rem; letter-spacing: 0.1px; }
-
-/* inputs / selects / textarea: unified modern look */
-.form-group input, .form-group select, .form-group textarea,
-input[type=“text”], input[type=“number”], input[type=“date”], select, textarea, .form-input {
-width: 100%;
-padding: 12px 14px;
-border: 1px solid rgba(255,255,255,0.04);
-border-radius: 10px;
-font-size: 0.93rem;
-background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(255,255,255,0.01)), var(–input);
+.btn {
+background: linear-gradient(135deg, var(–accent) 0%, var(–accent-hover) 100%);
 color: var(–text-primary);
-transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+box-shadow: var(–shadow-soft);
+}
+
+.btn:hover {
+background: linear-gradient(135deg, var(–accent-hover) 0%, var(–accent) 100%);
+transform: translateY(-2px);
+box-shadow: var(–shadow-strong);
+}
+
+.btn-secondary {
+background: rgba(255,255,255,0.08);
+color: var(–text-primary);
+border: 1px solid var(–border-subtle);
+backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+background: rgba(255,255,255,0.12);
+border-color: var(–border-strong);
+transform: translateY(-2px);
+}
+
+.btn-danger {
+background: linear-gradient(135deg, var(–danger) 0%, #e60026 100%);
+color: #fff;
+}
+
+.btn:disabled, .btn[disabled] {
+opacity: 0.4;
+cursor: not-allowed;
+transform: none;
+}
+
+.btn:active {
+transform: scale(0.98);
+}
+
+.btn:focus-visible {
+outline: none;
+box-shadow: 0 0 0 4px rgba(255,255,255,0.1);
+}
+
+/* Form styles modernizzati */
+.form-group { margin-bottom: 20px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.form-group label {
+display: block;
+margin-bottom: 8px;
+color: var(–text-secondary);
+font-weight: 600;
+font-size: 0.95rem;
+letter-spacing: -0.01em;
+}
+
+.form-group input, .form-group select, .form-group textarea,
+input[type=“text”], input[type=“number”], input[type=“date”],
+select, textarea, .form-input {
+width: 100%;
+padding: 16px 20px;
+border: 1px solid var(–border-subtle);
+border-radius: var(–radius-small);
+font-size: 1rem;
+background: var(–input-bg);
+color: var(–text-primary);
+transition: all 0.3s ease;
 -webkit-appearance: none;
 box-sizing: border-box;
+backdrop-filter: blur(10px);
 }
-.form-group input::placeholder, .form-group textarea::placeholder { color: var(–muted); }
 
-/* focus look neutral */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+color: var(–text-muted);
+}
+
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus,
 input:focus, select:focus, textarea:focus {
 outline: none;
-border-color: rgba(255,255,255,0.08);
-box-shadow: 0 6px 18px rgba(0,0,0,0.5), 0 0 0 4px rgba(0,0,0,0.16) inset;
-background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.03));
+border-color: var(–border-strong);
+box-shadow:
+var(–shadow-soft),
+0 0 0 4px rgba(255,255,255,0.08);
+background: rgba(255,255,255,0.03);
 }
 
-/* small tweaks */
-input[type=“number”] { -moz-appearance:textfield; }
-input[type=“date”] { padding-left: 12px; }
-
-/* Dashboard specifics */
-.period-selector select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(–border); font-size: 0.94rem; background: var(–input); color: var(–text-primary); }
-
-/* Stats grid */
-.stats-grid { display: grid; gap: 14px; }
+/* Stats grid modernizzata */
+.stats-grid { display: grid; gap: 16px; }
 .stats-grid-2x2 {
-grid-template-columns: repeat(2, minmax(120px, 1fr));
-grid-auto-rows: minmax(80px, auto);
-gap: 14px;
+grid-template-columns: repeat(2, minmax(140px, 1fr));
+gap: 16px;
 }
-@media (max-width: 380px) { .stats-grid-2x2 { grid-template-columns: 1fr; } }
+
+@media (max-width: 380px) {
+.stats-grid-2x2 { grid-template-columns: 1fr; }
+}
 
 .stat-card {
-background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
-padding: 16px 12px;
-border-radius: 12px;
+background: var(–glass-bg);
+backdrop-filter: blur(20px);
+padding: 20px 16px;
+border-radius: var(–radius);
 text-align: center;
-border: 1px solid var(–border);
-transition: transform .12s ease, box-shadow .12s ease;
-display: flex; flex-direction: column; justify-content: center; align-items: center;
+border: 1px solid var(–glass-border);
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+position: relative;
+overflow: hidden;
 }
-.stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.55); }
-/* prevent wrap on stat headings (avoids “Spesa Massima” going a capo) */
-.stat-card h3 { font-size: 0.92rem; color: var(–text-secondary); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat-card .amount { font-size: 1.3rem; font-weight: 800; color: var(–text-primary); margin-top: 4px; }
 
-/* Charts: affiancati in due blocchi separati.
-Su schermi stretti vengono tenuti affiancati ma con scroll orizzontale
-così non si rompono il layout e restano visibili come richiesto. */
+.stat-card::before {
+content: ‘’;
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+height: 1px;
+background: linear-gradient(90deg, transparent, var(–border-strong), transparent);
+}
+
+.stat-card:hover {
+transform: translateY(-4px);
+box-shadow: var(–shadow-strong);
+border-color: var(–border-strong);
+}
+
+.stat-card h3 {
+font-size: 0.9rem;
+color: var(–text-secondary);
+margin-bottom: 8px;
+font-weight: 600;
+text-transform: uppercase;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+letter-spacing: 0.02em;
+}
+
+.stat-card .amount {
+font-size: 1.6rem;
+font-weight: 800;
+color: var(–text-primary);
+margin-top: 4px;
+letter-spacing: -0.02em;
+}
+
+/* Charts modernizzati */
 .charts-section {
 display: flex;
-gap: 14px;
+gap: 16px;
 align-items: flex-start;
 width: 100%;
-overflow-x: auto;     /* permette scorrimento orizzontale su iPhone */
+overflow-x: auto;
 -webkit-overflow-scrolling: touch;
-padding-bottom: 6px;
+padding-bottom: 8px;
 }
 
-/* ogni chart-container occupa metà della larghezza del contenitore
-ma ha un min-width per evitare che il canvas si riduca troppo */
 .chart-container {
-flex: 0 0 calc(50% - 7px);
-min-width: 260px;
+flex: 0 0 calc(50% - 8px);
+min-width: 280px;
 text-align: center;
-padding: 12px;
-border-radius: 12px;
-background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
-border: 1px solid rgba(255,255,255,0.02);
+padding: 20px;
+border-radius: var(–radius);
+background: var(–glass-bg);
+backdrop-filter: var(–blur);
+border: 1px solid var(–glass-border);
 box-sizing: border-box;
 }
-.chart-container h3 { margin-top: 0; margin-bottom: 8px; text-align: center; font-size: 1.02rem; }
-.chart-container canvas { width: 100% !important; height: auto !important; margin: 8px 0 12px; border-radius: 10px; }
 
-/* stats-list */
-.stats-list { text-align: left; margin-top: 8px; }
-.stats-list div { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.02); color:var(–text-primary); }
-
-/* Recent */
-.recent-list { max-height: 300px; overflow-y: auto; padding-right: 6px; padding-bottom: 8px; }
-.recent-item { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.02); }
-.recent-info strong { color:var(–text-primary); font-weight:700; }
-.recent-info small { color:var(–text-secondary); }
-
-/* Cart / Table */
-.cart-section { background: rgba(255,255,255,0.02); border:1px solid var(–border); padding: 12px; border-radius: 12px; margin-bottom: calc(var(–bottom-nav-height) + 8px); }
-.cart-table-container { overflow-x:auto; margin: 10px 0; border-radius: 10px; }
-#cartTable { width:100%; border-collapse: collapse; background: var(–panel); border-radius: 8px; overflow: hidden; }
-#cartTable th { background: #303030; color: var(–text-primary); padding: 12px 10px; text-align:left; font-weight:700; font-size:0.95rem; border-bottom:1px solid rgba(255,255,255,0.03); }
-#cartTable td { padding: 12px 10px; border-top: 1px solid rgba(255,255,255,0.02); color: var(–text-primary); font-size:0.95rem; }
-.cart-total { text-align: right; font-size:1.15rem; margin-top:12px; padding:12px; background: var(–panel); border-radius:10px; border:1px solid var(–border); color:var(–text-primary); }
-
-/* Form-actions near bottom */
-.form-actions { display:flex; gap:8px; align-items:center; margin-top:12px; margin-bottom: calc(var(–bottom-nav-height) + 8px); }
-
-/* Remove btn - uniformato alle altre dimensioni */
-.remove-btn { background: var(–danger); color: #fff; border:none; padding: 0 12px; border-radius:8px; cursor:pointer; transition: transform .12s ease; height: var(–btn-height); min-height: var(–btn-height); display:inline-flex; align-items:center; justify-content:center; }
-.remove-btn:hover { transform: scale(1.04); }
-
-/* Modal */
-.modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:2000; }
-.modal-content { background: var(–panel); color: var(–text-primary); margin: 8% auto; padding: 18px; width: 94%; max-width: 520px; border-radius: 14px; border:1px solid var(–border); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
-
-/* Scanner overlay - ridotto il blu per non contrastare con il nuovo tema dei bottoni */
-#scannerContainer { position: relative; width: 100%; height: 320px; max-height: 60vh; background: #000; border-radius: 10px; overflow: hidden; display:flex; align-items:center; justify-content:center; margin-top: 8px; }
-#scannerContainer video, #scannerVideo { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
-#scannerOverlay { position: absolute; left: 50%; top: 50%; width: 78%; height: 120px; transform: translate(-50%, -50%); border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(255,255,255,0.04); pointer-events: none; z-index: 40; }
-#scannerOverlay .scan-line { position: absolute; left: 0; top: 0; width: 100%; height: 2px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0) 100%); animation: scanMove 1.6s linear infinite; border-radius: 1px; }
-@keyframes scanMove { 0% { transform: translateY(-4px); opacity: 0; } 10% { opacity: 1; } 50% { transform: translateY(calc(100% - 2px)); opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-4px); opacity: 0; } }
-
-/* Labels / small text */
-.device-label { font-size: 0.85rem; color: var(–text-secondary); margin-right: 8px; }
-.small-btn { padding: 0 var(–btn-padding-h); height: var(–btn-height); min-height: var(–btn-height); }
-
-/* Filters actions */
-.filter-actions { display: flex; gap: 8px; align-items: center; width: 100%; }
-.filter-actions .btn, .filter-actions .btn-secondary, .filter-actions .small-btn { flex: 1 1 0; min-width: 0; padding: 0 var(–btn-padding-h); font-size: 0.93rem; }
-
-/* Filters (Archivio) */
-.filter-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:12px; align-items:end; }
-.filter-group label { color: var(–text-secondary); }
-
-/* No-expenses */
-.no-expenses { text-align:center; color:var(–text-secondary); padding: 28px 6px; }
-
-/* Scrollbar custom */
-::-webkit-scrollbar { width:8px; height:8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.09); }
-
-/* Accessibility focus for inputs */
-input:focus, select:focus, textarea:focus { outline: none; }
-
-/* Responsive tweaks */
-@media (max-width: 480px) {
-main { padding: 14px; padding-bottom: calc(var(–bottom-nav-height) + 36px + env(safe-area-inset-bottom, 0px)); }
-.form-row { grid-template-columns: 1fr; gap:10px; }
-header h1 { font-size:1.4rem; }
-nav.top-nav a { padding: 6px 10px; font-size: 0.88rem; min-width: auto; }
-/* rendiamo i titoli un pelo più piccoli su schermi molto stretti */
-section h2 { font-size: 1.08rem; }
+.chart-container h3 {
+margin: 0 0 12px 0;
+text-align: center;
+font-size: 1.1rem;
+font-weight: 700;
 }
 
-/* Settings-specific */
-.settings-section { padding: 12px; background: var(–panel); border-radius: 12px; border:1px solid var(–border); }
-.stores-list { display: grid; gap: 10px; margin-top: 8px; }
-.store-item { display: flex; gap: 8px; align-items: center; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); padding: 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.02); }
-.store-handle { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.03); display:flex;align-items:center;justify-content:center;color:var(–text-secondary);font-size:14px;cursor:grab; }
-.store-input { flex: 1; background: var(–input); border: 1px solid var(–border); color: var(–text-primary); padding: 10px 12px; border-radius: 8px; font-size: 0.95rem; }
-.store-actions { display:flex; gap:8px; align-items:center; }
-.add-store-btn { display:flex; gap:8px; align-items:center; justify-content:center; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); color: var(–text-primary); border: 1px solid var(–border); cursor: pointer; }
-.save-settings-btn { margin-top: 12px; background: var(–btn-bg); color: white; font-weight: 700; border-radius: 10px; padding: 12px 14px; }
+.chart-container canvas {
+width: 100% !important;
+height: auto !important;
+margin: 12px 0;
+border-radius: var(–radius-small);
+}
 
-/* PRODUCT ITEM (DETTAGLIO) - FIX overflow + modern inputs
-Modificato: prima colonna riservata alla thumbnail (64px)
-*/
+/* Responsive migliorato */
+@media (max-width: 480px) {
+main { padding: 16px; }
+.form-row { grid-template-columns: 1fr; gap: 12px; }
+header h1 { font-size: 1.6rem; }
+section { padding: 20px 16px; margin: 16px 0; }
+.btn { padding: 0 20px; font-size: 0.95rem; }
+}
+
+/* Product items modernizzati */
 .product-item {
 display: grid;
-grid-template-columns: 64px 1fr 100px 40px; /* prima colonna per immagine */
-gap: 8px;
+grid-template-columns: 64px 1fr 100px 40px;
+gap: 12px;
 align-items: center;
-padding: 10px 0;
-border-bottom: 1px solid rgba(255,255,255,0.03);
-width: 100%;
-box-sizing: border-box;
-min-width: 0; /* evita overflow figlio in flex layouts */
+padding: 16px 0;
+border-bottom: 1px solid var(–border-subtle);
 }
 
-/* thumb styles - applicate in dettaglio e carrello */
 .thumb {
 width: 56px;
 height: 56px;
-border-radius: 8px;
+border-radius: var(–radius-small);
 object-fit: cover;
 display: block;
-box-shadow: 0 6px 18px rgba(0,0,0,0.45);
-border: 1px solid rgba(255,255,255,0.03);
+box-shadow: var(–shadow-soft);
+border: 1px solid var(–glass-border);
 }
 
-/* Placeholder per prodotti senza foto (coerente con layout) */
 .image-placeholder {
 width: 56px;
 height: 56px;
-display:flex;
-align-items:center;
-justify-content:center;
-background: rgba(255,255,255,0.02);
+display: flex;
+align-items: center;
+justify-content: center;
+background: rgba(255,255,255,0.05);
 color: var(–text-secondary);
-border-radius: 8px;
-font-size: 0.82rem;
-border: 1px dashed rgba(255,255,255,0.02);
+border-radius: var(–radius-small);
+font-size: 0.8rem;
+border: 1px dashed var(–border-subtle);
 }
 
-/* INPUTS in product-item */
-.product-item input[type=“text”],
-.product-item input[type=“number”],
-.product-item .prod-name,
-.product-item .prod-price,
-.product-item .prod-category,
-.product-item .prod-notes {
-width: 100%;
-padding: 10px 12px;
-border-radius: 8px;
-border: 1px solid rgba(255,255,255,0.04);
-background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)), var(–input);
+/* Scrollbar personalizzata */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+background: rgba(255,255,255,0.2);
+border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+background: rgba(255,255,255,0.3);
+}
+
+/* Modal modernizzato */
+.modal {
+display: none;
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.8);
+backdrop-filter: blur(10px);
+z-index: 2000;
+}
+
+.modal-content {
+background: var(–panel-elevated);
 color: var(–text-primary);
-font-size: 0.92rem;
-box-sizing: border-box;
+margin: 10vh auto;
+padding: 24px;
+width: 95%;
+max-width: 500px;
+border-radius: var(–radius);
+border: 1px solid var(–glass-border);
+box-shadow: var(–shadow-strong);
+backdrop-filter: var(–blur);
 }
 
-/* notes field spans full width */
-.product-item > div { grid-column: 1 / -1; margin-top: 8px; }
-.product-item .prod-notes { margin-top: 6px; }
-
-/* responsive adjustments */
-@media (max-width: 640px) {
-.product-item { grid-template-columns: 56px 1fr 80px 36px; }
-.product-item .prod-price { text-align: right; }
-.product-item .prod-category { display: none; }
-.product-item .prod-notes { font-size: 0.88rem; }
+/* Scanner modernizzato */
+#scannerContainer {
+position: relative;
+width: 100%;
+height: 320px;
+background: #000;
+border-radius: var(–radius-small);
+overflow: hidden;
+display: flex;
+align-items: center;
+justify-content: center;
+margin-top: 12px;
+border: 1px solid var(–glass-border);
 }
 
-/* === IMPORTANT: NASCONDI IMMAGINI NELLA LISTA ARCHIVIO ===
-Qui nascondiamo le thumb SOLO dentro il container #expenseList (lista)
-=> le immagini restano visibili nelle pagine di dettaglio (#productsContainer)
-*/
-#expenseList .thumb,
-#expenseList .image-placeholder,
-#expenseList img.thumb {
-display: none !important;
+/* Utilities */
+.recent-list {
+max-height: 350px;
+overflow-y: auto;
+padding-right: 8px;
 }
 
-/* Se invece vuoi mostrare una piccola icona/placeholder nella lista,
-puoi rimuovere la regola qui sopra e usare un CSS meno drastico. */
+.recent-item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 16px 0;
+border-bottom: 1px solid var(–border-subtle);
+}
 
-/* stats-list */
-.stats-list { text-align: left; margin-top: 8px; }
-.stats-list div { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.02); color:var(–text-primary); }
+.stats-list { text-align: left; margin-top: 12px; }
+.stats-list div {
+display: flex;
+justify-content: space-between;
+padding: 10px 0;
+border-bottom: 1px solid var(–border-subtle);
+color: var(–text-primary);
+}
 
-/* Light mode support */
-@media (prefers-color-scheme: light) {
-:root{ –bg-1: #f5f7fa; –bg-2: #eef1f6; –panel: #ffffff; –input: #ffffff; –text-primary: #111214; –text-secondary: #4a4a4a; –muted: #6b6b70; –border: rgba(0,0,0,0.06); –btn-secondary-bg: #e7e9ec; –accent: #555; –accent-hover: #777; –btn-bg: var(–accent); }
-body { background: linear-gradient(135deg, var(–bg-1) 0%, var(–bg-2) 100%); color: var(–text-primary);}
-header, section, .card { box-shadow: 0 6px 20px rgba(0,0,0,0.04); }
-.btn { color: #fff; }
-#cartTable th { background: #f6f6f7; color: var(–text-primary); }
+.no-expenses {
+text-align: center;
+color: var(–text-secondary);
+padding: 32px 8px;
+font-size: 1.1rem;
+}
 
-/* Light mode per bottom nav - mantiene comunque l’estetica scura */
-.bottom-nav { background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); }
-.bottom-nav .nav-item .icon-wrap i,
-.bottom-nav .nav-item .icon-wrap svg { color: #8e8e93; }
-.bottom-nav .nav-item.nav-active .icon-wrap i,
-.bottom-nav .nav-item.nav-active .icon-wrap svg { color: #ffffff; }
-.bottom-nav .nav-item.nav-active::before { background: rgba(255,255,255,0.25); }
+/* Cart e tabelle */
+.cart-section {
+background: var(–glass-bg);
+border: 1px solid var(–glass-border);
+padding: 20px;
+border-radius: var(–radius);
+margin-bottom: calc(var(–bottom-nav-height) + 12px);
+backdrop-filter: var(–blur);
+}
 
-.btn-secondary { border: 1px solid rgba(0,0,0,0.06); color: var(–text-primary); background: var(–btn-secondary-bg); }
+#cartTable {
+width: 100%;
+border-collapse: collapse;
+background: var(–panel-elevated);
+border-radius: var(–radius-small);
+overflow: hidden;
+border: 1px solid var(–glass-border);
+}
+
+#cartTable th {
+background: rgba(255,255,255,0.05);
+color: var(–text-primary);
+padding: 16px 12px;
+text-align: left;
+font-weight: 600;
+border-bottom: 1px solid var(–border-subtle);
+}
+
+#cartTable td {
+padding: 16px 12px;
+border-top: 1px solid var(–border-subtle);
+color: var(–text-primary);
+}
+
+.cart-total {
+text-align: right;
+font-size: 1.2rem;
+margin-top: 16px;
+padding: 16px;
+background: var(–glass-bg);
+border-radius: var(–radius-small);
+border: 1px solid var(–glass-border);
+color: var(–text-primary);
+font-weight: 700;
 }
