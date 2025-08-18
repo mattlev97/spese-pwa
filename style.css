@@ -1,5 +1,5 @@
 /* =========================
-   style.css - GroceryHub unified
+   style.css - GroceryHub unified (FULL)
    Palette: bianco, salvia, senape, terracotta
    Forza light-mode e layout unificato
    Mantiene charts affiancati, scanner/modal, archivio, ecc.
@@ -15,7 +15,7 @@
   --gh-text-strong: #222428;
   --gh-muted: #5b5f63;
 
-  /* legacy vars (per compatibilità con altri css che usavi) */
+  /* legacy vars for compatibility */
   --bg-1: #ffffff;
   --bg-2: #ffffff;
   --panel: #ffffff;
@@ -44,7 +44,6 @@ body {
   color: var(--gh-text-strong);
   -webkit-tap-highlight-color: transparent;
   min-height:100vh;
-  /* spazio per bottom nav */
   padding-bottom: calc(var(--bottom-nav-height) + 24px + env(safe-area-inset-bottom, 0px));
   line-height:1.45;
 }
@@ -64,13 +63,27 @@ header {
   border-bottom: 1px solid var(--border);
   z-index: 3000;
 }
-.hamburger{ width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(0,0,0,0.04);cursor:pointer; }
+
+/* hamburger */
+.hamburger{
+  width:48px;height:48px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:12px;background:rgba(0,0,0,0.04);cursor:pointer;border:none;
+}
 .hamburger i{ font-size:18px;color:var(--gh-text-strong); }
 
 /* GroceryHub title: attached, bigger and left-aligned */
 .title-wrap{ display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex:1; }
-.groceryhub{ font-size:2.6rem; font-weight:700; color:var(--gh-text-strong); line-height:1; letter-spacing:-0.6px; margin:0; display:inline-block; }
-.groceryhub .hub{ color:var(--gh-salvia); font-weight:900; margin-left:0; padding-left:6px; display:inline-block; }
+.groceryhub{
+  font-size:2.6rem; font-weight:700; color:var(--gh-text-strong);
+  line-height:1; letter-spacing:-0.6px; margin:0; display:inline-block; white-space:nowrap;
+}
+.groceryhub .grocery,
+.groceryhub .hub{ display:inline-block; margin:0; padding:0; vertical-align:baseline; }
+.groceryhub .grocery{ font-weight:400; color:var(--gh-text-strong); }
+.groceryhub .hub{ font-weight:900; color:var(--gh-salvia); padding-left:6px; } /* visually attached but slightly offset */
+
+/* payoff under title */
 .payoff{ font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:4px; }
 
 /* main container - leave space for fixed header */
@@ -154,10 +167,10 @@ main.dashboard{ max-width:920px; margin:0 auto; padding:16px; padding-top: calc(
 .block.min{ background:#f09a76; color:#111; } /* soft terracotta fallback */
 .block.count{ background:var(--gh-terracotta); }
 
-/* remove donut visuals from CSS (if you want to remove donut entirely in HTML, do so) */
+/* remove donut visuals (not used) */
 .donut-wrap{ display:none !important; }
 
-/* Charts section (kept from original but adapted to palette) */
+/* Charts section */
 .charts-section{ display:flex; gap:14px; align-items:flex-start; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px; margin-top:18px; }
 .chart-container{ flex:0 0 calc(50% - 7px); min-width:260px; text-align:left; padding:0; background:transparent; border:none; box-shadow:none; }
 .chart-container h3{ margin:0 0 8px 0; font-weight:700; color:var(--gh-text-strong); }
@@ -167,7 +180,12 @@ main.dashboard{ max-width:920px; margin:0 auto; padding:16px; padding-top: calc(
 .recent-item{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.04); }
 
 /* side menu (off-canvas) */
-#sideMenu{ font-family:inherit; }
+#sideMenu{
+  position:fixed; left:0; top:0; bottom:0; width:78%; max-width:360px;
+  background:#fff; z-index:3500; box-shadow: 8px 0 40px rgba(0,0,0,0.12);
+  padding:18px; overflow:auto; transform:translateX(-110%); transition:transform .28s ease;
+}
+#sideMenu.open{ transform:translateX(0); }
 #sideMenu .menu-header{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
 #sideMenu .menu-logo{ width:44px;height:44px;border-radius:10px;background:var(--gh-salvia);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800; }
 #sideMenu a{ color:var(--gh-text-strong); text-decoration:none; display:block; padding:10px 6px; border-radius:8px; }
@@ -175,7 +193,7 @@ main.dashboard{ max-width:920px; margin:0 auto; padding:16px; padding-top: calc(
 #sideMenu .menu-section{ margin:12px 0; }
 
 /* Modal + scanner z-index preserved and above bottom-nav */
-.modal{ display:none; position:fixed; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.45); z-index:3000; }
+.modal{ display:none; position:fixed; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.45); z-index:4000; }
 .modal-content{ background:#fff; color:var(--gh-text-strong); margin:8% auto; padding:18px; width:94%; max-width:640px; border-radius:12px; border:1px solid var(--border); box-shadow:0 30px 60px rgba(0,0,0,0.12); }
 
 /* scanner overlay kept (z-index low) */
