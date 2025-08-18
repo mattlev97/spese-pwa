@@ -14,18 +14,18 @@
   <!-- Font Awesome (icone) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Stile principale (sostituisci style.css con la versione aggiornata che ti ho fornito) -->
+  <!-- Stile principale -->
   <link rel="stylesheet" href="style.css?v=20250816">
 </head>
 <body>
   <!-- HEADER (fisso) -->
   <header>
-    <button id="menuToggle" class="hamburger" aria-label="Apri menu">
+    <button id="menuToggle" class="hamburger" aria-label="Apri menu" title="Apri menu">
       <i class="fa-solid fa-bars" aria-hidden="true"></i>
     </button>
 
     <div class="title-wrap" role="banner">
-      <!-- GroceryHub attaccato e piú grande -->
+      <!-- GroceryHub attaccato -->
       <h1 class="groceryhub" aria-label="GroceryHub">
         <span class="grocery">Grocery</span><span class="hub">Hub</span>
       </h1>
@@ -34,15 +34,15 @@
   </header>
 
   <!-- OFF-CANVAS SIDE MENU (arricchito) -->
-  <nav id="sideMenu" aria-hidden="true" style="display:none; position:fixed; left:0; top:0; bottom:0; width:78%; max-width:360px; background:#fff; z-index:2500; box-shadow: 8px 0 40px rgba(0,0,0,0.12); padding:18px; overflow:auto;">
-    <div class="menu-header" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+  <nav id="sideMenu" aria-hidden="true">
+    <div class="menu-header">
       <div class="menu-logo" aria-hidden="true">GH</div>
       <div>
         <div style="font-weight:800;font-size:1rem;color:var(--gh-text-strong)">GroceryHub</div>
         <div style="font-size:0.9rem;color:var(--gh-muted)">Controlla, risparmia, vivi meglio</div>
       </div>
     </div>
-    <button id="menuClose" style="background:none;border:none;font-size:16px;display:block;margin-bottom:12px;cursor:pointer;">Chiudi ✕</button>
+    <button id="menuClose" aria-label="Chiudi menu" style="background:none;border:none;font-size:16px;display:block;margin-bottom:12px;cursor:pointer;">Chiudi ✕</button>
 
     <div class="menu-section">
       <h4 style="margin:8px 0;color:var(--gh-muted);font-size:0.9rem">Navigazione</h4>
@@ -56,9 +56,7 @@
 
     <div class="menu-section" style="margin-top:18px;">
       <h4 style="margin:8px 0;color:var(--gh-muted);font-size:0.9rem">Store rapidi</h4>
-      <div id="menuStores" style="display:flex;flex-wrap:wrap;gap:8px;">
-        <!-- popolato via JS (populateAllStoreSelects usa select.store-select; qui lo popolo manualmente) -->
-      </div>
+      <div id="menuStores" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
     </div>
 
     <div style="margin-top:18px;color:var(--gh-muted);font-size:0.9rem">
@@ -71,12 +69,11 @@
   <main class="dashboard" role="main">
     <!-- CALENDAR SLIDER -->
     <section class="calendar-wrap" aria-label="Selezione giorno">
-      <!-- container con scroll-snap per vedere parzialmente i giorni laterali -->
       <div id="calendarRow" class="calendar-row" role="list" aria-label="Giorni"></div>
       <div id="daySummary" class="day-summary" aria-live="polite"></div>
     </section>
 
-    <!-- RIEPILOGO blocchi (totale, max, min, count) -->
+    <!-- RIEPILOGO blocchi -->
     <section aria-label="Riepilogo">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <div style="font-weight:700;font-size:1.06rem;color:var(--gh-text-strong)">Riepilogo</div>
@@ -96,8 +93,7 @@
             <div class="label">Totale spese</div>
             <div id="totalAmountBlock" class="value">€0.00</div>
           </div>
-          <!-- donut rimosso: mantenuto div vuoto solo per allineamento se serve -->
-          <div class="donut-wrap" aria-hidden="true" style="display:none;"></div>
+          <div class="donut-wrap" aria-hidden="true"></div>
         </div>
 
         <div class="block max" role="img" aria-label="Spesa massima">
@@ -125,16 +121,16 @@
       </div>
     </section>
 
-    <!-- CHARTS (due affiancati) -->
+    <!-- CHARTS -->
     <section class="charts-section" aria-label="Grafici comparativi">
       <div class="chart-container">
-        <h3 style="margin-bottom:6px;">Supermercati più usati</h3>
+        <h3>Supermercati più usati</h3>
         <canvas id="storeChart" width="300" height="300" role="img" aria-label="Grafico supermercati più usati"></canvas>
         <div id="storeStats" class="chart-legend"></div>
       </div>
 
       <div class="chart-container">
-        <h3 style="margin-bottom:6px;">Tipologie prodotti</h3>
+        <h3>Tipologie prodotti</h3>
         <canvas id="categoryChart" width="300" height="300" role="img" aria-label="Grafico tipologie prodotti"></canvas>
         <div id="categoryStats" class="chart-legend"></div>
       </div>
@@ -170,24 +166,25 @@
   <!-- App core (expense tracker) -->
   <script src="app.js"></script>
 
-  <!-- Dashboard script (merge e ripristino logica) -->
+  <!-- Dashboard script (keeps logic but uses classes, no inline style reliance) -->
   <script>
-    // Assumo l'esistenza globale `app` (ExpenseTracker) come nel tuo app.js
     (function () {
       if (!window.app) {
         console.warn('app non trovato (assicurati app.js sia caricato prima).');
         return;
       }
 
-      // elementi
+      // elements
       const calendarRow = document.getElementById('calendarRow');
       const daySummary = document.getElementById('daySummary');
       const periodSelect = document.getElementById('periodSelect');
+      const menuToggle = document.getElementById('menuToggle');
+      const sideMenu = document.getElementById('sideMenu');
+      const menuClose = document.getElementById('menuClose');
 
-      // default selection key YYYY-MM-DD
       let selectedDateKey = null;
 
-      // helper date -> key/labels
+      // date helpers
       function formatKey(d) {
         const y = d.getFullYear();
         const m = String(d.getMonth()+1).padStart(2,'0');
@@ -195,16 +192,12 @@
         return `${y}-${m}-${day}`;
       }
       function shortDayName(d) {
-        return d.toLocaleDateString('it-IT', { weekday: 'short' }); // lun, mar...
-      }
-      function shortMonth(d) {
-        return d.toLocaleDateString('it-IT', { month: 'short' }); // gen, feb...
+        return d.toLocaleDateString('it-IT', { weekday: 'short' });
       }
       function longMonth(d) {
-        return d.toLocaleDateString('it-IT', { month: 'long' }); // gennaio
+        return d.toLocaleDateString('it-IT', { month: 'long' });
       }
 
-      // get expenses for a day key
       function getExpensesForKey(key) {
         return (app.expenses || []).filter(e => e.date === key);
       }
@@ -227,7 +220,6 @@
 
           const pill = document.createElement('button');
           pill.className = 'day-pill';
-          // adjacent classes to make side pills slightly smaller
           if (offset === -2 || offset === 2) pill.classList.add('adjacent-2');
           else if (offset === -1 || offset === 1) pill.classList.add('adjacent');
 
@@ -235,7 +227,6 @@
           pill.dataset.key = key;
           pill.setAttribute('aria-pressed', 'false');
 
-          // default selection: today if none
           if (selectedDateKey === null && isToday) selectedDateKey = key;
           if (key === selectedDateKey) pill.classList.add('selected');
 
@@ -250,11 +241,19 @@
           calendarRow.appendChild(pill);
         }
 
-        // After render show summary for selected key
         if (selectedDateKey) showDaySummary(selectedDateKey);
+        // ensure center pill is visible: scroll calendar so selected pill is centered
+        const sel = document.querySelector('.day-pill.selected');
+        if (sel) {
+          // calculate scroll to center selected pill
+          const parent = calendarRow;
+          const parentRect = parent.getBoundingClientRect();
+          const selRect = sel.getBoundingClientRect();
+          const offset = (selRect.left + selRect.width/2) - (parentRect.left + parentRect.width/2);
+          parent.scrollBy({ left: offset, behavior: 'smooth' });
+        }
       }
 
-      // when clicking a day - only change selection & show summary (no auto scroll)
       function onDayClick(key, pillEl) {
         const prev = document.querySelector('.day-pill.selected');
         if (prev && prev !== pillEl) prev.classList.remove('selected');
@@ -264,7 +263,6 @@
         // intentionally DO NOT scroll the whole page (user requested)
       }
 
-      // show summary for a given day key
       function showDaySummary(key) {
         const exps = getExpensesForKey(key);
         if (!exps || exps.length === 0) {
@@ -282,7 +280,7 @@
         daySummary.classList.add('has-data');
       }
 
-      // draw pie charts (reused from prima)
+      // draw pie charts (palette)
       function drawPieChart(canvasId, data, statsId, palette) {
         const canvas = document.getElementById(canvasId);
         const statsDiv = document.getElementById(statsId);
@@ -322,13 +320,11 @@
         ).join('');
       }
 
-      // update dashboard numbers & charts
       function updateDashboard() {
         const period = periodSelect?.value || 'mese';
         const filtered = app.filterByPeriod(period);
         const stats = app.getStats(filtered);
 
-        // blocks
         document.getElementById('totalAmountBlock').textContent = app.formatCurrency(stats.total);
         document.getElementById('maxAmountBlock').textContent = app.formatCurrency(stats.max.amount);
         document.getElementById('minAmountBlock').textContent = app.formatCurrency(stats.min.amount);
@@ -336,7 +332,6 @@
         document.getElementById('maxStoreBlock').textContent = stats.max.store || '';
         document.getElementById('minStoreBlock').textContent = stats.min.store || '';
 
-        // charts palette
         const palette = [
           getComputedStyle(document.documentElement).getPropertyValue('--gh-salvia').trim() || '#7aa986',
           getComputedStyle(document.documentElement).getPropertyValue('--gh-mustard').trim() || '#d6a63f',
@@ -346,11 +341,9 @@
         drawPieChart('storeChart', stats.storeStats, 'storeStats', palette);
         drawPieChart('categoryChart', stats.categoryStats, 'categoryStats', palette);
 
-        // recent list
         loadRecentExpenses(filtered);
       }
 
-      // recent expenses rendering
       function loadRecentExpenses(expenses) {
         const recentList = document.getElementById('recentList');
         if (!recentList) return;
@@ -370,59 +363,46 @@
         `).join('');
       }
 
-      // populate side menu stores quick list
       function populateSideStores() {
         const container = document.getElementById('menuStores');
         if (!container) return;
         container.innerHTML = '';
         (app.getStores() || []).slice(0,8).forEach(s => {
-          const btn = document.createElement('a');
-          btn.href = '#';
-          btn.textContent = s;
-          btn.style.padding = '6px 8px';
-          btn.style.borderRadius = '8px';
-          btn.style.background = 'rgba(0,0,0,0.03)';
-          btn.style.color = 'var(--gh-text-strong)';
-          btn.style.textDecoration = 'none';
-          btn.addEventListener('click', (ev) => { ev.preventDefault(); sideMenu.style.display='none'; /* eventuale filtro */ });
-          container.appendChild(btn);
+          const a = document.createElement('a');
+          a.href = '#';
+          a.textContent = s;
+          a.className = 'side-store';
+          a.addEventListener('click', (ev) => { ev.preventDefault(); sideMenu.classList.remove('open'); });
+          container.appendChild(a);
         });
       }
 
-      // menu open/close wiring
-      const menuToggle = document.getElementById('menuToggle');
-      const sideMenu = document.getElementById('sideMenu');
-      const menuClose = document.getElementById('menuClose');
-
+      // menu open/close (use class open so no inline style required)
       menuToggle?.addEventListener('click', () => {
-        sideMenu.style.display = 'block';
+        sideMenu.classList.add('open');
         sideMenu.setAttribute('aria-hidden','false');
       });
       menuClose?.addEventListener('click', () => {
-        sideMenu.style.display = 'none';
+        sideMenu.classList.remove('open');
         sideMenu.setAttribute('aria-hidden','true');
       });
 
-      // initial render
+      // initial
       renderCalendar();
       updateDashboard();
       populateSideStores();
 
-      // event listeners
-      window.addEventListener('resize', () => {
-        // keep 5 pills, but we may re-render to ensure sizes/labels good
-        renderCalendar();
-      });
+      // listeners
+      window.addEventListener('resize', () => renderCalendar());
       periodSelect?.addEventListener('change', updateDashboard);
 
-      // react to app state changes
       document.addEventListener('app:expenses-changed', () => {
         renderCalendar();
         updateDashboard();
       });
       document.addEventListener('app:stores-changed', () => populateSideStores());
 
-      // sync bottom nav active (in caso di path differente)
+      // bottom nav sync
       (function syncBottomNav() {
         const path = location.pathname.split('/').pop() || 'index.html';
         document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
@@ -431,7 +411,7 @@
         });
       })();
 
-      // service worker register (best-effort)
+      // service worker attempt
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW register failed', err));
       }
