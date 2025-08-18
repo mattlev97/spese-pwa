@@ -14,7 +14,7 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Stile principale -->
+  <!-- Mantengo style.css per gli stili globali -->
   <link rel="stylesheet" href="style.css?v=20250816">
 
   <style>
@@ -58,7 +58,7 @@
       max-width: 900px;
       margin: 0 auto;
       padding: 16px;
-      padding-top: calc(88px + 12px); /* leave room for fixed header */
+      padding-top: calc(88px + 12px); /* spazio header fisso */
     }
 
     /* hamburger */
@@ -82,7 +82,7 @@
     .hub { font-weight:800; color:var(--gh-salvia); font-size:1.9rem; margin:0; line-height:1; }
     .payoff { font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:2px; }
 
-    /* Side menu (offcanvas) enhanced */
+    /* Side menu (offcanvas) */
     #sideMenu {
       display:none;
       position:fixed;
@@ -99,18 +99,14 @@
       -webkit-overflow-scrolling: touch;
     }
     #sideMenu .menu-header { display:flex; gap:12px; align-items:center; margin-bottom:14px; }
-    #sideMenu .avatar {
-      width:52px; height:52px; border-radius:10px; background:var(--gh-salvia); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800;
-    }
+    #sideMenu .avatar { width:52px; height:52px; border-radius:10px; background:var(--gh-salvia); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; }
     #sideMenu h4 { margin:0; font-size:1.06rem; color:var(--gh-text-strong); }
     #sideMenu p.sub { margin:4px 0 0 0; color:var(--gh-muted); font-size:0.92rem; }
-
     #sideMenu nav ul { list-style:none; padding:0; margin:12px 0; }
     #sideMenu nav li { padding:10px 6px; border-radius:8px; }
     #sideMenu nav a { text-decoration:none; color:var(--gh-text-strong); display:flex; justify-content:space-between; gap:8px; align-items:center; width:100%; }
     #sideMenu nav a small { color:var(--gh-muted); font-weight:500; }
     #sideMenu nav a:hover { background: rgba(0,0,0,0.03); }
-
     #sideMenu .menu-sep { height:1px; background: rgba(0,0,0,0.04); margin:12px 0; border-radius:1px; }
 
     /* overlay when menu open */
@@ -134,25 +130,38 @@
       border:1px solid rgba(0,0,0,0.04);
       cursor:pointer;
       transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+      color: var(--gh-text-strong);
     }
 
     .day-pill .day-num { font-size:1.9rem; font-weight:800; color:var(--gh-text-strong); }
     .day-pill .day-name { font-size:1.05rem; font-weight:700; color:var(--gh-text-strong); text-transform:capitalize; }
     .day-pill .month { font-size:0.78rem; color:var(--gh-muted); text-transform:capitalize; }
 
+    /* selected = white text on terracotta */
     .day-pill.selected {
       background: linear-gradient(180deg, var(--gh-terracotta), var(--gh-terracotta));
-      color: #fff;
+      color: #fff !important;
       border-color: rgba(0,0,0,0.06);
       box-shadow: 0 10px 30px rgba(199,104,60,0.12);
       transform: translateY(-4px);
     }
+    .day-pill.selected .day-num,
+    .day-pill.selected .day-name,
+    .day-pill.selected .month {
+      color: #fff !important;
+    }
+    .day-pill.selected .has-expense-dot { background: rgba(255,255,255,0.95) !important; }
 
-    /* a little smaller adjacent previews */
-    .day-pill.adjacent { transform: none; opacity:0.98; padding:10px 8px; min-width:72px; }
-    .day-pill.adjacent .day-num { font-size:1.4rem; }
+    /* adjacent reductions */
+    .day-pill.adjacent { padding:10px 8px; min-width:72px; }
+    .day-pill.adjacent .day-num { font-size:1.45rem; }
     .day-pill.adjacent .day-name { font-size:0.92rem; }
     .day-pill.adjacent .month { font-size:0.7rem; }
+
+    .day-pill.adjacent-2 { padding:8px 6px; min-width:64px; opacity:0.95; }
+    .day-pill.adjacent-2 .day-num { font-size:1.15rem; font-weight:700; }
+    .day-pill.adjacent-2 .day-name { font-size:0.82rem; }
+    .day-pill.adjacent-2 .month { font-size:0.65rem; }
 
     .has-expense-dot { width:8px; height:8px; border-radius:50%; background:var(--gh-salvia); margin-top:4px; opacity:0.95; }
     .has-expense-dot.hidden { opacity:0; }
@@ -172,7 +181,7 @@
     .block.min { background:#f1a386; color:#111; }
     .block.count { background:var(--gh-terracotta); color:#fff; }
 
-    /* charts: remove icons in h3 — style legend */
+    /* charts: style legend */
     .charts-section .chart-container h3 { font-weight:700; color:var(--gh-text-strong); margin:0 0 8px 0; }
     .chart-legend { margin-top:8px; color:var(--gh-muted); }
 
@@ -271,10 +280,9 @@
             <div class="label">Totale spese</div>
             <div id="totalAmountBlock" class="value">€0.00</div>
           </div>
-          <!-- removed donut per richiesta -->
+          <!-- removed "periodo selezionato" text per richiesta -->
           <div style="font-size:0.92rem;color:rgba(255,255,255,0.95);text-align:right;">
-            <div style="font-weight:700" id="totalDelta">—</div>
-            <div style="font-size:0.8rem;color:rgba(255,255,255,0.9)">Periodo selezionato</div>
+            <div style="font-weight:700" id="totalDelta"> </div>
           </div>
         </div>
 
@@ -361,18 +369,8 @@
         return JSON.parse(raw);
       } catch (e) { return { weeklyBudget:100 }; }
     }
-    function getBudgetForPeriod(period) {
-      const s = loadSettings();
-      const w = parseFloat(s.weeklyBudget) || 0;
-      switch(period) {
-        case 'settimana': return w;
-        case 'mese': return w * 4;
-        case 'anno': return w * 52;
-        default: return w * 4;
-      }
-    }
 
-    /* ------------- Calendar logic ------------- */
+    /* ------------- Calendar logic (fixed 5 pills) ------------- */
     const calendarRow = document.getElementById('calendarRow');
     const daySummary = document.getElementById('daySummary');
     let selectedDateKey = null;
@@ -383,8 +381,7 @@
       const day = String(d.getDate()).padStart(2,'0');
       return `${y}-${m}-${day}`;
     }
-    function weekdayName(d) { return d.toLocaleDateString('it-IT', { weekday:'long' }); } // full name
-    function weekdayShort(d) { return d.toLocaleDateString('it-IT', { weekday:'short' }); } // short (mon)
+    function weekdayName(d) { return d.toLocaleDateString('it-IT', { weekday:'long' }); } // full
     function monthLong(d) { return d.toLocaleDateString('it-IT', { month:'long' }); }
 
     function getExpensesForKey(key) {
@@ -395,16 +392,9 @@
       if (!calendarRow) return;
       calendarRow.innerHTML = '';
 
-      // determine how many pills fit and ensure center + 1 left + 1 right at least
-      const containerW = Math.max(document.documentElement.clientWidth, 360);
-      const approxPill = 96;
-      let visible = Math.floor(containerW / approxPill);
-      if (visible < 3) visible = 3;
-      if (visible % 2 === 0) visible = visible - 1;
-      const half = Math.floor(visible / 2);
-
       const today = new Date();
-      for (let offset = -half; offset <= half; offset++) {
+      // fixed 5 pills: offsets -2, -1, 0, 1, 2
+      for (let offset = -2; offset <= 2; offset++) {
         const d = new Date();
         d.setDate(today.getDate() + offset);
         const key = formatKey(d);
@@ -413,14 +403,14 @@
 
         const pill = document.createElement('button');
         pill.className = 'day-pill';
-        // mark adjacent (one left or right) as 'adjacent' class to slightly reduce size
-        if (offset === -1 || offset === 1) pill.classList.add('adjacent');
+        if (Math.abs(offset) === 1) pill.classList.add('adjacent');
+        if (Math.abs(offset) === 2) pill.classList.add('adjacent-2');
 
         pill.dataset.key = key;
         pill.type = 'button';
         pill.setAttribute('aria-pressed', 'false');
 
-        // initial selection: if no selectedDateKey set, select today
+        // initial selection: if none set, select today
         if (!selectedDateKey && isToday) {
           pill.classList.add('selected');
           selectedDateKey = key;
@@ -448,8 +438,7 @@
       pillEl.classList.add('selected');
       selectedDateKey = key;
       showDaySummary(key);
-      // scroll summary into view (smooth)
-      daySummary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // NOT scrolling the page anymore (user requested)
     }
 
     function showDaySummary(key) {
@@ -519,9 +508,6 @@
       document.getElementById('countBlock').textContent = stats.count;
       document.getElementById('maxStoreBlock').textContent = stats.max.store || '';
       document.getElementById('minStoreBlock').textContent = stats.min.store || '';
-
-      // set a small delta text (optional placeholder)
-      document.getElementById('totalDelta').textContent = '';
 
       // charts palette
       const palette = [
