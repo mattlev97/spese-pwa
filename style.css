@@ -665,3 +665,32 @@ main.dashboard .recent-list > * {
 }
 
 /* fine: Index card styling */
+
+/* Fix: forza lo stile "selected" dei day-pill dentro main.dashboard.calendar-wrap */
+main.dashboard .calendar-wrap .day-pill.selected,
+main.dashboard .calendar-wrap .day-pill.selected:where(*) {
+  background: var(--gh-salvia) !important;
+  color: #fff !important;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(122,169,134,0.14);
+  border-color: rgba(0,0,0,0.04);
+}
+
+/* Assicura che testo e numeri dentro il pill siano bianchi */
+main.dashboard .calendar-wrap .day-pill.selected .day-num,
+main.dashboard .calendar-wrap .day-pill.selected .day-name,
+main.dashboard .calendar-wrap .day-pill.selected .month {
+  color: #fff !important;
+}
+
+/* Punto spesa (dot) su pill selezionato */
+main.dashboard .calendar-wrap .day-pill.selected .has-expense-dot {
+  background: rgba(255,255,255,0.95) !important;
+  opacity: 1 !important;
+}
+
+/* Se il box wrapper taglia l'ombra (overflow), prova a permettere overflow visibile sui bordi del pannello */
+main.dashboard .calendar-wrap { overflow: visible; }
+
+/* Se il container .panel imposta overflow:hidden (tipico), puoi limitare il cambiamento solo alla calendar-row */
+main.dashboard .calendar-wrap .calendar-row { overflow-x: auto; overflow-y: visible; }
