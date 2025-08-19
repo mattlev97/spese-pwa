@@ -514,3 +514,67 @@ main.dashboard, main.add-expense { max-width:900px; margin:0 auto; padding:16px;
 .archive-card a:focus, .archive-card button:focus { outline: 3px solid rgba(122,169,134,0.18); outline-offset: 2px; }
 
 /* end Archivio styles */
+
+/* ===== Impostazioni (stores list) ===== */
+
+.hint { margin:6px 0 10px 0; color:var(--text-secondary); font-size:0.95rem; }
+
+.stores-list { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+
+.store-item {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:10px;
+  border-radius:10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+}
+
+.store-handle {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:40px;
+  height:40px;
+  border-radius:8px;
+  background: rgba(0,0,0,0.03);
+  color:var(--gh-text-strong);
+  border:none;
+  cursor:default;
+  flex:0 0 40px;
+}
+
+.store-input {
+  flex:1;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--input);
+  font-size:0.95rem;
+  color:var(--text-primary);
+}
+
+.store-actions { display:flex; gap:8px; flex:0 0 auto; }
+
+.remove-btn {
+  padding:8px 10px;
+  border-radius:8px;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  color:var(--gh-text-strong);
+  font-size:1rem;
+}
+.remove-btn:hover { background: rgba(122,169,134,0.06); border-radius:8px; }
+
+.add-store-btn { padding:10px 12px; border-radius:8px; }
+
+/* small screens */
+@media (max-width:560px) {
+  .store-handle { width:36px; height:36px; flex:0 0 36px; }
+  .store-input { font-size:0.92rem; padding:8px 10px; }
+}
+
+/* fine Impostazioni */
