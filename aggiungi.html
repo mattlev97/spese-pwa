@@ -17,6 +17,121 @@
 
   <!-- Stili: unificati in style.css (versione "bellissima") -->
   <link rel="stylesheet" href="style.css?v=20250816" />
+
+  <!-- Override / stili locali per aggiungi (modernizzazione) -->
+  <style>
+    :root{
+      --card-bg: #ffffff;
+      --card-radius: 14px;
+      --field-padding: 12px 14px;
+      --field-border: rgba(0,0,0,0.08);
+      --muted: var(--gh-muted, #5b5f63);
+      --primary: var(--gh-salvia, #7aa986);
+    }
+
+    /* Card per le sezioni */
+    .form-section {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(10,10,10,0.06);
+      margin-bottom: 14px;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+
+    /* Titoli: più leggeri, niente grassetto, senza icone */
+    .form-section h2 {
+      margin: 0 0 12px 0;
+      font-size: 1.18rem;
+      font-weight: 400; /* niente bold */
+      color: var(--gh-text-strong, #222428);
+      line-height: 1.1;
+      letter-spacing: -0.2px;
+    }
+
+    /* Title split per "Aggiungi Prodotti" - seconda riga più sottile */
+    .split-title { display:block; }
+    .split-title .second { display:block; color:var(--muted); font-size:0.98rem; margin-top:4px; }
+
+    /* Labels: moderni, sottili, meno invasivi */
+    .form-group label {
+      display:block;
+      margin-bottom:6px;
+      font-size:0.95rem;
+      color:var(--muted);
+      font-weight:400;
+    }
+
+    /* Campi input/select moderni */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    .store-select {
+      width:100%;
+      padding: var(--field-padding);
+      border-radius:10px;
+      border: 1px solid var(--field-border);
+      background: #fff;
+      font-size:1rem;
+      color: var(--gh-text-strong, #222428);
+      outline: none;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.01);
+      transition: box-shadow .12s ease, border-color .12s ease, transform .06s ease;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    input:focus, select:focus {
+      border-color: rgba(122,169,134,0.9);
+      box-shadow: 0 8px 20px rgba(122,169,134,0.08);
+    }
+
+    /* Select con freccia personalizzata */
+    .form-group.select-wrap { position:relative; }
+    .form-group.select-wrap::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid var(--gh-text-strong, #222428);
+      border-bottom: 2px solid var(--gh-text-strong, #222428);
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
+    /* Adaptive layout rows */
+    .form-row { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+    .form-row .form-group { flex:1; min-width:140px; }
+
+    /* Buttons: coherent with main style (use existing .btn classes if present) */
+    .btn { background:var(--primary); color:#fff; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow: 0 8px 20px rgba(122,169,134,0.12); }
+    .btn.btn-secondary { background: transparent; border:1px solid rgba(0,0,0,0.06); color:var(--gh-text-strong); box-shadow:none; }
+    .btn.btn-danger { background: var(--gh-terracotta, #c7683c); color:#fff; }
+
+    /* Small utility tweaks */
+    .product-form { display:block; }
+    #suggestions { z-index: 2600; }
+    .suggestion-item { padding:8px 10px; cursor:pointer; color:var(--gh-text-strong); }
+    .suggestion-item:hover { background: rgba(122,169,134,0.06); }
+
+    /* Cart table visual improvements */
+    #cartTable td, #cartTable th { padding: 8px 6px; vertical-align: middle; }
+    .cart-img { width:64px; height:64px; object-fit:cover; border-radius:8px; }
+
+    /* mobile tweaks */
+    @media (max-width:520px){
+      .groceryhub { font-size:2.2rem; }
+      .form-section { padding:14px; }
+      input[type="text"], select { padding:10px 12px; }
+      .cart-img { width:48px; height:48px; }
+    }
+
+  </style>
 </head>
 <body>
   <!-- Header (identico a index) -->
@@ -69,92 +184,92 @@
   <!-- Main content -->
   <main class="dashboard add-expense" role="main" aria-live="polite" style="max-width:900px;margin:0 auto;padding:16px;padding-top:calc(88px + 12px);">
     <form id="expenseForm" class="expense-form" novalidate>
-      <!-- SEZIONE 1: Informazioni Generali -->
+      <!-- SEZIONE 1: Informazioni Generali (in card) -->
       <section class="form-section">
-        <h2>🏪 Informazioni Generali</h2>
+        <h2>Informazioni generali</h2>
 
-        <div class="form-group">
-          <label for="storeSelect">Supermercato:</label>
+        <div class="form-group select-wrap">
+          <label for="storeSelect">Supermercato</label>
           <select id="storeSelect" class="store-select" required></select>
         </div>
 
         <div class="form-group" id="customStoreGroup" style="display:none;">
-          <label for="customStore">Nome supermercato:</label>
+          <label for="customStore">Nome supermercato</label>
           <input type="text" id="customStore" placeholder="Inserisci nome supermercato" />
         </div>
 
-        <div class="form-group">
-          <label for="expenseDate">Data:</label>
+        <div class="form-group" style="margin-top:8px;">
+          <label for="expenseDate">Data</label>
           <input type="date" id="expenseDate" required />
         </div>
       </section>
 
-      <!-- SEZIONE 2: Aggiungi Prodotti -->
+      <!-- SEZIONE 2: Aggiungi Prodotti (in card) -->
       <section class="form-section">
-        <h2>🛒 Aggiungi Prodotti</h2>
+        <h2 class="split-title">Aggiungi <span class="second">Prodotti</span></h2>
 
         <div class="product-form">
-          <div class="form-row" style="display:flex;gap:12px;flex-wrap:wrap;">
-            <div class="form-group" style="flex:1;min-width:160px;">
-              <label for="productCategory">Tipologia:</label>
+          <div class="form-row" style="margin-bottom:8px;">
+            <div class="form-group select-wrap" style="flex:1;min-width:160px;">
+              <label for="productCategory">Tipologia</label>
               <select id="productCategory" required>
                 <option value="">Seleziona tipologia</option>
-                <option value="Carne">🥩 Carne</option>
-                <option value="Pesce">🐟 Pesce</option>
-                <option value="Verdura">🥬 Verdura</option>
-                <option value="Frutta">🍎 Frutta</option>
-                <option value="Latticini">🧀 Latticini</option>
-                <option value="Pane">🍞 Pane e Cereali</option>
-                <option value="Bevande">🥤 Bevande</option>
-                <option value="Surgelati">🧊 Surgelati</option>
-                <option value="Dolci">🍰 Dolci</option>
-                <option value="Pulizia">🧽 Prodotti Pulizia</option>
-                <option value="Igiene">🧴 Igiene Personale</option>
-                <option value="Altro">📦 Altro</option>
+                <option value="Carne">Carne</option>
+                <option value="Pesce">Pesce</option>
+                <option value="Verdura">Verdura</option>
+                <option value="Frutta">Frutta</option>
+                <option value="Latticini">Latticini</option>
+                <option value="Pane">Pane e Cereali</option>
+                <option value="Bevande">Bevande</option>
+                <option value="Surgelati">Surgelati</option>
+                <option value="Dolci">Dolci</option>
+                <option value="Pulizia">Prodotti Pulizia</option>
+                <option value="Igiene">Igiene Personale</option>
+                <option value="Altro">Altro</option>
               </select>
             </div>
 
-            <div class="form-group suggestions" style="min-width:0;flex:2;">
-              <label for="productName">Nome prodotto:</label>
+            <div class="form-group suggestions" style="flex:2;min-width:180px;">
+              <label for="productName">Nome prodotto</label>
               <input type="text" id="productName" placeholder="Es. Pomodori" autocomplete="off" required />
               <!-- container per suggerimenti -->
               <div id="suggestions" aria-hidden="true" class="suggestions-list" style="display:none;"></div>
             </div>
           </div>
 
-          <div class="form-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">
+          <div class="form-row" style="margin-top:6px;">
             <div class="form-group" style="flex:1;min-width:140px;">
-              <label for="productPrice">Prezzo (€):</label>
+              <label for="productPrice">Prezzo (€)</label>
               <input type="number" id="productPrice" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required />
-              <div id="priceDiff" aria-live="polite" style="display:none;"></div>
+              <div id="priceDiff" aria-live="polite" style="display:none;margin-top:6px;font-size:0.92rem;color:var(--muted);"></div>
             </div>
 
             <div class="form-group" style="flex:1;min-width:140px;">
-              <label for="productPriceKg">Prezzo/kg (€):</label>
+              <label for="productPriceKg">Prezzo/kg (€)</label>
               <input type="number" id="productPriceKg" step="0.01" min="0" inputmode="decimal" placeholder="0.00" />
             </div>
           </div>
 
           <div class="form-group" style="margin-top:10px;">
-            <label for="productNotes">Note:</label>
+            <label for="productNotes">Note</label>
             <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)" />
           </div>
 
-          <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
-            <button type="button" id="scanBarcodeBtn" class="btn btn-secondary">📷 Scansiona codice a barre</button>
-            <button type="button" id="addProductBtn" class="btn">➕ Aggiungi Prodotto al Carrello</button>
+          <div style="display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap;">
+            <button type="button" id="scanBarcodeBtn" class="btn btn-secondary">Scansiona codice a barre</button>
+            <button type="button" id="addProductBtn" class="btn">Aggiungi Prodotto al Carrello</button>
           </div>
 
         </div>
       </section>
 
       <!-- SEZIONE 3: Carrello (visibile solo quando ci sono prodotti) -->
-      <section class="cart-section" id="cartSection" style="display:none;margin-top:18px;">
-        <h2>🛒 Carrello</h2>
-        <div class="cart-table-container">
+      <section class="cart-section form-section" id="cartSection" style="display:none;margin-top:8px;">
+        <h2>Carrello</h2>
+        <div class="cart-table-container" style="overflow:auto;">
           <table id="cartTable" style="width:100%;border-collapse:collapse;">
             <thead>
-              <tr><th style="text-align:left;padding:8px 0;">Prodotto</th><th style="text-align:right;padding:8px 0;">Prezzo</th><th style="text-align:center;padding:8px 0;">Azioni</th></tr>
+              <tr><th style="text-align:left;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.04);">Prodotto</th><th style="text-align:right;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.04);">Prezzo</th><th style="text-align:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.04);">Azioni</th></tr>
             </thead>
             <tbody id="cartBody"></tbody>
           </table>
@@ -164,8 +279,8 @@
 
       <!-- SEZIONE 4: Azioni finali -->
       <section class="form-actions" style="margin-top:18px;display:flex;gap:10px;">
-        <button type="submit" id="saveExpenseBtn" class="btn" disabled>💾 Salva Spesa Completa</button>
-        <button type="button" id="clearCartBtn" class="btn btn-danger">🗑️ Svuota Carrello</button>
+        <button type="submit" id="saveExpenseBtn" class="btn" disabled>Salva Spesa</button>
+        <button type="button" id="clearCartBtn" class="btn btn-danger">Svuota Carrello</button>
       </section>
     </form>
   </main>
@@ -173,7 +288,7 @@
   <!-- Scanner modal -->
   <div id="scannerModal" class="modal" aria-hidden="true" style="display:none;">
     <div class="modal-content" style="max-width:720px;margin:20px auto;padding:16px;border-radius:12px;background:#fff;">
-      <h3>📷 Scansione Codice a Barre</h3>
+      <h3>Scansione Codice a Barre</h3>
       <p class="scanner-instructions">Inquadra il codice a barre con la fotocamera. L'app proverà a recuperare i dati da Open Food Facts.</p>
 
       <div id="scannerContainer" aria-live="polite" style="position:relative;width:100%;height:320px;max-height:60vh;background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
@@ -183,14 +298,14 @@
         </div>
       </div>
 
-      <a class="openfood-link" href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="display:block;margin-top:10px;color:var(--gh-salvia);font-weight:600;text-decoration:none;">🔎 Cerca manualmente su Open Food Facts</a>
+      <a class="openfood-link" href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="display:block;margin-top:10px;color:var(--primary);font-weight:600;text-decoration:none;">Cerca manualmente su Open Food Facts</a>
 
       <div class="scanner-actions" style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;align-items:center;">
         <div class="left">
           <div id="deviceLabel" class="device-label" aria-live="polite"></div>
         </div>
         <div class="right">
-          <button id="switchCameraBtn" class="btn btn-secondary small-btn">🔁 Cambia Camera</button>
+          <button id="switchCameraBtn" class="btn btn-secondary small-btn">Cambia Camera</button>
           <button id="scannerCancelBtn" class="btn btn-secondary">Annulla</button>
         </div>
       </div>
@@ -623,7 +738,7 @@
       const diff = ((p - r) / r) * 100;
       const abs = Math.abs(diff);
       if (diff === 0) {
-        el.innerHTML = `<span style="color:var(--gh-muted)">Prezzo pari al riferimento: <strong>€${Number(r).toFixed(2)}</strong></span>`;
+        el.innerHTML = `<span style="color:var(--muted)">Prezzo pari al riferimento: <strong>€${Number(r).toFixed(2)}</strong></span>`;
         el.style.display = 'block';
         return;
       }
