@@ -578,3 +578,90 @@ main.dashboard, main.add-expense { max-width:900px; margin:0 auto; padding:16px;
 }
 
 /* fine Impostazioni */
+
+/* ===== Index: effetto "card bianche" per sezioni principali =====
+   Applica a: calendario, blocchi, charts, recenti e day-summary
+   (metti questo blocco alla fine di style.css) */
+
+main.dashboard .calendar-wrap,
+main.dashboard .blocks,
+main.dashboard .charts-section,
+main.dashboard .recent-list {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.04);
+}
+
+/* assicura che la calendar-row occupi lo spazio senza rompere i bordi arrotondati */
+main.dashboard .calendar-wrap .calendar-row {
+  padding: 6px 4px;
+  margin: 0;
+}
+
+/* rendi i-pill del calendario un pochino più "appoggiati" sul pannello */
+main.dashboard .calendar-wrap .day-pill {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+}
+
+/* day-summary come card bianca ma mantiene il bordo/colore per evidenziare messaggi */
+main.dashboard .day-summary {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 10px;
+  color: var(--gh-text-strong);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+}
+
+/* titoli nelle sezioni index: allinea e dà gerarchia */
+main.dashboard h2, main.dashboard .section-title {
+  margin: 0 0 10px 0;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+/* rendi i singoli "block" (i pannelli statistici colorati) visivamente separati dal background del pannello
+   (solo un leggero padding attorno alla griglia) */
+main.dashboard .blocks {
+  padding: 12px;
+  gap: 12px;
+}
+main.dashboard .blocks .block {
+  box-shadow: 0 10px 28px rgba(0,0,0,0.06);
+}
+
+/* charts-section: rendi ciascun chart-container un piccolo card interno */
+main.dashboard .charts-section {
+  padding: 12px;
+}
+main.dashboard .chart-container {
+  background: transparent; /* i grafici restano liberi di usare il loro sfondo */
+  padding: 8px;
+  border-radius: 8px;
+}
+
+/* recent-list: cards per ogni voce recente (se markup usa .recent-item) */
+main.dashboard .recent-list .recent-item,
+main.dashboard .recent-list > * {
+  background: transparent; /* se le voci hanno già card interne mantienile */
+}
+
+/* piccolo aggiustamento responsive se il pannello è molto stretto */
+@media (max-width:720px) {
+  main.dashboard .calendar-wrap,
+  main.dashboard .blocks,
+  main.dashboard .charts-section,
+  main.dashboard .recent-list {
+    padding: 10px;
+  }
+  main.dashboard .blocks { gap:10px; }
+}
+
+/* fine: Index card styling */
