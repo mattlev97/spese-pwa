@@ -15,159 +15,8 @@
   <!-- Font Awesome (icone) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
 
-  <!-- Stili: unificati in style.css (versione "bellissima") -->
+  <!-- Stili unificati (tuo style.css "bellissima") -->
   <link rel="stylesheet" href="style.css?v=20250816" />
-
-  <!-- Stile locale per layout form/icone/tweaks (leggero, compatibile con style.css) -->
-  <style>
-    :root {
-      /* se style.css non fosse caricato, fallback palette */
-      --gh-salvia: #7aa986;
-      --panel-bg: #ffffff;
-      --panel-radius: 12px;
-      --panel-padding: 14px;
-      --field-bg: #fafafa;
-      --field-border: #e6e6e6;
-      --field-focus: rgba(122,169,134,0.18);
-      --label-color: #5b5f63;
-      --input-radius: 10px;
-    }
-
-    /* Main adjustments to match dashboard layout */
-    body { -webkit-font-smoothing:antialiased; }
-
-    /* Ensure the same system font as dashboard (style.css already sets this) */
-    header, main, .panel, label, input, select, button { font-family: inherit; }
-
-    /* HEADER tweaks (keeps same look as index) */
-    header { position: fixed; top:0; left:0; right:0; height:88px; padding:12px 18px; display:flex; align-items:center; gap:12px; background: rgba(255,255,255,0.98); border-bottom: 1px solid rgba(0,0,0,0.04); z-index:3000; }
-    .hamburger { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px; background: rgba(0,0,0,0.04); cursor:pointer; }
-    .hamburger i { color:var(--gh-text-strong); font-size:18px; }
-
-    .title-wrap { display:flex; flex-direction:column; align-items:flex-start; gap:4px; flex:1; }
-    .payoff { font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:2px; }
-
-    /* main container */
-    main.dashboard.add-expense { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: calc(88px + 12px); }
-
-    /* Panels for clear separation */
-    .panel {
-      background: var(--panel-bg);
-      border-radius: var(--panel-radius);
-      padding: var(--panel-padding);
-      box-shadow: 0 8px 26px rgba(0,0,0,0.04);
-      margin-bottom: 16px;
-      border: 1px solid rgba(0,0,0,0.03);
-    }
-
-    .form-section { margin-bottom: 0; } /* panels handle spacing */
-
-    /* Section header: icon circle + title */
-    .section-header {
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin-bottom:10px;
-    }
-    .icon-circle {
-      width:44px;
-      height:44px;
-      border-radius:999px;
-      background: var(--gh-salvia);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      color: #fff;
-      box-shadow: 0 8px 18px rgba(122,169,134,0.18);
-      flex: 0 0 44px;
-      font-size:18px;
-    }
-    .section-header .title-lines { display:flex; flex-direction:column; line-height:1; }
-    .section-header h2 {
-      margin:0;
-      font-size:1.05rem;
-      font-weight:700; /* richiesto: titoli in grassetto */
-      color: var(--gh-text-strong);
-      letter-spacing: -0.2px;
-    }
-    .section-header .subtitle {
-      margin:0;
-      font-size:0.92rem;
-      color: var(--gh-muted);
-      font-weight:600;
-    }
-
-    /* Modern labels */
-    .form-group label {
-      display:block;
-      margin-bottom:8px;
-      color: var(--label-color);
-      font-size:0.92rem;
-      font-weight:600;
-    }
-
-    /* Modern inputs/selects */
-    input[type="text"], input[type="number"], input[type="date"], select, .suggestions-list {
-      display:block;
-      width:100%;
-      padding:10px 12px;
-      border-radius: var(--input-radius);
-      border: 1px solid var(--field-border);
-      background: var(--field-bg);
-      color: var(--gh-text-strong);
-      font-size: 0.95rem;
-      outline: none;
-      transition: box-shadow .12s ease, border-color .12s ease, background .12s ease;
-    }
-    input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus {
-      box-shadow: 0 6px 20px var(--field-focus);
-      border-color: rgba(122,169,134,0.32);
-      background: #fff;
-    }
-
-    /* Select arrow smoothing */
-    select { -webkit-appearance: none; appearance: none; background-image: linear-gradient(45deg, transparent 50%, #666 50%), linear-gradient(135deg, #666 50%, transparent 50%); background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 12px) calc(1em + 2px); background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; padding-right:36px; }
-
-    /* form rows */
-    .form-row { display:flex; gap:12px; align-items:flex-start; }
-    .form-row .form-group { flex:1; min-width: 120px; }
-
-    /* buttons */
-    .btn { padding:10px 12px; border-radius:10px; border:none; background: #111; color:#fff; cursor:pointer; font-weight:700; }
-    .btn.btn-secondary { background:transparent; border:1px solid rgba(0,0,0,0.08); color: var(--gh-text-strong); }
-    .btn.btn-danger { background: #c7683c; color:#fff; }
-
-    .btn:active { transform:translateY(1px); }
-
-    /* suggestions box */
-    .suggestions-list {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: calc(100% + 8px);
-      z-index: 2200;
-      max-height: 220px;
-      overflow:auto;
-      box-shadow: 0 8px 26px rgba(0,0,0,0.12);
-      border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.06);
-    }
-    .suggestion-item { padding:8px 10px; cursor:pointer; color:var(--gh-text-strong); }
-    .suggestion-item:hover { background: rgba(0,0,0,0.03); }
-
-    /* Cart item image tweaks (reuse classes) */
-    .cart-img { width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid rgba(0,0,0,0.04); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); }
-
-    /* table layout inside panel */
-    table#cartTable { width:100%; border-collapse:collapse; }
-    table#cartTable td, table#cartTable th { padding:10px 6px; vertical-align:middle; }
-
-    /* bottom nav spacing handled elsewhere — ensure main bottom padding */
-    @media (max-width:880px) {
-      .section-header h2 { font-size:1rem; }
-      .icon-circle { width:40px; height:40px; font-size:16px; }
-    }
-  </style>
 </head>
 <body>
   <!-- Header (identico a index) -->
@@ -184,8 +33,8 @@
     </div>
   </header>
 
-  <!-- Off-canvas side menu (identico) -->
-  <nav id="sideMenu" style="display:none; position:fixed; left:0; top:0; bottom:0; width:78%; max-width:340px; background:#fff; z-index:3500; box-shadow: 6px 0 30px rgba(0,0,0,0.12); padding:18px;">
+  <!-- Off-canvas side menu -->
+  <nav id="sideMenu" class="hidden" aria-hidden="true">
     <div class="menu-header">
       <div class="menu-logo">GH</div>
       <div>
@@ -206,14 +55,14 @@
       <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Supermercati</div>
       <div id="storesList">Caricamento…</div>
       <div style="margin-top:8px;">
-        <button id="addStoreBtn" style="padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer;">Aggiungi supermercato</button>
+        <button id="addStoreBtn" class="btn-secondary">Aggiungi supermercato</button>
       </div>
     </div>
 
     <div class="menu-section" style="margin-top:auto;">
       <div style="font-size:0.9rem;color:var(--gh-muted)">Versione app</div>
       <div style="font-weight:700">1.0.0</div>
-      <div style="margin-top:8px;"><button id="menuClose" style="padding:8px 10px;border-radius:8px;border:none;background:var(--gh-terracotta);color:#fff;cursor:pointer;">Chiudi menu</button></div>
+      <div style="margin-top:8px;"><button id="menuClose" class="btn">Chiudi menu</button></div>
     </div>
   </nav>
 
@@ -235,7 +84,7 @@
           <select id="storeSelect" class="store-select" required></select>
         </div>
 
-        <div class="form-group" id="customStoreGroup" style="display:none;">
+        <div class="form-group" id="customStoreGroup" aria-hidden="true" hidden>
           <label for="customStore">Nome supermercato</label>
           <input type="text" id="customStore" placeholder="Inserisci nome supermercato" />
         </div>
@@ -251,15 +100,14 @@
         <div class="section-header" id="add-header">
           <span class="icon-circle" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>
           <div class="title-lines">
-            <!-- richiesta: titoli su righe differenti -->
             <h2 style="line-height:1;">Aggiungi</h2>
             <div class="subtitle">Prodotti</div>
           </div>
         </div>
 
-        <div class="product-form" style="position:relative;">
-          <div class="form-row" style="flex-wrap:wrap;">
-            <div class="form-group" style="flex:1;min-width:160px;">
+        <div class="product-form">
+          <div class="form-row">
+            <div class="form-group">
               <label for="productCategory">Tipologia</label>
               <select id="productCategory" required>
                 <option value="">Seleziona tipologia</option>
@@ -278,33 +126,33 @@
               </select>
             </div>
 
-            <div class="form-group suggestions" style="min-width:0;flex:2;position:relative;">
+            <div class="form-group suggestions">
               <label for="productName">Nome prodotto</label>
               <input type="text" id="productName" placeholder="Es. Pomodori" autocomplete="off" required />
               <!-- container per suggerimenti -->
-              <div id="suggestions" aria-hidden="true" class="suggestions-list" style="display:none;"></div>
+              <div id="suggestions" aria-hidden="true" class="suggestions-list"></div>
             </div>
           </div>
 
-          <div class="form-row" style="flex-wrap:wrap;margin-top:10px;">
-            <div class="form-group" style="flex:1;min-width:140px;">
+          <div class="form-row">
+            <div class="form-group">
               <label for="productPrice">Prezzo (€)</label>
               <input type="number" id="productPrice" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required />
-              <div id="priceDiff" aria-live="polite" style="display:none;margin-top:6px;font-size:0.92rem;"></div>
+              <div id="priceDiff" aria-live="polite"></div>
             </div>
 
-            <div class="form-group" style="flex:1;min-width:140px;">
+            <div class="form-group">
               <label for="productPriceKg">Prezzo/kg (€)</label>
               <input type="number" id="productPriceKg" step="0.01" min="0" inputmode="decimal" placeholder="0.00" />
             </div>
           </div>
 
-          <div class="form-group" style="margin-top:10px;">
+          <div class="form-group">
             <label for="productNotes">Note</label>
             <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)" />
           </div>
 
-          <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <button type="button" id="scanBarcodeBtn" class="btn btn-secondary">Scansiona codice a barre</button>
             <button type="button" id="addProductBtn" class="btn">Aggiungi Prodotto al Carrello</button>
           </div>
@@ -312,24 +160,24 @@
       </section>
 
       <!-- SEZIONE 3: Carrello (visibile solo quando ci sono prodotti) -->
-      <section class="cart-section panel" id="cartSection" style="display:none;">
-        <div class="section-header" style="margin-bottom:12px;">
-          <span style="width:44px;"></span> <!-- spacer aligned with icons -->
+      <section class="cart-section panel hidden" id="cartSection" aria-hidden="true">
+        <div class="section-header">
+          <span style="width:44px;"></span>
           <div class="title-lines">
-            <h2 style="margin:0;font-weight:700;">Carrello</h2>
+            <h2>Carrello</h2>
             <div class="subtitle">Riepilogo dei prodotti</div>
           </div>
         </div>
 
         <div class="cart-table-container">
-          <table id="cartTable" style="width:100%;border-collapse:collapse;">
+          <table id="cartTable">
             <thead>
-              <tr><th style="text-align:left;padding:8px 0;">Prodotto</th><th style="text-align:right;padding:8px 0;">Prezzo</th><th style="text-align:center;padding:8px 0;">Azioni</th></tr>
+              <tr><th>Prodotto</th><th>Prezzo</th><th>Azioni</th></tr>
             </thead>
             <tbody id="cartBody"></tbody>
           </table>
         </div>
-        <div class="cart-total" style="margin-top:12px;"><strong>Totale: <span id="cartTotal">€0.00</span></strong></div>
+        <div class="cart-total"><strong>Totale: <span id="cartTotal">€0.00</span></strong></div>
       </section>
 
       <!-- SEZIONE 4: Azioni finali -->
@@ -341,21 +189,21 @@
   </main>
 
   <!-- Scanner modal -->
-  <div id="scannerModal" class="modal" aria-hidden="true" style="display:none;">
-    <div class="modal-content" style="max-width:720px;margin:20px auto;padding:16px;border-radius:12px;background:#fff;">
+  <div id="scannerModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
       <h3>📷 Scansione Codice a Barre</h3>
       <p class="scanner-instructions">Inquadra il codice a barre con la fotocamera. L'app proverà a recuperare i dati da Open Food Facts.</p>
 
-      <div id="scannerContainer" aria-live="polite" style="position:relative;width:100%;height:320px;max-height:60vh;background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-        <video id="scannerVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
-        <div id="scannerOverlay" aria-hidden="true" style="position:absolute;left:50%;top:50%;width:78%;height:120px;transform:translate(-50%, -50%);border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(0,122,255,0.85);pointer-events:none;z-index:40;">
-          <div class="scan-line" aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:2px;background:linear-gradient(90deg, rgba(0,122,255,0) 0%, rgba(0,122,255,0.9) 50%, rgba(0,122,255,0) 100%);border-radius:1px;animation:scanMove 1.6s linear infinite;"></div>
+      <div id="scannerContainer" aria-live="polite">
+        <video id="scannerVideo" autoplay playsinline muted></video>
+        <div id="scannerOverlay" aria-hidden="true">
+          <div class="scan-line" aria-hidden="true"></div>
         </div>
       </div>
 
-      <a class="openfood-link" href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="display:block;margin-top:10px;color:var(--gh-salvia);font-weight:600;text-decoration:none;">🔎 Cerca manualmente su Open Food Facts</a>
+      <a class="openfood-link" href="https://world.openfoodfacts.org" target="_blank" rel="noopener">🔎 Cerca manualmente su Open Food Facts</a>
 
-      <div class="scanner-actions" style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;align-items:center;">
+      <div class="scanner-actions">
         <div class="left">
           <div id="deviceLabel" class="device-label" aria-live="polite"></div>
         </div>
@@ -367,7 +215,7 @@
     </div>
   </div>
 
-  <div id="toast" class="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:rgba(0,0,0,0.7);color:#fff;padding:8px 12px;border-radius:10px;z-index:2100;font-size:0.95rem;display:none;"></div>
+  <div id="toast" class="toast" aria-hidden="true"></div>
 
   <!-- app.js (la tua logica condivisa) -->
   <script src="app.js"></script>
@@ -430,8 +278,14 @@
       const sideMenu = document.getElementById('sideMenu');
       const menuClose = document.getElementById('menuClose');
 
-      menuToggle?.addEventListener('click', () => { sideMenu.style.display = 'block'; });
-      menuClose?.addEventListener('click', () => { sideMenu.style.display = 'none'; });
+      menuToggle?.addEventListener('click', () => {
+        sideMenu.classList.remove('hidden');
+        sideMenu.removeAttribute('aria-hidden');
+      });
+      menuClose?.addEventListener('click', () => {
+        sideMenu.classList.add('hidden');
+        sideMenu.setAttribute('aria-hidden', 'true');
+      });
 
       document.getElementById('addStoreBtn')?.addEventListener('click', () => {
         const name = prompt('Nome supermercato da aggiungere:');
@@ -517,7 +371,7 @@
 
     async function openScannerModal() {
       const modal = document.getElementById('scannerModal');
-      if (modal) { modal.style.display = 'block'; modal.setAttribute('aria-hidden','false'); }
+      if (modal) { modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false'); }
       isScannerOpen = true;
       barcodeHandled = false;
 
@@ -561,7 +415,7 @@
     async function closeScannerModal() {
       const modal = document.getElementById('scannerModal');
       try { await stopScanner(); } catch(e){}
-      if (modal) { modal.style.display = 'none'; modal.setAttribute('aria-hidden','true'); }
+      if (modal) { modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); }
     }
 
     async function switchCamera() {
@@ -683,10 +537,12 @@
       const customInput = document.getElementById('customStore');
       if (!storeSelect) return;
       if (storeSelect.value === 'Altro') {
-        customGroup.style.display = 'block';
+        customGroup.classList.remove('hidden');
+        customGroup.removeAttribute('hidden');
         if (customInput) customInput.required = true;
       } else {
-        customGroup.style.display = 'none';
+        customGroup.classList.add('hidden');
+        customGroup.setAttribute('hidden', 'true');
         if (customInput) customInput.required = false;
       }
     }
@@ -748,7 +604,7 @@
     function showSuggestions(list) {
       const box = document.getElementById('suggestions');
       if (!box) return;
-      if (!list || !list.length) { box.style.display = 'none'; box.innerHTML = ''; box.setAttribute('aria-hidden','true'); return; }
+      if (!list || !list.length) { box.classList.add('hidden'); box.setAttribute('aria-hidden','true'); box.innerHTML = ''; return; }
       box.innerHTML = '';
       list.forEach(nameKey => {
         const item = document.createElement('div');
@@ -759,8 +615,8 @@
         item.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') applySuggestion(nameKey); });
         box.appendChild(item);
       });
-      box.style.display = 'block';
-      box.setAttribute('aria-hidden','false');
+      box.classList.remove('hidden');
+      box.removeAttribute('aria-hidden');
     }
 
     function applySuggestion(nameKey) {
@@ -776,25 +632,26 @@
         showPriceDiff(ref.minPrice, ref.minPrice);
       }
       // hide suggestions
-      showSuggestions([]);
+      const box = document.getElementById('suggestions');
+      if (box) { box.classList.add('hidden'); box.setAttribute('aria-hidden','true'); box.innerHTML = ''; }
       nameField.focus();
     }
 
-    function hideSuggestions() { showSuggestions([]); }
+    function hideSuggestions() { const box = document.getElementById('suggestions'); if (box) { box.classList.add('hidden'); box.setAttribute('aria-hidden','true'); box.innerHTML = ''; } }
 
     /* ---------- price diff UI ---------- */
     function showPriceDiff(enteredPrice, referencePrice) {
       const el = document.getElementById('priceDiff');
       if (!el) return;
-      if (!referencePrice || !enteredPrice) { el.style.display='none'; el.innerHTML=''; return; }
+      if (!referencePrice || !enteredPrice) { el.classList.add('hidden'); el.innerHTML=''; return; }
       const p = parseFloat(enteredPrice);
       const r = parseFloat(referencePrice);
-      if (!p || !r) { el.style.display='none'; el.innerHTML=''; return; }
+      if (!p || !r) { el.classList.add('hidden'); el.innerHTML=''; return; }
       const diff = ((p - r) / r) * 100;
       const abs = Math.abs(diff);
       if (diff === 0) {
         el.innerHTML = `<span style="color:var(--gh-muted)">Prezzo pari al riferimento: <strong>€${Number(r).toFixed(2)}</strong></span>`;
-        el.style.display = 'block';
+        el.classList.remove('hidden');
         return;
       }
       if (diff > 0) {
@@ -802,13 +659,13 @@
       } else {
         el.innerHTML = `Prezzo rispetto al minimo registrato: <span class="down">${(abs).toFixed(1)}% in meno</span> (rif. €${Number(r).toFixed(2)})`;
       }
-      el.style.display = 'block';
+      el.classList.remove('hidden');
     }
 
     function clearPriceDiff() {
       const el = document.getElementById('priceDiff');
       if (!el) return;
-      el.style.display = 'none';
+      el.classList.add('hidden');
       el.innerHTML = '';
     }
 
@@ -823,25 +680,27 @@
       const cart = app.currentCart || [];
 
       if (!cart || cart.length === 0) {
-        cartSection.style.display = 'none';
+        cartSection.classList.add('hidden');
+        cartSection.setAttribute('aria-hidden','true');
         saveBtn.disabled = true;
         cartBody.innerHTML = '';
         cartTotal.textContent = (app && typeof app.formatCurrency === 'function') ? app.formatCurrency(0) : `€0.00`;
         return;
       }
 
-      cartSection.style.display = 'block';
+      cartSection.classList.remove('hidden');
+      cartSection.removeAttribute('aria-hidden');
       saveBtn.disabled = false;
 
       cartBody.innerHTML = cart.map(p => {
         // image html (only if p.image present)
         const imgHtml = p.image ? `<img class="cart-img" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" />` : '';
         const detailsHtml = `
-          <div class="cart-item" style="display:flex;align-items:center;gap:12px;">
+          <div class="cart-item">
             ${imgHtml}
-            <div class="cart-item-details" style="display:flex;flex-direction:column;gap:4px;min-width:0;">
-              <div class="name" style="font-weight:700;color:var(--gh-text-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
-              <div class="meta" style="color:var(--gh-muted);font-size:0.88rem;">${escapeHtml(p.category || '')}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
+            <div class="cart-item-details">
+              <div class="name">${escapeHtml(p.name)}</div>
+              <div class="meta">${escapeHtml(p.category || '')}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
             </div>
           </div>
         `;
@@ -864,9 +723,9 @@
 
         return `
           <tr>
-            <td style="min-width:0; width:60%;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);">${detailsHtml}</td>
-            <td style="white-space:nowrap;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);">${priceHtml}</td>
-            <td style="white-space:nowrap;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);text-align:center;">
+            <td style="min-width:0; width:60%;">${detailsHtml}</td>
+            <td style="white-space:nowrap;">${priceHtml}</td>
+            <td style="white-space:nowrap;">
               <button type="button" class="remove-btn" onclick="removeFromCart('${p.id}')">🗑️</button>
             </td>
           </tr>
@@ -1059,7 +918,6 @@
 
       // attach events for productName autocomplete
       const nameField = document.getElementById('productName');
-      const suggestBox = document.getElementById('suggestions');
       nameField?.addEventListener('input', (e) => {
         clearTimeout(suggestionDebounce);
         suggestionDebounce = setTimeout(() => {
@@ -1092,6 +950,7 @@
 
       // ascolta cambi carte dall'API in caso qualcuno modifichi
       document.addEventListener('app:cart-changed', (e) => {
+        // app.currentCart è la fonte di verità
         updateCartDisplay();
       });
 
@@ -1111,10 +970,5 @@
       try { stopScanner(); } catch (e) {}
     });
   </script>
-
-  <style>
-    /* quick local scan animation keyframes (used by overlay) */
-    @keyframes scanMove { 0%{transform:translateY(-4px);opacity:0;}10%{opacity:1;}50%{transform:translateY(calc(100% - 2px));opacity:1;}90%{opacity:1;}100%{transform:translateY(-4px);opacity:0;} }
-  </style>
 </body>
 </html>
