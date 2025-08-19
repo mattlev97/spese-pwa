@@ -8,50 +8,99 @@
   <!-- Font Awesome (icone bottom nav) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
 
+  <!-- Stili principali -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Header identico a index/aggiungi -->
   <header>
-    <h1>Archivio Spese</h1>
-    <nav class="top-nav">
-      <a href="index.html">Dashboard</a>
-      <a href="aggiungi.html">Aggiungi</a>
-      <a href="archivio.html" class="nav-active">Archivio</a>
-      <a href="impostazioni.html">Impostazioni</a>
-    </nav>
+    <div class="hamburger" id="menuToggle" aria-label="Apri menu" title="Apri menu">
+      <i class="fa-solid fa-bars"></i>
+    </div>
+
+    <div class="title-wrap" role="banner">
+      <div class="title-row" aria-hidden="true">
+        <h1 class="groceryhub">Grocery<span class="hub">Hub</span></h1>
+      </div>
+      <div class="payoff">Controlla, risparmia, vivi meglio</div>
+    </div>
   </header>
 
-  <main>
-    <section>
-      <h2>Tutte le Spese</h2>
+  <!-- Side menu off-canvas (stesso pattern) -->
+  <nav id="sideMenu" aria-hidden="true" class="hidden" role="navigation">
+    <div class="menu-header">
+      <div class="menu-logo">GH</div>
+      <div>
+        <div style="font-weight:800;">GroceryHub</div>
+        <div style="font-size:0.9rem;color:var(--gh-muted)">La tua gestione spese</div>
+      </div>
+    </div>
 
-      <div class="filters" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;align-items:end;">
-        <div style="display:flex;flex-direction:column;min-width:160px;">
-          <label for="filterStore" style="color:var(--text-secondary);font-weight:600;">Supermercato</label>
-          <select id="filterStore" class="store-select" aria-label="Filtra per supermercato"></select>
-        </div>
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Navigazione</div>
+      <a href="index.html"><i class="fa-solid fa-house" style="width:18px;margin-right:8px;"></i> Dashboard</a>
+      <a href="aggiungi.html"><i class="fa-solid fa-plus" style="width:18px;margin-right:8px;"></i> Aggiungi spesa</a>
+      <a href="archivio.html"><i class="fa-solid fa-archive" style="width:18px;margin-right:8px;"></i> Archivio</a>
+      <a href="impostazioni.html"><i class="fa-solid fa-gear" style="width:18px;margin-right:8px;"></i> Impostazioni</a>
+    </div>
 
-        <div style="display:flex;flex-direction:column;">
-          <label for="filterDate" style="color:var(--text-secondary);font-weight:600;">Data (giorno)</label>
-          <input type="date" id="filterDate" aria-label="Filtra per data" />
-        </div>
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Supermercati</div>
+      <div id="storesList">Caricamento…</div>
+      <div style="margin-top:8px;">
+        <button id="addStoreBtn" class="btn btn-secondary">Aggiungi supermercato</button>
+      </div>
+    </div>
 
-        <div style="flex:1; min-width:180px; display:flex;flex-direction:column;">
-          <label for="filterProduct" style="color:var(--text-secondary);font-weight:600;">Prodotto (nome)</label>
-          <input type="text" id="filterProduct" placeholder="Cerca prodotto..." aria-label="Filtra per prodotto" />
-        </div>
+    <div class="menu-section" style="margin-top:auto;">
+      <div style="font-size:0.9rem;color:var(--gh-muted)">Versione app</div>
+      <div style="font-weight:700">1.0.0</div>
+      <div style="margin-top:8px;"><button id="menuClose" class="btn" style="background:var(--gh-terracotta);">Chiudi menu</button></div>
+    </div>
+  </nav>
 
-        <div class="filter-actions" style="display:flex;gap:8px;align-items:center;width:240px;max-width:40%;">
-          <button id="clearFiltersBtn" class="btn small-btn" title="Rimuovi filtri">✖ Rimuovi filtri</button>
+  <main class="dashboard" role="main" aria-live="polite">
+    <section class="panel">
+      <div class="section-header">
+        <div class="icon-circle" aria-hidden="true"><i class="fa-solid fa-filter"></i></div>
+        <div class="title-lines">
+          <h2>Tutte le Spese</h2>
+          <div class="subtitle">Filtra e trova velocemente le spese salvate</div>
         </div>
       </div>
 
-      <div id="filterStatus" class="filter-status" aria-live="polite" role="status" style="margin-bottom:10px;"></div>
+      <form id="filtersForm" class="filters" novalidate>
+        <div class="form-row">
+          <div class="form-group" style="min-width:160px;">
+            <label for="filterStore">Supermercato</label>
+            <select id="filterStore" class="store-select" aria-label="Filtra per supermercato"></select>
+          </div>
 
-      <div id="expenseList" aria-live="polite"></div>
+          <div class="form-group" style="min-width:150px;">
+            <label for="filterDate">Data (giorno)</label>
+            <input type="date" id="filterDate" aria-label="Filtra per data" />
+          </div>
+
+          <div class="form-group" style="flex:1; min-width:180px;">
+            <label for="filterProduct">Prodotto (nome)</label>
+            <input type="text" id="filterProduct" placeholder="Cerca prodotto..." aria-label="Filtra per prodotto" />
+          </div>
+
+          <div class="filter-actions" style="display:flex;align-items:end;">
+            <button id="clearFiltersBtn" class="btn btn-secondary small-btn" title="Rimuovi filtri">✖ Rimuovi filtri</button>
+          </div>
+        </div>
+      </form>
+
+      <div id="filterStatus" class="filter-status" aria-live="polite" role="status"></div>
+    </section>
+
+    <section id="archiveListPanel" class="panel" aria-live="polite">
+      <div id="expenseList" class="expense-list"></div>
     </section>
   </main>
 
+  <!-- bottom navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
     <a class="nav-item" href="index.html" aria-label="Dashboard">
       <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
@@ -71,8 +120,12 @@
     </a>
   </nav>
 
+  <!-- app.js (logica condivisa) -->
   <script src="app.js"></script>
+
+  <!-- script della pagina (funzionalità identiche a quelle che avevi) -->
   <script>
+    // helper
     function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text||''; return d.innerHTML; }
     function formatCurrencySafe(amount) { if (typeof app?.formatCurrency === 'function') return app.formatCurrency(amount || 0); try { return new Intl.NumberFormat('it-IT', { style:'currency', currency:'EUR' }).format(amount || 0); } catch { return `€${Number(amount||0).toFixed(2)}`; } }
     function formatDateSafe(dateStr) { if (typeof app?.formatDate === 'function') return app.formatDate(dateStr || ''); const d = dateStr ? new Date(dateStr) : new Date(); try { return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(d); } catch { return d.toLocaleDateString('it-IT'); } }
@@ -82,17 +135,15 @@
       if (!statusEl) return;
       const filtersText = activeFilters.length ? `Filtri attivi: ${activeFilters.join(', ')}` : 'Nessun filtro attivo';
       if (foundCount === 0) {
-        statusEl.innerHTML = `<span style="color:var(--text-secondary)">Nessuna spesa trovata. ${filtersText}.</span>`;
+        statusEl.innerHTML = `<div class="no-expenses">Nessuna spesa trovata. ${filtersText}.</div>`;
       } else {
-        statusEl.innerHTML = `<strong>${foundCount}</strong> spesa${foundCount>1 ? 'e' : ''} trovata su <strong>${totalCount}</strong>. ${filtersText}.`;
+        statusEl.innerHTML = `<div style="color:var(--text-secondary)"><strong>${foundCount}</strong> spesa${foundCount>1 ? 'e' : ''} trovata su <strong>${totalCount}</strong>. ${filtersText}.</div>`;
       }
     }
 
     function renderProducts(exp) {
       if (!exp || !Array.isArray(exp.products) || exp.products.length === 0) return '';
-      return `<div style="margin-top:8px; color:var(--text-secondary); font-size:0.9rem;">
-        ${exp.products.slice(0,3).map(p => escapeHtml(p.name)).join(', ')}${exp.products.length>3 ? ' …' : ''}
-      </div>`;
+      return `<div class="archive-products">${exp.products.slice(0,3).map(p => escapeHtml(p.name)).join(', ')}${exp.products.length>3 ? ' …' : ''}</div>`;
     }
 
     function renderArchive() {
@@ -103,7 +154,7 @@
       if (!container) return;
       let expenses = (typeof app?.loadExpenses === 'function') ? app.loadExpenses() : (app.expenses || []);
       const totalCount = expenses.length;
-      expenses.sort((a,b) => new Date(b.date) - new Date(a.date));
+      expenses = expenses.slice().sort((a,b) => new Date(b.date) - new Date(a.date));
       const activeFilters = [];
       if (storeFilter) { activeFilters.push(`Supermercato: ${storeFilter}`); expenses = expenses.filter(exp => (exp.store||'').toLowerCase() === storeFilter); }
       if (dateFilter) { activeFilters.push(`Data: ${dateFilter}`); expenses = expenses.filter(exp => (exp.date||'').startsWith(dateFilter)); }
@@ -112,34 +163,30 @@
       updateFilterStatus(expenses.length, totalCount, activeFilters);
       if (!expenses.length) { container.innerHTML = '<div class="no-expenses">Nessuna spesa trovata con i filtri selezionati.</div>'; return; }
 
-      // NOTE: no image is shown in the archive list (images are only in dettaglio.html)
       container.innerHTML = expenses.map(exp => {
         const productCount = (exp.products || []).length;
         const detailsUrl = `dettaglio.html?id=${encodeURIComponent(exp.id)}`;
 
         return `
-          <div class="archive-card" style="margin-bottom:12px; padding:12px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); border:1px solid rgba(255,255,255,0.02);">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
-                <div style="min-width:0;">
-                  <strong>🏪 ${escapeHtml(exp.store || '')}</strong>
-                  <div style="color:var(--text-secondary); font-size:0.92rem;">📅 ${formatDateSafe(exp.date)} • ${productCount} prodotti</div>
-                  ${renderProducts(exp)}
-                </div>
-              </div>
+          <article class="archive-card" role="article" aria-label="Spesa ${escapeHtml(exp.store || '')} - ${escapeHtml(exp.date || '')}">
+            <div class="archive-left">
+              <div class="store-name">🏪 ${escapeHtml(exp.store || '')}</div>
+              <div class="archive-meta">📅 ${formatDateSafe(exp.date)} • ${productCount} prodotti</div>
+              ${renderProducts(exp)}
+            </div>
 
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-                <div style="font-weight:700;">${formatCurrencySafe(exp.total)}</div>
-                <div style="display:flex;gap:8px;">
-                  <a class="btn btn-secondary" href="${detailsUrl}">Dettagli</a>
-                  <button class="delete-expense btn small-btn" data-id="${exp.id}" title="Elimina spesa">🗑️</button>
-                </div>
+            <div class="archive-right">
+              <div class="archive-total">${formatCurrencySafe(exp.total)}</div>
+              <div class="archive-actions">
+                <a class="btn btn-secondary" href="${detailsUrl}">Dettagli</a>
+                <button class="delete-expense btn small-btn" data-id="${exp.id}" title="Elimina spesa">🗑️</button>
               </div>
             </div>
-          </div>
+          </article>
         `;
       }).join('');
 
+      // attach delete handlers
       container.querySelectorAll('.delete-expense').forEach(btn => {
         btn.addEventListener('click', () => {
           if (!confirm('Sei sicuro di voler eliminare questa spesa?')) return;
@@ -163,12 +210,32 @@
     (function syncBottomNavActive() {
       const path = location.pathname.split('/').pop() || 'index.html';
       document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
-        try { const href = a.getAttribute('href') || ''; if (href.endsWith(path)) a.classList.add('nav-active'); else a.classList.remove('nav-active'); } catch(e) {}
+        try { const href = a.getAttribute('href') || ''; a.classList.toggle('nav-active', href.endsWith(path)); } catch(e) {}
       });
     })();
 
+    // side menu small logic + populate stores
+    function populateSideMenuStores() {
+      const container = document.getElementById('storesList');
+      if (!container || !window.app) return;
+      const stores = app.getStores ? app.getStores() : [];
+      if (!stores || stores.length === 0) {
+        container.innerHTML = '<div style="color:var(--gh-muted)">Nessun supermercato</div>';
+        return;
+      }
+      container.innerHTML = '';
+      stores.forEach(s => {
+        const el = document.createElement('div');
+        el.style.padding = '6px 0';
+        el.textContent = s;
+        container.appendChild(el);
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       try { app.populateAllStoreSelects(); } catch (e) {}
+      populateSideMenuStores();
+
       const filterStore = document.getElementById('filterStore');
       const filterDate = document.getElementById('filterDate');
       const filterProduct = document.getElementById('filterProduct');
@@ -185,11 +252,35 @@
         if (e.key === 'Enter') { e.preventDefault(); renderArchive(); }
       });
 
-      document.addEventListener('app:stores-changed', () => { try { app.populateAllStoreSelects(); } catch(e){} });
+      document.addEventListener('app:stores-changed', () => { try { app.populateAllStoreSelects(); populateSideMenuStores(); } catch(e){} });
       document.addEventListener('app:expenses-changed', () => { renderArchive(); });
 
+      // side menu toggle
+      const menuToggle = document.getElementById('menuToggle');
+      const sideMenu = document.getElementById('sideMenu');
+      const menuClose = document.getElementById('menuClose');
+      menuToggle?.addEventListener('click', () => { sideMenu.classList.remove('hidden'); sideMenu.setAttribute('aria-hidden','false'); });
+      menuClose?.addEventListener('click', () => { sideMenu.classList.add('hidden'); sideMenu.setAttribute('aria-hidden','true'); });
+      document.getElementById('addStoreBtn')?.addEventListener('click', () => {
+        const name = prompt('Nome supermercato da aggiungere:');
+        if (!name) return;
+        const ok = app.addStore ? app.addStore(name) : false;
+        if (ok) { populateSideMenuStores(); alert('Supermercato aggiunto'); } else { alert('Non è stato possibile aggiungere (potrebbe già esistere).'); }
+      });
+
       renderArchive();
+
+      // responsive padding for bottom nav
+      const bottomNav = document.querySelector('.bottom-nav');
+      const main = document.querySelector('main');
+      if (bottomNav && main) {
+        const navH = bottomNav.offsetHeight || 0;
+        const extra = 24;
+        main.style.paddingBottom = (navH + extra) + 'px';
+        document.body.style.paddingBottom = (navH + extra) + 'px';
+      }
     });
   </script>
+
 </body>
 </html>
