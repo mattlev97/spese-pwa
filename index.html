@@ -14,200 +14,8 @@
   <!-- Icone -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Manteniamo style.css (se presente) ma tutto il look specifico della dashboard è inline qui -->
+  <!-- Stile principale - usa il file style.css che ti ho fornito -->
   <link rel="stylesheet" href="style.css?v=20250816">
-
-  <style>
-    /* Palette e override per la dashboard (forzato light mode) */
-    :root{
-      --gh-bg: #ffffff;
-      --gh-salvia: #7aa986;
-      --gh-mustard: #d6a63f;
-      --gh-terracotta: #c7683c;
-      --gh-terracotta-light: rgba(199,104,60,0.12);
-      --gh-text-strong: #222428;
-      --gh-muted: #5b5f63;
-    }
-
-    /* Forza luce e palette indipendente */
-    html, body { background: var(--gh-bg) !important; color: var(--gh-text-strong) !important; color-scheme: light !important; -webkit-font-smoothing:antialiased; }
-    * { box-sizing: border-box; }
-
-    /* Header fisso */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 88px;
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(255,255,255,0.98);
-      border-bottom: 1px solid rgba(0,0,0,0.04);
-      z-index: 3000;
-    }
-
-    .hamburger {
-      width: 44px;
-      height: 44px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:10px;
-      background: rgba(0,0,0,0.04);
-      cursor:pointer;
-    }
-    .hamburger i { color: var(--gh-text-strong); font-size:18px; }
-
-    .title-wrap { display:flex; flex-direction:column; align-items:flex-start; gap:4px; flex:1; }
-    .title-row { display:flex; align-items:baseline; gap:6px; }
-    /* GroceryHub attaccato e piu' grande */
-    .groceryhub { font-weight:700; color:var(--gh-text-strong); font-size:3.0rem; margin:0; line-height:1; letter-spacing:-0.6px; }
-    /* rendi "Hub" salvia e in grassetto */
-    .groceryhub .hub { font-weight:900; color:var(--gh-salvia); margin-left:4px; display:inline-block; }
-
-    .payoff { font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:2px; }
-
-    /* Main spacing: lascia spazio per header */
-    main.dashboard { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: calc(88px + 12px); }
-
-    /* Calendar slider */
-    .calendar-wrap { margin-top: 4px; margin-bottom: 14px; display:flex; flex-direction:column; gap:8px; }
-    .calendar-row {
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:flex-start;
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-      padding:10px 14px;
-      scroll-behavior:smooth;
-      scroll-snap-type:x proximity;
-    }
-    .calendar-row::-webkit-scrollbar { height:8px; }
-    .calendar-row::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius:6px; }
-
-    .day-pill{
-      scroll-snap-align:center;
-      flex: 0 0 auto;
-      min-width:86px;
-      max-width:140px;
-      padding:12px 10px;
-      border-radius:28px;
-      background:#fff;
-      border:1px solid rgba(0,0,0,0.04);
-      box-shadow:0 6px 18px rgba(0,0,0,0.06);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-      cursor:pointer;
-      transition:transform .12s ease, background .12s ease, box-shadow .12s ease;
-      color: var(--gh-text-strong);
-      text-align:center;
-    }
-
-    .day-num { font-size:1.9rem; font-weight:800; line-height:1; }
-    .day-name { font-size:1.02rem; font-weight:700; text-transform:capitalize; }
-    .month { font-size:0.78rem; color:var(--gh-muted); }
-
-    /* adjacent sizes */
-    .day-pill.adjacent { padding:10px 8px; min-width:78px; }
-    .day-pill.adjacent .day-num { font-size:1.45rem; }
-    .day-pill.adjacent .day-name { font-size:0.92rem; }
-    .day-pill.adjacent-2 { padding:8px 6px; min-width:64px; opacity:0.95; }
-    .day-pill.adjacent-2 .day-num { font-size:1.15rem; }
-
-    /* selected: salvia and white text */
-    .day-pill.selected {
-      background: var(--gh-salvia);
-      color: #fff;
-      transform: translateY(-4px);
-      box-shadow: 0 10px 30px rgba(122,169,134,0.14);
-      border-color: rgba(0,0,0,0.04);
-    }
-    .day-pill.selected .has-expense-dot { background: rgba(255,255,255,0.95) !important; }
-
-    .has-expense-dot { width:8px;height:8px;border-radius:50%; background:var(--gh-salvia); margin-top:4px; }
-    .has-expense-dot.hidden { opacity:0; }
-
-    /* daySummary should always be visible (shows message if empty or content if not) */
-    .day-summary { display:block; margin-top:8px; padding:12px; background:var(--gh-terracotta-light); color:var(--gh-text-strong); border-radius:10px; }
-    .day-summary .empty { color:var(--gh-muted); }
-
-    /* Blocks */
-    .blocks { display:flex; gap:12px; margin-top:12px; align-items:stretch; flex-wrap:wrap; }
-    .block {
-      flex: 1 1 180px;
-      border-radius: 12px;
-      padding: 12px;
-      color: #fff;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:space-between;
-      min-height:84px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-    }
-    .block .label { font-size:0.86rem; opacity:0.95; }
-    .block .value { font-size:1.3rem; font-weight:800; }
-
-    .block.total { background: var(--gh-salvia); }
-    .block.max { background: var(--gh-mustard); color:#111; }
-    .block.min { background: #ffa87f; }
-    .block.count { background: var(--gh-terracotta); }
-
-    /* Charts */
-    .charts-section { display:flex; gap:14px; align-items:flex-start; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px; margin-top:18px; }
-    .chart-container { flex:0 0 calc(50% - 7px); min-width:260px; text-align:left; padding:0; background:transparent; border:none; box-shadow:none; }
-    .chart-container h3 { margin:0 0 8px 0; font-weight:700; color:var(--gh-text-strong); }
-    .chart-legend { margin-top:8px; color:var(--gh-muted); }
-
-    /* Recent */
-    .recent-list { margin-top:8px; }
-
-    /* bottom nav: white rounded pill, icon-only */
-    .bottom-nav {
-      position:fixed;
-      left:50%;
-      transform:translateX(-50%);
-      bottom:28px;
-      width: calc(100% - 24px);
-      max-width:720px;
-      height:72px;
-      background:#fff;
-      border-radius:999px;
-      display:flex;
-      justify-content:space-around;
-      align-items:center;
-      padding:10px;
-      box-shadow:0 18px 40px rgba(0,0,0,0.08);
-      z-index:1200;
-    }
-    .bottom-nav .nav-item { flex:1; display:flex; justify-content:center; align-items:center; text-decoration:none; }
-    .bottom-nav .nav-item .label { display:none; }
-
-    .bottom-nav .icon-wrap { width:52px; height:52px; border-radius:999px; display:flex; align-items:center; justify-content:center; transition:all .12s ease; background:transparent; }
-    .bottom-nav .icon-wrap i { font-size:20px; color:#1f2223; }
-
-    .bottom-nav .nav-item.nav-active .icon-wrap { background: var(--gh-salvia); box-shadow: 0 8px 18px rgba(122,169,134,0.18); }
-    .bottom-nav .nav-item.nav-active .icon-wrap i { color:#fff; }
-
-    @media (max-width:880px) {
-      .groceryhub { font-size:2.2rem; }
-    }
-
-    /* ------------ enriched side menu internal styling ------------- */
-    #sideMenu { font-family: inherit; }
-    #sideMenu .menu-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-    #sideMenu .menu-logo { width:44px; height:44px; border-radius:10px; background:var(--gh-salvia); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; }
-    #sideMenu .menu-section { margin:12px 0; }
-    #sideMenu a { color:var(--gh-text-strong); text-decoration:none; display:block; padding:8px 6px; border-radius:8px; }
-    #sideMenu a:hover { background: rgba(122,169,134,0.06); }
-    #storesList { margin-top:6px; padding-left:12px; color:var(--gh-muted); }
-  </style>
 </head>
 <body>
   <header>
@@ -352,6 +160,7 @@
   <!-- App core (non modificato) -->
   <script src="app.js"></script>
 
+  <!-- Dashboard script (mantiene tutta la logica che avevi nell'HTML originale) -->
   <script>
     /* ===== Helpers & settings (local) ===== */
     const SETTINGS_KEY = 'gh_settings';
@@ -396,7 +205,7 @@
     }
 
     function getExpensesForKey(key) {
-      return (app.expenses || []).filter(e => e.date === key);
+      return (window.app && app.expenses) ? (app.expenses || []).filter(e => e.date === key) : [];
     }
 
     function renderCalendar() {
@@ -543,13 +352,13 @@
     /* ===== Update dashboard content (no donut) ===== */
     function updateDashboard() {
       const period = document.getElementById('periodSelect')?.value || 'mese';
-      const filtered = app.filterByPeriod(period);
-      const stats = app.getStats(filtered);
+      const filtered = (window.app && app.filterByPeriod) ? app.filterByPeriod(period) : [];
+      const stats = (window.app && app.getStats) ? app.getStats(filtered) : { total:0, max:{amount:0,store:''}, min:{amount:0,store:''}, count:0, storeStats:{}, categoryStats:{} };
 
-      document.getElementById('totalAmountBlock').textContent = app.formatCurrency(stats.total);
-      document.getElementById('maxAmountBlock').textContent = app.formatCurrency(stats.max.amount);
-      document.getElementById('minAmountBlock').textContent = app.formatCurrency(stats.min.amount);
-      document.getElementById('countBlock').textContent = stats.count;
+      document.getElementById('totalAmountBlock').textContent = (window.app && app.formatCurrency) ? app.formatCurrency(stats.total) : '€0.00';
+      document.getElementById('maxAmountBlock').textContent = (window.app && app.formatCurrency) ? app.formatCurrency(stats.max.amount) : '€0.00';
+      document.getElementById('minAmountBlock').textContent = (window.app && app.formatCurrency) ? app.formatCurrency(stats.min.amount) : '€0.00';
+      document.getElementById('countBlock').textContent = stats.count || 0;
       document.getElementById('maxStoreBlock').textContent = stats.max.store || '';
       document.getElementById('minStoreBlock').textContent = stats.min.store || '';
 
@@ -562,6 +371,8 @@
 
       drawPieChart('storeChart', stats.storeStats, 'storeStats', palette);
       drawPieChart('categoryChart', stats.categoryStats, 'categoryStats', palette);
+
+      loadRecentExpenses(filtered);
     }
 
     function loadRecentExpenses(expenses) {
@@ -576,9 +387,9 @@
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
           <div>
             <strong style="display:block">${exp.store}</strong>
-            <small style="color:var(--gh-muted)">${app.formatDate(exp.date)} • ${exp.products?.length || 0} prodotti</small>
+            <small style="color:var(--gh-muted)">${(window.app && app.formatDate) ? app.formatDate(exp.date) : exp.date} • ${exp.products?.length || 0} prodotti</small>
           </div>
-          <div style="font-weight:700">${app.formatCurrency(exp.total)}</div>
+          <div style="font-weight:700">${(window.app && app.formatCurrency) ? app.formatCurrency(exp.total) : exp.total}</div>
         </div>
       `).join('');
     }
@@ -587,7 +398,7 @@
     function populateSideMenuStores() {
       const container = document.getElementById('storesList');
       if (!container) return;
-      const stores = (app.getStores && typeof app.getStores === 'function') ? app.getStores() : [];
+      const stores = (window.app && typeof app.getStores === 'function') ? app.getStores() : [];
       if (!stores || !stores.length) {
         container.innerHTML = '<div style="color:var(--gh-muted)">Nessun supermercato</div>';
         return;
@@ -614,7 +425,7 @@
       document.getElementById('addStoreBtn')?.addEventListener('click', () => {
         const name = prompt('Nome supermercato da aggiungere:');
         if (!name) return;
-        const ok = app.addStore ? app.addStore(name) : false;
+        const ok = (window.app && app.addStore) ? app.addStore(name) : false;
         if (ok) {
           populateSideMenuStores();
           alert('Supermercato aggiunto');
@@ -626,7 +437,7 @@
       // initial
       renderCalendar();
       updateDashboard();
-      loadRecentExpenses(app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese'));
+      loadRecentExpenses((window.app && app.filterByPeriod) ? app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese') : []);
       populateSideMenuStores();
 
       // listeners
@@ -635,7 +446,7 @@
       document.addEventListener('app:expenses-changed', () => {
         renderCalendar();
         updateDashboard();
-        loadRecentExpenses(app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese'));
+        loadRecentExpenses((window.app && app.filterByPeriod) ? app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese') : []);
         populateSideMenuStores();
       });
 
