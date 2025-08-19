@@ -3,124 +3,98 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>⚙️ Impostazioni - Gestione Spese</title>
+  <title>⚙️ Impostazioni - GroceryHub</title>
 
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
 
+  <!-- Stili principali -->
   <link rel="stylesheet" href="style.css" />
   <meta name="theme-color" content="#1e1e1e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 </head>
 <body>
+  <!-- Header (coerente con index/aggiungi) -->
   <header>
-    <h1>⚙️ Impostazioni</h1>
-    <nav class="top-nav" role="navigation" aria-label="Menu principale">
-      <a href="index.html">Dashboard</a>
-      <a href="aggiungi.html">Aggiungi</a>
-      <a href="archivio.html">Archivio</a>
-      <a href="impostazioni.html" class="nav-active">Impostazioni</a>
-    </nav>
+    <div class="hamburger" id="menuToggle" aria-label="Apri menu" title="Apri menu">
+      <i class="fa-solid fa-bars" aria-hidden="true"></i>
+    </div>
+
+    <div class="title-wrap" role="banner">
+      <div class="title-row" aria-hidden="true">
+        <h1 class="groceryhub">Grocery<span class="hub">Hub</span></h1>
+      </div>
+      <div class="payoff">Controlla, risparmia, vivi meglio</div>
+    </div>
   </header>
 
-  <main>
-    <section class="settings-section">
-      <h2>Supermercati</h2>
-      <p class="hint">Rimuovi i supermercati che non usi o aggiungine di nuovi. Le modifiche vengono salvate automaticamente.</p>
+  <!-- Off-canvas side menu -->
+  <nav id="sideMenu" aria-hidden="true" class="hidden" role="navigation">
+    <div class="menu-header">
+      <div class="menu-logo">GH</div>
+      <div>
+        <div style="font-weight:800;">GroceryHub</div>
+        <div style="font-size:0.9rem;color:var(--gh-muted)">La tua gestione spese</div>
+      </div>
+    </div>
 
-      <div id="storesContainer" class="stores-list" aria-live="polite"></div>
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Navigazione</div>
+      <a href="index.html"><i class="fa-solid fa-house" style="width:18px;margin-right:8px;"></i> Dashboard</a>
+      <a href="aggiungi.html"><i class="fa-solid fa-plus" style="width:18px;margin-right:8px;"></i> Aggiungi spesa</a>
+      <a href="archivio.html"><i class="fa-solid fa-archive" style="width:18px;margin-right:8px;"></i> Archivio</a>
+      <a href="impostazioni.html"><i class="fa-solid fa-gear" style="width:18px;margin-right:8px;"></i> Impostazioni</a>
+    </div>
 
-      <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-        <input id="newStoreInput" class="store-input" type="text" placeholder="Aggiungi nuovo supermercato" />
-        <button id="addStoreBtn" class="add-store-btn">➕ Aggiungi</button>
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Supermercati</div>
+      <div id="storesList">Caricamento…</div>
+      <div style="margin-top:8px;">
+        <button id="addStoreBtnMenu" class="btn btn-secondary">Aggiungi supermercato</button>
+      </div>
+    </div>
+
+    <div class="menu-section" style="margin-top:auto;">
+      <div style="font-size:0.9rem;color:var(--gh-muted)">Versione app</div>
+      <div style="font-weight:700">1.0.0</div>
+      <div style="margin-top:8px;"><button id="menuClose" class="btn" style="background:var(--gh-terracotta);">Chiudi menu</button></div>
+    </div>
+  </nav>
+
+  <main class="dashboard" role="main" aria-live="polite">
+    <section class="panel">
+      <div class="section-header" style="margin-bottom:10px;">
+        <div class="icon-circle" aria-hidden="true"><i class="fa-solid fa-gear"></i></div>
+        <div class="title-lines">
+          <h2>Impostazioni</h2>
+          <div class="subtitle">Gestisci supermercati e preferenze dell'app</div>
+        </div>
       </div>
 
-      <div class="form-actions" style="margin-top:12px;">
-        <button id="resetDefaultsBtn" class="btn btn-secondary">Ripristina valori predefiniti</button>
-        <button id="saveSettingsBtn" class="save-settings-btn">💾 Salva impostazioni</button>
+      <div class="form-group">
+        <h3 style="margin:0 0 8px 0;font-size:1rem;font-weight:700;">Supermercati</h3>
+        <p class="hint">Rimuovi i supermercati che non usi o aggiungine di nuovi. Le modifiche vengono salvate automaticamente.</p>
+
+        <div id="storesContainer" class="stores-list" aria-live="polite"></div>
+
+        <div class="form-row" style="margin-top:12px;">
+          <div class="form-group" style="flex:1;min-width:160px;">
+            <label for="newStoreInput">Aggiungi nuovo supermercato</label>
+            <input id="newStoreInput" class="store-input" type="text" placeholder="Nome supermercato" />
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;">
+            <button id="addStoreBtn" class="btn">➕ Aggiungi</button>
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top:14px; display:flex; gap:10px;">
+          <button id="resetDefaultsBtn" class="btn btn-secondary">Ripristina valori predefiniti</button>
+          <button id="saveSettingsBtn" class="btn">💾 Salva impostazioni</button>
+        </div>
       </div>
     </section>
   </main>
-
-  <script src="app.js"></script>
-  <script>
-    function renderStoresList() {
-      const container = document.getElementById('storesContainer');
-      container.innerHTML = '';
-      const stores = app.getStores();
-      if (!stores || stores.length === 0) {
-        container.innerHTML = '<div class="no-expenses">Nessun supermercato salvato</div>';
-        return;
-      }
-
-      stores.forEach(storeName => {
-        const item = document.createElement('div');
-        item.className = 'store-item';
-        item.dataset.store = storeName;
-
-        const handle = document.createElement('div');
-        handle.className = 'store-handle';
-        handle.title = 'Trascina per riordinare (non implementato)';
-        handle.textContent = '≡';
-
-        const input = document.createElement('input');
-        input.className = 'store-input';
-        input.value = storeName;
-        input.readOnly = true;
-
-        const actions = document.createElement('div');
-        actions.className = 'store-actions';
-
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'remove-btn';
-        removeBtn.title = 'Rimuovi';
-        removeBtn.innerHTML = '🗑️';
-        removeBtn.addEventListener('click', () => {
-          if (confirm(`Eliminare "${storeName}" dalla lista dei supermercati?`)) {
-            app.removeStore(storeName);
-            renderStoresList();
-            app.populateAllStoreSelects();
-          }
-        });
-
-        actions.appendChild(removeBtn);
-        item.appendChild(handle);
-        item.appendChild(input);
-        item.appendChild(actions);
-        container.appendChild(item);
-      });
-    }
-
-    function addNewStoreFromInput() {
-      const inp = document.getElementById('newStoreInput');
-      const val = inp.value ? inp.value.trim() : '';
-      if (!val) { alert('Inserisci il nome del supermercato'); return; }
-      const ok = app.addStore(val);
-      if (!ok) { alert('Questo supermercato è già presente o non valido.'); return; }
-      inp.value = '';
-      renderStoresList();
-      app.populateAllStoreSelects();
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      renderStoresList();
-
-      document.getElementById('addStoreBtn')?.addEventListener('click', e => { e.preventDefault(); addNewStoreFromInput(); });
-      document.getElementById('newStoreInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addNewStoreFromInput(); } });
-
-      document.getElementById('saveSettingsBtn')?.addEventListener('click', () => { app.saveStores(app.getStores()); alert('Impostazioni salvate.'); });
-
-      document.getElementById('resetDefaultsBtn')?.addEventListener('click', () => {
-        if (!confirm('Ripristinare la lista ai valori predefiniti?')) return;
-        app.saveStores(app.defaultStores.slice());
-        app.stores = app.loadStores();
-        renderStoresList();
-        app.populateAllStoreSelects();
-        alert('Valori predefiniti ripristinati.');
-      });
-    });
-  </script>
 
   <!-- bottom navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
@@ -142,14 +116,146 @@
     </a>
   </nav>
 
+  <!-- app logic -->
+  <script src="app.js"></script>
+
   <script>
-    (function () {
+    // Renderizza la lista dei supermercati
+    function renderStoresList() {
+      const container = document.getElementById('storesContainer');
+      container.innerHTML = '';
+      const stores = (app && typeof app.getStores === 'function') ? app.getStores() : (app.stores || []);
+      if (!stores || stores.length === 0) {
+        container.innerHTML = '<div class="no-expenses">Nessun supermercato salvato</div>';
+        return;
+      }
+
+      stores.forEach(storeName => {
+        const item = document.createElement('div');
+        item.className = 'store-item';
+        item.dataset.store = storeName;
+
+        const handle = document.createElement('button');
+        handle.className = 'store-handle';
+        handle.type = 'button';
+        handle.title = 'Riordina (non implementato)';
+        handle.setAttribute('aria-hidden','true');
+        handle.innerHTML = '<i class="fa-solid fa-grip-lines"></i>';
+
+        const input = document.createElement('input');
+        input.className = 'store-input';
+        input.value = storeName;
+        input.readOnly = true;
+        input.setAttribute('aria-label', `Supermercato ${storeName}`);
+
+        const actions = document.createElement('div');
+        actions.className = 'store-actions';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.type = 'button';
+        removeBtn.title = 'Rimuovi';
+        removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        removeBtn.addEventListener('click', () => {
+          if (confirm(`Eliminare "${storeName}" dalla lista dei supermercati?`)) {
+            app.removeStore(storeName);
+            renderStoresList();
+            try { app.populateAllStoreSelects(); } catch(e){}
+          }
+        });
+
+        actions.appendChild(removeBtn);
+        item.appendChild(handle);
+        item.appendChild(input);
+        item.appendChild(actions);
+        container.appendChild(item);
+      });
+    }
+
+    function addNewStoreFromInput() {
+      const inp = document.getElementById('newStoreInput');
+      const val = inp.value ? inp.value.trim() : '';
+      if (!val) { alert('Inserisci il nome del supermercato'); return; }
+      const ok = (app && typeof app.addStore === 'function') ? app.addStore(val) : false;
+      if (!ok) { alert('Questo supermercato è già presente o non valido.'); return; }
+      inp.value = '';
+      renderStoresList();
+      try { app.populateAllStoreSelects(); } catch(e){}
+    }
+
+    // sincronizza bottom nav active
+    (function syncBottomNavActive() {
       const path = location.pathname.split('/').pop() || 'index.html';
       document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
-        const href = a.getAttribute('href') || '';
-        if (href.endsWith(path)) a.classList.add('nav-active'); else a.classList.remove('nav-active');
+        try { const href = a.getAttribute('href') || ''; a.classList.toggle('nav-active', href.endsWith(path)); } catch(e) {}
       });
     })();
+
+    // side menu small logic
+    function populateSideMenuStores() {
+      const container = document.getElementById('storesList');
+      if (!container || !window.app) return;
+      const stores = app.getStores ? app.getStores() : [];
+      if (!stores || stores.length === 0) {
+        container.innerHTML = '<div style="color:var(--gh-muted)">Nessun supermercato</div>';
+        return;
+      }
+      container.innerHTML = '';
+      stores.forEach(s => {
+        const el = document.createElement('div');
+        el.style.padding = '6px 0';
+        el.textContent = s;
+        container.appendChild(el);
+      });
+    }
+
+    // wiring DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      renderStoresList();
+      populateSideMenuStores();
+
+      document.getElementById('addStoreBtn')?.addEventListener('click', e => { e.preventDefault(); addNewStoreFromInput(); });
+      document.getElementById('newStoreInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addNewStoreFromInput(); } });
+
+      document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
+        try { app.saveStores(app.getStores()); alert('Impostazioni salvate.'); } catch (e) { alert('Errore salvataggio impostazioni'); }
+      });
+
+      document.getElementById('resetDefaultsBtn')?.addEventListener('click', () => {
+        if (!confirm('Ripristinare la lista ai valori predefiniti?')) return;
+        try {
+          app.saveStores(app.defaultStores.slice());
+          app.stores = app.loadStores();
+          renderStoresList();
+          app.populateAllStoreSelects();
+          alert('Valori predefiniti ripristinati.');
+        } catch(e) { alert('Errore nel ripristino.'); }
+      });
+
+      // menu open/close
+      const menuToggle = document.getElementById('menuToggle');
+      const sideMenu = document.getElementById('sideMenu');
+      const menuClose = document.getElementById('menuClose');
+      menuToggle?.addEventListener('click', () => { sideMenu.classList.remove('hidden'); sideMenu.setAttribute('aria-hidden','false'); });
+      menuClose?.addEventListener('click', () => { sideMenu.classList.add('hidden'); sideMenu.setAttribute('aria-hidden','true'); });
+
+      document.getElementById('addStoreBtnMenu')?.addEventListener('click', () => {
+        const name = prompt('Nome supermercato da aggiungere:');
+        if (!name) return;
+        const ok = app.addStore ? app.addStore(name) : false;
+        if (ok) { populateSideMenuStores(); alert('Supermercato aggiunto'); } else { alert('Non è stato possibile aggiungere (potrebbe già esistere).'); }
+      });
+
+      // ensure main bottom padding for bottom nav
+      const bottomNav = document.querySelector('.bottom-nav');
+      const main = document.querySelector('main');
+      if (bottomNav && main) {
+        const navH = bottomNav.offsetHeight || 0;
+        const extra = 24;
+        main.style.paddingBottom = (navH + extra) + 'px';
+        document.body.style.paddingBottom = (navH + extra) + 'px';
+      }
+    });
   </script>
 </body>
 </html>
