@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Aggiungi Spesa</title>
+  <title>Aggiungi Spesa — GroceryHub</title>
 
   <!-- Manifest / PWA -->
   <link rel="manifest" href="manifest.json" />
@@ -18,119 +18,155 @@
   <!-- Stili: unificati in style.css (versione "bellissima") -->
   <link rel="stylesheet" href="style.css?v=20250816" />
 
-  <!-- Override / stili locali per aggiungi (modernizzazione) -->
+  <!-- Stile locale per layout form/icone/tweaks (leggero, compatibile con style.css) -->
   <style>
-    :root{
-      --card-bg: #ffffff;
-      --card-radius: 14px;
-      --field-padding: 12px 14px;
-      --field-border: rgba(0,0,0,0.08);
-      --muted: var(--gh-muted, #5b5f63);
-      --primary: var(--gh-salvia, #7aa986);
+    :root {
+      /* se style.css non fosse caricato, fallback palette */
+      --gh-salvia: #7aa986;
+      --panel-bg: #ffffff;
+      --panel-radius: 12px;
+      --panel-padding: 14px;
+      --field-bg: #fafafa;
+      --field-border: #e6e6e6;
+      --field-focus: rgba(122,169,134,0.18);
+      --label-color: #5b5f63;
+      --input-radius: 10px;
     }
 
-    /* Card per le sezioni */
-    .form-section {
-      background: var(--card-bg);
-      border-radius: var(--card-radius);
-      padding: 18px;
-      box-shadow: 0 10px 28px rgba(10,10,10,0.06);
-      margin-bottom: 14px;
-      border: 1px solid rgba(0,0,0,0.04);
+    /* Main adjustments to match dashboard layout */
+    body { -webkit-font-smoothing:antialiased; }
+
+    /* Ensure the same system font as dashboard (style.css already sets this) */
+    header, main, .panel, label, input, select, button { font-family: inherit; }
+
+    /* HEADER tweaks (keeps same look as index) */
+    header { position: fixed; top:0; left:0; right:0; height:88px; padding:12px 18px; display:flex; align-items:center; gap:12px; background: rgba(255,255,255,0.98); border-bottom: 1px solid rgba(0,0,0,0.04); z-index:3000; }
+    .hamburger { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px; background: rgba(0,0,0,0.04); cursor:pointer; }
+    .hamburger i { color:var(--gh-text-strong); font-size:18px; }
+
+    .title-wrap { display:flex; flex-direction:column; align-items:flex-start; gap:4px; flex:1; }
+    .payoff { font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:2px; }
+
+    /* main container */
+    main.dashboard.add-expense { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: calc(88px + 12px); }
+
+    /* Panels for clear separation */
+    .panel {
+      background: var(--panel-bg);
+      border-radius: var(--panel-radius);
+      padding: var(--panel-padding);
+      box-shadow: 0 8px 26px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+      border: 1px solid rgba(0,0,0,0.03);
     }
 
-    /* Titoli: più leggeri, niente grassetto, senza icone */
-    .form-section h2 {
-      margin: 0 0 12px 0;
-      font-size: 1.18rem;
-      font-weight: 400; /* niente bold */
-      color: var(--gh-text-strong, #222428);
-      line-height: 1.1;
+    .form-section { margin-bottom: 0; } /* panels handle spacing */
+
+    /* Section header: icon circle + title */
+    .section-header {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .icon-circle {
+      width:44px;
+      height:44px;
+      border-radius:999px;
+      background: var(--gh-salvia);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(122,169,134,0.18);
+      flex: 0 0 44px;
+      font-size:18px;
+    }
+    .section-header .title-lines { display:flex; flex-direction:column; line-height:1; }
+    .section-header h2 {
+      margin:0;
+      font-size:1.05rem;
+      font-weight:700; /* richiesto: titoli in grassetto */
+      color: var(--gh-text-strong);
       letter-spacing: -0.2px;
     }
+    .section-header .subtitle {
+      margin:0;
+      font-size:0.92rem;
+      color: var(--gh-muted);
+      font-weight:600;
+    }
 
-    /* Title split per "Aggiungi Prodotti" - seconda riga più sottile */
-    .split-title { display:block; }
-    .split-title .second { display:block; color:var(--muted); font-size:0.98rem; margin-top:4px; }
-
-    /* Labels: moderni, sottili, meno invasivi */
+    /* Modern labels */
     .form-group label {
       display:block;
-      margin-bottom:6px;
-      font-size:0.95rem;
-      color:var(--muted);
-      font-weight:400;
+      margin-bottom:8px;
+      color: var(--label-color);
+      font-size:0.92rem;
+      font-weight:600;
     }
 
-    /* Campi input/select moderni */
-    input[type="text"],
-    input[type="number"],
-    input[type="date"],
-    select,
-    .store-select {
+    /* Modern inputs/selects */
+    input[type="text"], input[type="number"], input[type="date"], select, .suggestions-list {
+      display:block;
       width:100%;
-      padding: var(--field-padding);
-      border-radius:10px;
+      padding:10px 12px;
+      border-radius: var(--input-radius);
       border: 1px solid var(--field-border);
-      background: #fff;
-      font-size:1rem;
-      color: var(--gh-text-strong, #222428);
+      background: var(--field-bg);
+      color: var(--gh-text-strong);
+      font-size: 0.95rem;
       outline: none;
-      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.01);
-      transition: box-shadow .12s ease, border-color .12s ease, transform .06s ease;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
+      transition: box-shadow .12s ease, border-color .12s ease, background .12s ease;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus {
+      box-shadow: 0 6px 20px var(--field-focus);
+      border-color: rgba(122,169,134,0.32);
+      background: #fff;
     }
 
-    input:focus, select:focus {
-      border-color: rgba(122,169,134,0.9);
-      box-shadow: 0 8px 20px rgba(122,169,134,0.08);
-    }
+    /* Select arrow smoothing */
+    select { -webkit-appearance: none; appearance: none; background-image: linear-gradient(45deg, transparent 50%, #666 50%), linear-gradient(135deg, #666 50%, transparent 50%); background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 12px) calc(1em + 2px); background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; padding-right:36px; }
 
-    /* Select con freccia personalizzata */
-    .form-group.select-wrap { position:relative; }
-    .form-group.select-wrap::after {
-      content: '';
+    /* form rows */
+    .form-row { display:flex; gap:12px; align-items:flex-start; }
+    .form-row .form-group { flex:1; min-width: 120px; }
+
+    /* buttons */
+    .btn { padding:10px 12px; border-radius:10px; border:none; background: #111; color:#fff; cursor:pointer; font-weight:700; }
+    .btn.btn-secondary { background:transparent; border:1px solid rgba(0,0,0,0.08); color: var(--gh-text-strong); }
+    .btn.btn-danger { background: #c7683c; color:#fff; }
+
+    .btn:active { transform:translateY(1px); }
+
+    /* suggestions box */
+    .suggestions-list {
       position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%) rotate(45deg);
-      width: 8px;
-      height: 8px;
-      border-right: 2px solid var(--gh-text-strong, #222428);
-      border-bottom: 2px solid var(--gh-text-strong, #222428);
-      pointer-events: none;
-      opacity: 0.85;
+      left: 0;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 2200;
+      max-height: 220px;
+      overflow:auto;
+      box-shadow: 0 8px 26px rgba(0,0,0,0.12);
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.06);
     }
-
-    /* Adaptive layout rows */
-    .form-row { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
-    .form-row .form-group { flex:1; min-width:140px; }
-
-    /* Buttons: coherent with main style (use existing .btn classes if present) */
-    .btn { background:var(--primary); color:#fff; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow: 0 8px 20px rgba(122,169,134,0.12); }
-    .btn.btn-secondary { background: transparent; border:1px solid rgba(0,0,0,0.06); color:var(--gh-text-strong); box-shadow:none; }
-    .btn.btn-danger { background: var(--gh-terracotta, #c7683c); color:#fff; }
-
-    /* Small utility tweaks */
-    .product-form { display:block; }
-    #suggestions { z-index: 2600; }
     .suggestion-item { padding:8px 10px; cursor:pointer; color:var(--gh-text-strong); }
-    .suggestion-item:hover { background: rgba(122,169,134,0.06); }
+    .suggestion-item:hover { background: rgba(0,0,0,0.03); }
 
-    /* Cart table visual improvements */
-    #cartTable td, #cartTable th { padding: 8px 6px; vertical-align: middle; }
-    .cart-img { width:64px; height:64px; object-fit:cover; border-radius:8px; }
+    /* Cart item image tweaks (reuse classes) */
+    .cart-img { width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid rgba(0,0,0,0.04); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); }
 
-    /* mobile tweaks */
-    @media (max-width:520px){
-      .groceryhub { font-size:2.2rem; }
-      .form-section { padding:14px; }
-      input[type="text"], select { padding:10px 12px; }
-      .cart-img { width:48px; height:48px; }
+    /* table layout inside panel */
+    table#cartTable { width:100%; border-collapse:collapse; }
+    table#cartTable td, table#cartTable th { padding:10px 6px; vertical-align:middle; }
+
+    /* bottom nav spacing handled elsewhere — ensure main bottom padding */
+    @media (max-width:880px) {
+      .section-header h2 { font-size:1rem; }
+      .icon-circle { width:40px; height:40px; font-size:16px; }
     }
-
   </style>
 </head>
 <body>
@@ -182,13 +218,19 @@
   </nav>
 
   <!-- Main content -->
-  <main class="dashboard add-expense" role="main" aria-live="polite" style="max-width:900px;margin:0 auto;padding:16px;padding-top:calc(88px + 12px);">
+  <main class="dashboard add-expense" role="main" aria-live="polite">
     <form id="expenseForm" class="expense-form" novalidate>
-      <!-- SEZIONE 1: Informazioni Generali (in card) -->
-      <section class="form-section">
-        <h2>Informazioni generali</h2>
+      <!-- SEZIONE 1: Informazioni Generali (in panel) -->
+      <section class="form-section panel" aria-labelledby="info-header">
+        <div class="section-header" id="info-header">
+          <span class="icon-circle" aria-hidden="true"><i class="fa-solid fa-store"></i></span>
+          <div class="title-lines">
+            <h2>Informazioni Generali</h2>
+            <div class="subtitle">Dati della spesa</div>
+          </div>
+        </div>
 
-        <div class="form-group select-wrap">
+        <div class="form-group">
           <label for="storeSelect">Supermercato</label>
           <select id="storeSelect" class="store-select" required></select>
         </div>
@@ -198,19 +240,26 @@
           <input type="text" id="customStore" placeholder="Inserisci nome supermercato" />
         </div>
 
-        <div class="form-group" style="margin-top:8px;">
+        <div class="form-group">
           <label for="expenseDate">Data</label>
           <input type="date" id="expenseDate" required />
         </div>
       </section>
 
-      <!-- SEZIONE 2: Aggiungi Prodotti (in card) -->
-      <section class="form-section">
-        <h2 class="split-title">Aggiungi <span class="second">Prodotti</span></h2>
+      <!-- SEZIONE 2: Aggiungi Prodotti (in panel) -->
+      <section class="form-section panel" aria-labelledby="add-header">
+        <div class="section-header" id="add-header">
+          <span class="icon-circle" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>
+          <div class="title-lines">
+            <!-- richiesta: titoli su righe differenti -->
+            <h2 style="line-height:1;">Aggiungi</h2>
+            <div class="subtitle">Prodotti</div>
+          </div>
+        </div>
 
-        <div class="product-form">
-          <div class="form-row" style="margin-bottom:8px;">
-            <div class="form-group select-wrap" style="flex:1;min-width:160px;">
+        <div class="product-form" style="position:relative;">
+          <div class="form-row" style="flex-wrap:wrap;">
+            <div class="form-group" style="flex:1;min-width:160px;">
               <label for="productCategory">Tipologia</label>
               <select id="productCategory" required>
                 <option value="">Seleziona tipologia</option>
@@ -229,7 +278,7 @@
               </select>
             </div>
 
-            <div class="form-group suggestions" style="flex:2;min-width:180px;">
+            <div class="form-group suggestions" style="min-width:0;flex:2;position:relative;">
               <label for="productName">Nome prodotto</label>
               <input type="text" id="productName" placeholder="Es. Pomodori" autocomplete="off" required />
               <!-- container per suggerimenti -->
@@ -237,11 +286,11 @@
             </div>
           </div>
 
-          <div class="form-row" style="margin-top:6px;">
+          <div class="form-row" style="flex-wrap:wrap;margin-top:10px;">
             <div class="form-group" style="flex:1;min-width:140px;">
               <label for="productPrice">Prezzo (€)</label>
               <input type="number" id="productPrice" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required />
-              <div id="priceDiff" aria-live="polite" style="display:none;margin-top:6px;font-size:0.92rem;color:var(--muted);"></div>
+              <div id="priceDiff" aria-live="polite" style="display:none;margin-top:6px;font-size:0.92rem;"></div>
             </div>
 
             <div class="form-group" style="flex:1;min-width:140px;">
@@ -255,21 +304,27 @@
             <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)" />
           </div>
 
-          <div style="display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap;">
+          <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
             <button type="button" id="scanBarcodeBtn" class="btn btn-secondary">Scansiona codice a barre</button>
             <button type="button" id="addProductBtn" class="btn">Aggiungi Prodotto al Carrello</button>
           </div>
-
         </div>
       </section>
 
       <!-- SEZIONE 3: Carrello (visibile solo quando ci sono prodotti) -->
-      <section class="cart-section form-section" id="cartSection" style="display:none;margin-top:8px;">
-        <h2>Carrello</h2>
-        <div class="cart-table-container" style="overflow:auto;">
+      <section class="cart-section panel" id="cartSection" style="display:none;">
+        <div class="section-header" style="margin-bottom:12px;">
+          <span style="width:44px;"></span> <!-- spacer aligned with icons -->
+          <div class="title-lines">
+            <h2 style="margin:0;font-weight:700;">Carrello</h2>
+            <div class="subtitle">Riepilogo dei prodotti</div>
+          </div>
+        </div>
+
+        <div class="cart-table-container">
           <table id="cartTable" style="width:100%;border-collapse:collapse;">
             <thead>
-              <tr><th style="text-align:left;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.04);">Prodotto</th><th style="text-align:right;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.04);">Prezzo</th><th style="text-align:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.04);">Azioni</th></tr>
+              <tr><th style="text-align:left;padding:8px 0;">Prodotto</th><th style="text-align:right;padding:8px 0;">Prezzo</th><th style="text-align:center;padding:8px 0;">Azioni</th></tr>
             </thead>
             <tbody id="cartBody"></tbody>
           </table>
@@ -278,9 +333,9 @@
       </section>
 
       <!-- SEZIONE 4: Azioni finali -->
-      <section class="form-actions" style="margin-top:18px;display:flex;gap:10px;">
-        <button type="submit" id="saveExpenseBtn" class="btn" disabled>Salva Spesa</button>
-        <button type="button" id="clearCartBtn" class="btn btn-danger">Svuota Carrello</button>
+      <section class="form-actions" style="margin-top:12px;display:flex;gap:10px;">
+        <button type="submit" id="saveExpenseBtn" class="btn" disabled>💾 Salva Spesa Completa</button>
+        <button type="button" id="clearCartBtn" class="btn btn-danger">🗑️ Svuota Carrello</button>
       </section>
     </form>
   </main>
@@ -288,7 +343,7 @@
   <!-- Scanner modal -->
   <div id="scannerModal" class="modal" aria-hidden="true" style="display:none;">
     <div class="modal-content" style="max-width:720px;margin:20px auto;padding:16px;border-radius:12px;background:#fff;">
-      <h3>Scansione Codice a Barre</h3>
+      <h3>📷 Scansione Codice a Barre</h3>
       <p class="scanner-instructions">Inquadra il codice a barre con la fotocamera. L'app proverà a recuperare i dati da Open Food Facts.</p>
 
       <div id="scannerContainer" aria-live="polite" style="position:relative;width:100%;height:320px;max-height:60vh;background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
@@ -298,14 +353,14 @@
         </div>
       </div>
 
-      <a class="openfood-link" href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="display:block;margin-top:10px;color:var(--primary);font-weight:600;text-decoration:none;">Cerca manualmente su Open Food Facts</a>
+      <a class="openfood-link" href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="display:block;margin-top:10px;color:var(--gh-salvia);font-weight:600;text-decoration:none;">🔎 Cerca manualmente su Open Food Facts</a>
 
       <div class="scanner-actions" style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;align-items:center;">
         <div class="left">
           <div id="deviceLabel" class="device-label" aria-live="polite"></div>
         </div>
         <div class="right">
-          <button id="switchCameraBtn" class="btn btn-secondary small-btn">Cambia Camera</button>
+          <button id="switchCameraBtn" class="btn btn-secondary small-btn">🔁 Cambia Camera</button>
           <button id="scannerCancelBtn" class="btn btn-secondary">Annulla</button>
         </div>
       </div>
@@ -738,7 +793,7 @@
       const diff = ((p - r) / r) * 100;
       const abs = Math.abs(diff);
       if (diff === 0) {
-        el.innerHTML = `<span style="color:var(--muted)">Prezzo pari al riferimento: <strong>€${Number(r).toFixed(2)}</strong></span>`;
+        el.innerHTML = `<span style="color:var(--gh-muted)">Prezzo pari al riferimento: <strong>€${Number(r).toFixed(2)}</strong></span>`;
         el.style.display = 'block';
         return;
       }
