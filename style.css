@@ -464,3 +464,53 @@ main.dashboard, main.add-expense { max-width:900px; margin:0 auto; padding:16px;
 }
 
 /* Fine estensioni aggiungi.html */
+
+/* ===== Archivio specific styles (append here) ===== */
+
+/* layout form row used nei filtri */
+.form-row { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
+
+/* filters area (in-panel) */
+.filters { margin: 6px 0 2px 0; }
+.filter-actions { margin-left:auto; display:flex; align-items:center; gap:8px; }
+
+/* status area */
+.filter-status { margin-top:8px; color:var(--text-secondary); font-size:0.95rem; }
+
+/* archive card */
+.archive-card {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px;
+  border-radius:12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  margin-bottom:10px;
+}
+.archive-left { min-width:0; flex:1; display:flex; flex-direction:column; gap:6px; }
+.store-name { font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.archive-meta { color:var(--text-secondary); font-size:0.92rem; }
+.archive-products { margin-top:6px; color:var(--text-secondary); font-size:0.9rem; }
+
+/* right column */
+.archive-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex:0 0 auto; min-width:110px; text-align:right; }
+.archive-total { font-weight:800; font-size:1.05rem; color:var(--text-primary); }
+.archive-actions { display:flex; gap:8px; align-items:center; }
+
+/* no-expenses fallback */
+.no-expenses { text-align:center; color:var(--gh-muted); padding:18px 6px; }
+
+/* small screens adjustments */
+@media (max-width:760px) {
+  .archive-card { flex-direction: column; align-items:stretch; text-align:left; }
+  .archive-right { align-items:flex-start; text-align:left; margin-top:8px; }
+  .form-row { align-items:stretch; }
+}
+
+/* accessibility: focus styles for buttons and links in archive */
+.archive-card a:focus, .archive-card button:focus { outline: 3px solid rgba(122,169,134,0.18); outline-offset: 2px; }
+
+/* end Archivio styles */
