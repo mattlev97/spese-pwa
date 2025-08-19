@@ -1,4 +1,4 @@
-/* style.css - GroceryHub dashboard (versione "bellissima" esterna) */
+/* style.css - GroceryHub unified "bellissima" */
 
 /* Palette e override per la dashboard (forzato light mode) */
 :root{
@@ -9,6 +9,14 @@
   --gh-terracotta-light: rgba(199,104,60,0.12);
   --gh-text-strong: #222428;
   --gh-muted: #5b5f63;
+
+  /* utility */
+  --panel: #ffffff;
+  --input: #ffffff;
+  --text-primary: var(--gh-text-strong);
+  --text-secondary: var(--gh-muted);
+  --border: rgba(0,0,0,0.06);
+  --bottom-nav-height: 72px;
 }
 
 /* Forza luce e palette indipendente */
@@ -32,36 +40,39 @@ header {
   align-items: center;
   gap: 12px;
   background: rgba(255,255,255,0.98);
-  border-bottom: 1px solid rgba(0,0,0,0.04);
+  border-bottom: 1px solid var(--border);
   z-index: 3000;
 }
 
-.hamburger {
-  width: 44px;
-  height: 44px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
+/* small buttons */
+.btn {
+  padding:10px 14px;
   border-radius:10px;
-  background: rgba(0,0,0,0.04);
+  border:none;
+  background: var(--gh-salvia);
+  color:#fff;
   cursor:pointer;
+  font-weight:700;
 }
+.btn-secondary { padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--gh-text-strong); }
+.btn-danger { background: var(--gh-terracotta); color:#fff; border:none; }
+
+/* hamburger */
+.hamburger { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px; background: rgba(0,0,0,0.04); cursor:pointer; }
 .hamburger i { color: var(--gh-text-strong); font-size:18px; }
 
+/* Title area (index) */
 .title-wrap { display:flex; flex-direction:column; align-items:flex-start; gap:4px; flex:1; }
 .title-row { display:flex; align-items:baseline; gap:6px; }
-/* GroceryHub attaccato e piu' grande */
 .groceryhub { font-weight:700; color:var(--gh-text-strong); font-size:3.0rem; margin:0; line-height:1; letter-spacing:-0.6px; }
-/* rendi "Hub" salvia e in grassetto */
 .groceryhub .hub { font-weight:900; color:var(--gh-salvia); margin-left:4px; display:inline-block; }
-
 .payoff { font-style:italic; color:var(--gh-muted); font-size:0.95rem; margin-top:2px; }
 
 /* Main spacing: lascia spazio per header */
-main.dashboard { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: calc(88px + 12px); }
+main.dashboard, main.add-expense { max-width:900px; margin:0 auto; padding:16px; padding-top: calc(88px + 12px); }
 
 /* Calendar slider */
-.calendar-wrap { margin-top: 4px; margin-bottom: 14px; display:flex; flex-direction:column; gap:8px; }
+.calendar-wrap { margin-top:4px; margin-bottom:14px; display:flex; flex-direction:column; gap:8px; }
 .calendar-row {
   display:flex;
   gap:10px;
@@ -79,35 +90,27 @@ main.dashboard { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: c
 .day-pill{
   scroll-snap-align:center;
   flex: 0 0 auto;
-  min-width:86px;
-  max-width:140px;
+  min-width:86px; max-width:140px;
   padding:12px 10px;
   border-radius:28px;
   background:#fff;
   border:1px solid rgba(0,0,0,0.04);
   box-shadow:0 6px 18px rgba(0,0,0,0.06);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:6px;
-  cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;
   transition:transform .12s ease, background .12s ease, box-shadow .12s ease;
   color: var(--gh-text-strong);
   text-align:center;
 }
-
 .day-num { font-size:1.9rem; font-weight:800; line-height:1; }
 .day-name { font-size:1.02rem; font-weight:700; text-transform:capitalize; }
 .month { font-size:0.78rem; color:var(--gh-muted); }
 
-/* adjacent sizes */
 .day-pill.adjacent { padding:10px 8px; min-width:78px; }
 .day-pill.adjacent .day-num { font-size:1.45rem; }
 .day-pill.adjacent .day-name { font-size:0.92rem; }
 .day-pill.adjacent-2 { padding:8px 6px; min-width:64px; opacity:0.95; }
 .day-pill.adjacent-2 .day-num { font-size:1.15rem; }
 
-/* selected: salvia and white text */
 .day-pill.selected {
   background: var(--gh-salvia);
   color: #fff;
@@ -117,10 +120,10 @@ main.dashboard { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: c
 }
 .day-pill.selected .has-expense-dot { background: rgba(255,255,255,0.95) !important; }
 
-.has-expense-dot { width:8px;height:8px;border-radius:50%; background:var(--gh-salvia); margin-top:4px; }
+.has-expense-dot { width:8px; height:8px; border-radius:50%; background:var(--gh-salvia); margin-top:4px; }
 .has-expense-dot.hidden { opacity:0; }
 
-/* daySummary should always be visible (shows message if empty or content if not) */
+/* daySummary */
 .day-summary { display:block; margin-top:8px; padding:12px; background:var(--gh-terracotta-light); color:var(--gh-text-strong); border-radius:10px; }
 .day-summary .empty { color:var(--gh-muted); }
 
@@ -155,7 +158,7 @@ main.dashboard { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: c
 /* Recent */
 .recent-list { margin-top:8px; }
 
-/* bottom nav: white rounded pill, icon-only */
+/* bottom nav */
 .bottom-nav {
   position:fixed;
   left:50%;
@@ -175,18 +178,12 @@ main.dashboard { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: c
 }
 .bottom-nav .nav-item { flex:1; display:flex; justify-content:center; align-items:center; text-decoration:none; }
 .bottom-nav .nav-item .label { display:none; }
-
 .bottom-nav .icon-wrap { width:52px; height:52px; border-radius:999px; display:flex; align-items:center; justify-content:center; transition:all .12s ease; background:transparent; }
 .bottom-nav .icon-wrap i { font-size:20px; color:#1f2223; }
-
 .bottom-nav .nav-item.nav-active .icon-wrap { background: var(--gh-salvia); box-shadow: 0 8px 18px rgba(122,169,134,0.18); }
 .bottom-nav .nav-item.nav-active .icon-wrap i { color:#fff; }
 
-@media (max-width:880px) {
-  .groceryhub { font-size:2.2rem; }
-}
-
-/* ------------ enriched side menu internal styling ------------- */
+/* side menu */
 #sideMenu { font-family: inherit; }
 #sideMenu .menu-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
 #sideMenu .menu-logo { width:44px; height:44px; border-radius:10px; background:var(--gh-salvia); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; }
@@ -196,8 +193,75 @@ main.dashboard { max-width: 900px; margin: 0 auto; padding: 16px; padding-top: c
 #storesList { margin-top:6px; padding-left:12px; color:var(--gh-muted); }
 
 /* small utility */
-.no-expenses { text-align:center; color:var(--gh-muted); padding: 18px 6px; }
+.no-expenses { text-align:center; color:var(--gh-muted); padding:18px 6px; }
+.hidden { display:none !important; }
 
-/* scrollbar neutral */
-::-webkit-scrollbar{ width:8px; height:8px; }
-::-webkit-scrollbar-thumb{ background: rgba(0,0,0,0.06); border-radius:8px; }
+/* === aggiungi.html specific (scanner, suggestions, toast, cart) === */
+
+/* Scanner area */
+.scanner-instructions { color: var(--text-secondary); margin-bottom:8px; font-size:0.95rem; }
+#scannerContainer { position: relative; width: 100%; height: 320px; max-height: 60vh; background: #000; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+#scannerVideo { width: 100%; height: 100%; object-fit: cover; background: #000; display: block; }
+#scannerOverlay {
+  position: absolute; left: 50%; top: 50%; width: 78%; height: 120px; transform: translate(-50%, -50%);
+  border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(0,122,255,0.85);
+  pointer-events: none; z-index: 40;
+}
+#scannerOverlay .scan-line { position: absolute; left: 0; top: 0; width: 100%; height: 2px; background: linear-gradient(90deg, rgba(0,122,255,0) 0%, rgba(0,122,255,0.9) 50%, rgba(0,122,255,0) 100%); animation: scanMove 1.6s linear infinite; border-radius: 1px; }
+@keyframes scanMove { 0%{transform:translateY(-4px);opacity:0;}10%{opacity:1;}50%{transform:translateY(calc(100% - 2px));opacity:1;}90%{opacity:1;}100%{transform:translateY(-4px);opacity:0;} }
+
+.scanner-actions { display:flex; gap:8px; margin-top:10px; justify-content: space-between; align-items:center; }
+.scanner-actions .left { display:flex; gap:8px; align-items:center; }
+.scanner-actions .right { display:flex; gap:8px; align-items:center; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 28px; background: rgba(0,0,0,0.7); color: #fff; padding: 8px 12px; border-radius: 10px; z-index: 2100; font-size: 0.95rem; display:none; }
+
+.device-label { font-size: 0.85rem; color: var(--text-secondary); }
+.small-btn { padding:8px 10px; border-radius:8px; font-size:0.9rem; }
+
+.openfood-link { display:block; margin-top:10px; color: var(--gh-salvia); text-decoration: none; font-weight:600; }
+.openfood-link:hover { text-decoration: underline; }
+
+/* Cart image & table */
+.cart-item { display:flex; align-items:center; gap:12px; }
+.cart-img {
+  width:64px; height:64px; object-fit: cover; border-radius:8px; border:1px solid rgba(255,255,255,0.04); flex:0 0 64px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+}
+.cart-item-details { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.cart-item-details .name { font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cart-item-details .meta { color:var(--text-secondary); font-size:0.88rem; }
+
+/* compact table cells */
+#cartTable td { vertical-align: middle; }
+
+/* Suggestions UI */
+.suggestions { position: relative; }
+.suggestions-list {
+  position: absolute; left: 0; right: 0; top: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  z-index: 2200;
+  max-height: 200px;
+  overflow: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  display:none;
+}
+.suggestion-item { padding: 8px 10px; cursor: pointer; color: var(--text-primary); font-size: 0.95rem; }
+.suggestion-item:hover { background: rgba(255,255,255,0.02); }
+
+/* price diff badge */
+#priceDiff { margin-top:6px; font-size:0.9rem; color: var(--text-secondary); display:none; }
+#priceDiff .up { color: #ffb4b0; font-weight:700; }
+#priceDiff .down { color: #c8f7d4; font-weight:700; }
+
+/* Modal wrapper + content (scanner) */
+.modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.45); z-index:3000; }
+.modal-content {
+  background:#fff; color:var(--gh-text-strong); margin:8% auto; padding:18px; width:94%; max-width:640px; border-radius:12px; border:1px solid var(--border); box-shadow:0 30px 60px rgba(0,0,0,0.12);
+}
+
+/* responsive tweaks */
+@media (max-width:880px) { .groceryhub { font-size:2.2rem; } }
+@media (max-width:520px) { .cart-img { width:48px; height:48px; flex:0 0 48px; } }
