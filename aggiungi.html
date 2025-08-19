@@ -10,26 +10,64 @@
   <link rel="apple-touch-icon" href="icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="theme-color" content="#1e1e1e" />
+  <meta name="theme-color" content="#ffffff" />
 
   <!-- Font Awesome (icone) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
 
-  <!-- Stili: unificati in style.css -->
-  <link rel="stylesheet" href="style.css?v=20250816">
+  <!-- Stili: unificati in style.css (versione "bellissima") -->
+  <link rel="stylesheet" href="style.css?v=20250816" />
 </head>
 <body>
+  <!-- Header (identico a index) -->
   <header>
-    <h1>🛍️ Aggiungi Spesa</h1>
-    <nav class="top-nav" role="navigation" aria-label="Menu principale">
-      <a href="index.html">Dashboard</a>
-      <a href="aggiungi.html" class="nav-active">Aggiungi</a>
-      <a href="archivio.html">Archivio</a>
-      <a href="impostazioni.html">Impostazioni</a>
-    </nav>
+    <div class="hamburger" id="menuToggle" aria-label="Apri menu" title="Apri menu">
+      <i class="fa-solid fa-bars"></i>
+    </div>
+
+    <div class="title-wrap" role="banner">
+      <div class="title-row" aria-hidden="true">
+        <h1 class="groceryhub">Grocery<span class="hub">Hub</span></h1>
+      </div>
+      <div class="payoff">Controlla, risparmia, vivi meglio</div>
+    </div>
   </header>
 
-  <main class="add-expense">
+  <!-- Off-canvas side menu (identico) -->
+  <nav id="sideMenu" style="display:none; position:fixed; left:0; top:0; bottom:0; width:78%; max-width:340px; background:#fff; z-index:3500; box-shadow: 6px 0 30px rgba(0,0,0,0.12); padding:18px;">
+    <div class="menu-header">
+      <div class="menu-logo">GH</div>
+      <div>
+        <div style="font-weight:800;">GroceryHub</div>
+        <div style="font-size:0.9rem;color:var(--gh-muted)">La tua gestione spese</div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Navigazione</div>
+      <a href="index.html"><i class="fa-solid fa-house" style="width:18px;margin-right:8px;"></i> Dashboard</a>
+      <a href="aggiungi.html"><i class="fa-solid fa-plus" style="width:18px;margin-right:8px;"></i> Aggiungi spesa</a>
+      <a href="archivio.html"><i class="fa-solid fa-archive" style="width:18px;margin-right:8px;"></i> Archivio</a>
+      <a href="impostazioni.html"><i class="fa-solid fa-gear" style="width:18px;margin-right:8px;"></i> Impostazioni</a>
+    </div>
+
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Supermercati</div>
+      <div id="storesList">Caricamento…</div>
+      <div style="margin-top:8px;">
+        <button id="addStoreBtn" style="padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer;">Aggiungi supermercato</button>
+      </div>
+    </div>
+
+    <div class="menu-section" style="margin-top:auto;">
+      <div style="font-size:0.9rem;color:var(--gh-muted)">Versione app</div>
+      <div style="font-weight:700">1.0.0</div>
+      <div style="margin-top:8px;"><button id="menuClose" style="padding:8px 10px;border-radius:8px;border:none;background:var(--gh-terracotta);color:#fff;cursor:pointer;">Chiudi menu</button></div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="dashboard add-expense" role="main" aria-live="polite" style="max-width:900px;margin:0 auto;padding:16px;padding-top:calc(88px + 12px);">
     <form id="expenseForm" class="expense-form" novalidate>
       <!-- SEZIONE 1: Informazioni Generali -->
       <section class="form-section">
@@ -56,8 +94,8 @@
         <h2>🛒 Aggiungi Prodotti</h2>
 
         <div class="product-form">
-          <div class="form-row">
-            <div class="form-group">
+          <div class="form-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+            <div class="form-group" style="flex:1;min-width:160px;">
               <label for="productCategory">Tipologia:</label>
               <select id="productCategory" required>
                 <option value="">Seleziona tipologia</option>
@@ -76,7 +114,7 @@
               </select>
             </div>
 
-            <div class="form-group suggestions" style="min-width:0;">
+            <div class="form-group suggestions" style="min-width:0;flex:2;">
               <label for="productName">Nome prodotto:</label>
               <input type="text" id="productName" placeholder="Es. Pomodori" autocomplete="off" required />
               <!-- container per suggerimenti -->
@@ -84,25 +122,25 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
+          <div class="form-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">
+            <div class="form-group" style="flex:1;min-width:140px;">
               <label for="productPrice">Prezzo (€):</label>
               <input type="number" id="productPrice" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required />
               <div id="priceDiff" aria-live="polite" style="display:none;"></div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" style="flex:1;min-width:140px;">
               <label for="productPriceKg">Prezzo/kg (€):</label>
               <input type="number" id="productPriceKg" step="0.01" min="0" inputmode="decimal" placeholder="0.00" />
             </div>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="margin-top:10px;">
             <label for="productNotes">Note:</label>
             <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)" />
           </div>
 
-          <div style="display:flex; gap:8px; align-items:center;">
+          <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
             <button type="button" id="scanBarcodeBtn" class="btn btn-secondary">📷 Scansiona codice a barre</button>
             <button type="button" id="addProductBtn" class="btn">➕ Aggiungi Prodotto al Carrello</button>
           </div>
@@ -111,21 +149,21 @@
       </section>
 
       <!-- SEZIONE 3: Carrello (visibile solo quando ci sono prodotti) -->
-      <section class="cart-section" id="cartSection" style="display:none;">
+      <section class="cart-section" id="cartSection" style="display:none;margin-top:18px;">
         <h2>🛒 Carrello</h2>
         <div class="cart-table-container">
-          <table id="cartTable">
+          <table id="cartTable" style="width:100%;border-collapse:collapse;">
             <thead>
-              <tr><th>Prodotto</th><th>Prezzo</th><th>Azioni</th></tr>
+              <tr><th style="text-align:left;padding:8px 0;">Prodotto</th><th style="text-align:right;padding:8px 0;">Prezzo</th><th style="text-align:center;padding:8px 0;">Azioni</th></tr>
             </thead>
             <tbody id="cartBody"></tbody>
           </table>
         </div>
-        <div class="cart-total"><strong>Totale: <span id="cartTotal">€0.00</span></strong></div>
+        <div class="cart-total" style="margin-top:12px;"><strong>Totale: <span id="cartTotal">€0.00</span></strong></div>
       </section>
 
       <!-- SEZIONE 4: Azioni finali -->
-      <section class="form-actions">
+      <section class="form-actions" style="margin-top:18px;display:flex;gap:10px;">
         <button type="submit" id="saveExpenseBtn" class="btn" disabled>💾 Salva Spesa Completa</button>
         <button type="button" id="clearCartBtn" class="btn btn-danger">🗑️ Svuota Carrello</button>
       </section>
@@ -133,21 +171,21 @@
   </main>
 
   <!-- Scanner modal -->
-  <div id="scannerModal" class="modal" aria-hidden="true">
-    <div class="modal-content">
+  <div id="scannerModal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-content" style="max-width:720px;margin:20px auto;padding:16px;border-radius:12px;background:#fff;">
       <h3>📷 Scansione Codice a Barre</h3>
       <p class="scanner-instructions">Inquadra il codice a barre con la fotocamera. L'app proverà a recuperare i dati da Open Food Facts.</p>
 
-      <div id="scannerContainer" aria-live="polite">
-        <video id="scannerVideo" autoplay playsinline muted></video>
-        <div id="scannerOverlay" aria-hidden="true">
-          <div class="scan-line" aria-hidden="true"></div>
+      <div id="scannerContainer" aria-live="polite" style="position:relative;width:100%;height:320px;max-height:60vh;background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <video id="scannerVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+        <div id="scannerOverlay" aria-hidden="true" style="position:absolute;left:50%;top:50%;width:78%;height:120px;transform:translate(-50%, -50%);border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(0,122,255,0.85);pointer-events:none;z-index:40;">
+          <div class="scan-line" aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:2px;background:linear-gradient(90deg, rgba(0,122,255,0) 0%, rgba(0,122,255,0.9) 50%, rgba(0,122,255,0) 100%);border-radius:1px;animation:scanMove 1.6s linear infinite;"></div>
         </div>
       </div>
 
-      <a class="openfood-link" href="https://world.openfoodfacts.org" target="_blank" rel="noopener">🔎 Cerca manualmente su Open Food Facts</a>
+      <a class="openfood-link" href="https://world.openfoodfacts.org" target="_blank" rel="noopener" style="display:block;margin-top:10px;color:var(--gh-salvia);font-weight:600;text-decoration:none;">🔎 Cerca manualmente su Open Food Facts</a>
 
-      <div class="scanner-actions">
+      <div class="scanner-actions" style="display:flex;gap:8px;margin-top:10px;justify-content:space-between;align-items:center;">
         <div class="left">
           <div id="deviceLabel" class="device-label" aria-live="polite"></div>
         </div>
@@ -159,7 +197,7 @@
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:rgba(0,0,0,0.7);color:#fff;padding:8px 12px;border-radius:10px;z-index:2100;font-size:0.95rem;display:none;"></div>
 
   <!-- app.js (la tua logica condivisa) -->
   <script src="app.js"></script>
@@ -187,22 +225,64 @@
     </a>
   </nav>
 
+  <!-- sincronia bottom-nav active -->
   <script>
-    // Sincronizza lo stato "active" nella bottom-nav con la pagina corrente
     (function () {
       const path = location.pathname.split('/').pop() || 'index.html';
       document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
         const href = a.getAttribute('href') || '';
-        if (href.endsWith(path)) {
-          a.classList.add('nav-active');
-        } else {
-          a.classList.remove('nav-active');
-        }
+        a.classList.toggle('nav-active', href.endsWith(path));
       });
     })();
   </script>
 
-  <!-- Tutto il JS di aggiungi (scanner, cart, autocomplete) è mantenuto identico -->
+  <!-- Script: menu handling + populate side menu stores -->
+  <script>
+    function populateSideMenuStores() {
+      const container = document.getElementById('storesList');
+      if (!container || !window.app) return;
+      const stores = app.getStores ? app.getStores() : [];
+      if (!stores || stores.length === 0) {
+        container.innerHTML = '<div style="color:var(--gh-muted)">Nessun supermercato</div>';
+        return;
+      }
+      container.innerHTML = '';
+      stores.forEach(s => {
+        const el = document.createElement('div');
+        el.style.padding = '6px 0';
+        el.textContent = s;
+        container.appendChild(el);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.getElementById('menuToggle');
+      const sideMenu = document.getElementById('sideMenu');
+      const menuClose = document.getElementById('menuClose');
+
+      menuToggle?.addEventListener('click', () => { sideMenu.style.display = 'block'; });
+      menuClose?.addEventListener('click', () => { sideMenu.style.display = 'none'; });
+
+      document.getElementById('addStoreBtn')?.addEventListener('click', () => {
+        const name = prompt('Nome supermercato da aggiungere:');
+        if (!name) return;
+        const ok = app.addStore ? app.addStore(name) : false;
+        if (ok) {
+          populateSideMenuStores();
+          alert('Supermercato aggiunto');
+        } else {
+          alert('Non è stato possibile aggiungere (potrebbe già esistere).');
+        }
+      });
+
+      populateSideMenuStores();
+
+      // Also refresh sideMenu store list if app changes stores elsewhere
+      document.addEventListener('app:stores-changed', () => populateSideMenuStores());
+    });
+  </script>
+
+  <!-- Tutto il JS di aggiungi (scanner, cart, autocomplete) - mantenuto identico e collocato qui -->
   <script>
     /* ---------- helper toast ---------- */
     function showToast(msg, duration = 1800) {
@@ -543,7 +623,7 @@
       const diff = ((p - r) / r) * 100;
       const abs = Math.abs(diff);
       if (diff === 0) {
-        el.innerHTML = `<span style="color:var(--text-secondary)">Prezzo pari al riferimento: <strong>€${Number(r).toFixed(2)}</strong></span>`;
+        el.innerHTML = `<span style="color:var(--gh-muted)">Prezzo pari al riferimento: <strong>€${Number(r).toFixed(2)}</strong></span>`;
         el.style.display = 'block';
         return;
       }
@@ -587,11 +667,11 @@
         // image html (only if p.image present)
         const imgHtml = p.image ? `<img class="cart-img" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" />` : '';
         const detailsHtml = `
-          <div class="cart-item">
+          <div class="cart-item" style="display:flex;align-items:center;gap:12px;">
             ${imgHtml}
-            <div class="cart-item-details">
-              <div class="name">${escapeHtml(p.name)}</div>
-              <div class="meta">${escapeHtml(p.category || '')}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
+            <div class="cart-item-details" style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+              <div class="name" style="font-weight:700;color:var(--gh-text-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
+              <div class="meta" style="color:var(--gh-muted);font-size:0.88rem;">${escapeHtml(p.category || '')}${p.notes ? ' • ' + escapeHtml(p.notes) : ''}</div>
             </div>
           </div>
         `;
@@ -602,7 +682,7 @@
           const d = comp.difference;
           const abs = Math.abs(d);
           if (d === 0) {
-            diffHtml = `<div style="font-size:0.86rem;color:var(--text-secondary)">rif. ${ (app && app.formatCurrency) ? app.formatCurrency(comp.reference) : '€' + comp.reference.toFixed(2)}</div>`;
+            diffHtml = `<div style="font-size:0.86rem;color:var(--gh-muted)">rif. ${ (app && app.formatCurrency) ? app.formatCurrency(comp.reference) : '€' + comp.reference.toFixed(2)}</div>`;
           } else if (d > 0) {
             diffHtml = `<div style="font-size:0.86rem;color:#ffb4b0">+${abs.toFixed(1)}% vs min (rif. ${(app && app.formatCurrency) ? app.formatCurrency(comp.reference) : '€'+comp.reference.toFixed(2)})</div>`;
           } else {
@@ -614,9 +694,9 @@
 
         return `
           <tr>
-            <td style="min-width:0; width:60%;">${detailsHtml}</td>
-            <td style="white-space:nowrap;">${priceHtml}</td>
-            <td style="white-space:nowrap;">
+            <td style="min-width:0; width:60%;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);">${detailsHtml}</td>
+            <td style="white-space:nowrap;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);">${priceHtml}</td>
+            <td style="white-space:nowrap;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);text-align:center;">
               <button type="button" class="remove-btn" onclick="removeFromCart('${p.id}')">🗑️</button>
             </td>
           </tr>
@@ -842,7 +922,6 @@
 
       // ascolta cambi carte dall'API in caso qualcuno modifichi
       document.addEventListener('app:cart-changed', (e) => {
-        // app.currentCart è la fonte di verità
         updateCartDisplay();
       });
 
@@ -861,7 +940,11 @@
     window.addEventListener('pagehide', () => {
       try { stopScanner(); } catch (e) {}
     });
-
   </script>
+
+  <style>
+    /* quick local scan animation keyframes (used by overlay) */
+    @keyframes scanMove { 0%{transform:translateY(-4px);opacity:0;}10%{opacity:1;}50%{transform:translateY(calc(100% - 2px));opacity:1;}90%{opacity:1;}100%{transform:translateY(-4px);opacity:0;} }
+  </style>
 </body>
 </html>
