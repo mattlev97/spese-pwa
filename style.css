@@ -915,3 +915,60 @@ body.no-scroll {
 .store-choice-card { padding-bottom:12px; }
 
 /* end new rules */
+/* Patch: coerenza classi usate in aggiungi.html (updateCartDisplay) */
+.cart-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.04);
+  flex: 0 0 48px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+}
+
+.cart-product-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-product-meta {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  margin-top: 3px;
+}
+
+/* bottone rimuovi nella tabella carrello */
+.cart-remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--gh-terracotta);
+  cursor: pointer;
+  padding: 6px;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cart-remove-btn:hover {
+  background: rgba(199,104,60,0.06);
+  border-radius: 8px;
+}
+
+/* placeholder immagine quando non c'è immagine reale */
+.cart-thumb.placeholder {
+  display: inline-block;
+  background: rgba(0,0,0,0.04);
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+}
+
+/* garantisce che le celle della tabella non si spezzino e restino leggibili */
+#cartTable td, #cartTable th {
+  padding: 10px 8px;
+  vertical-align: middle;
+  word-break: break-word;
+}
