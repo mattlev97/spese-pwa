@@ -811,3 +811,107 @@ body.no-scroll {
 /* Small tweak to ensure overlay sits under sideMenu but above page */
 #sideMenu { z-index: 3500; }
 .menu-overlay { z-index: 3400; }
+
+/* ===== Nuovi stili per Aggiungi: store choice, drawer, floating buttons ===== */
+
+/* Grid per le store-card */
+.store-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* card singola supermercato */
+.store-card {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:10px;
+  border-radius:12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  cursor:pointer;
+  text-align:left;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  width:100%;
+}
+.store-card:hover { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(0,0,0,0.06); }
+.store-card:focus { outline: 3px solid rgba(122,169,134,0.12); outline-offset: 2px; }
+
+/* left area logo */
+.store-card-left { flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
+.store-logo { width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(0,0,0,0.04); }
+
+/* body */
+.store-card-body { flex:1; min-width:0; }
+.store-card-title { font-weight:800; color:var(--gh-text-strong); font-size:1rem; }
+.store-card-desc { color:var(--gh-muted); font-size:0.92rem; margin-top:6px; }
+
+/* stato selezionato (verde salvia con testo bianco) */
+.store-card.selected {
+  background: var(--gh-salvia);
+  color: #fff;
+  border-color: rgba(0,0,0,0.03);
+  box-shadow: 0 18px 44px rgba(122,169,134,0.12);
+}
+.store-card.selected .store-card-title,
+.store-card.selected .store-card-desc { color: #fff !important; }
+.store-card.selected .store-logo { filter: brightness(0.98) contrast(0.95); }
+
+/* drawer (bottom sheet) */
+.add-product-drawer {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 720px;
+  border-radius: 12px 12px 0 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 -18px 60px rgba(0,0,0,0.12);
+  z-index: 3600;
+  transition: transform .22s ease, opacity .18s ease;
+  padding: 14px;
+}
+.add-product-drawer.hidden { display: none; transform: translate(-50%, 8px); opacity:0; }
+.add-product-drawer .drawer-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px; }
+.add-product-drawer .drawer-body { max-height:60vh; overflow:auto; padding-bottom:8px; }
+
+/* overlay already defined as .menu-overlay; ensure drawer overlay sits under drawer */
+#drawerOverlay { z-index: 3590; }
+
+/* floating buttons */
+.floating-btn {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + 32px);
+  width:56px;
+  height:56px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:none;
+  cursor:pointer;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  z-index: 3700;
+  background: var(--gh-salvia);
+  color:#fff;
+  font-size:20px;
+}
+.floating-left { left:18px; }
+.floating-right { right:18px; }
+
+/* adjust for small screens */
+@media (max-width:520px) {
+  .store-logo { width:48px; height:48px; }
+  .floating-btn { width:50px; height:50px; font-size:18px; }
+  .store-list-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+}
+
+/* ensure storeChoiceCard has consistent panel styling */
+.store-choice-card { padding-bottom:12px; }
+
+/* end new rules */
