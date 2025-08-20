@@ -85,9 +85,34 @@
     .floating-right { right:18px; bottom:110px; }
     .floating-btn.hidden { display:none !important; }
 
-    /* Drawer tweaks */
+    /* Conferma: stato disabled (grigio) */
+    #confirmStoreBtn:disabled,
+    #confirmStoreBtn[aria-disabled="true"] {
+      background: #f3f4f5 !important;
+      color: #8a8f94 !important;
+      border: 1px solid rgba(0,0,0,0.04) !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+      opacity: 1 !important;
+    }
+
+    /* Drawer bottom-sheet centrato e responsive */
     .add-product-drawer {
-      position:fixed; left:0; right:0; bottom:0; background:var(--panel); border-top-left-radius:12px; border-top-right-radius:12px; box-shadow:0 -12px 40px rgba(0,0,0,0.12); padding:12px; max-height:68vh; overflow:auto; z-index:3600;
+      position:fixed !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      bottom: 16px !important;
+      width: calc(100% - 32px) !important;
+      max-width: 720px !important;
+      border-top-left-radius: 12px !important;
+      border-top-right-radius: 12px !important;
+      box-shadow: 0 -12px 40px rgba(0,0,0,0.12) !important;
+      padding: 12px !important;
+      max-height: 78vh !important;
+      overflow: auto !important;
+      z-index: 3600 !important;
+      pointer-events: auto !important;
+      background: var(--panel);
     }
     .add-product-drawer .drawer-header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 6px 12px 6px; }
     .add-product-drawer .drawer-body { padding:4px 6px 12px 6px; }
@@ -148,7 +173,7 @@
 
       <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px;">
         <!-- "Scegli manualmente" rimosso su richiesta -->
-        <button id="confirmStoreBtn" class="btn" disabled>✔️ Conferma</button>
+        <button id="confirmStoreBtn" class="btn" disabled aria-disabled="true">✔️ Conferma</button>
       </div>
     </section>
 
@@ -259,7 +284,7 @@
     </div>
   </div>
 
-  <!-- Scanner modal (existing) -->
+  <!-- Scanner modal -->
   <div id="scannerModal" class="modal hidden" aria-hidden="true">
     <div class="modal-content">
       <h3>📷 Scansione Codice a Barre</h3>
@@ -292,6 +317,175 @@
   <script src="app.js"></script>
   <!-- ZXing (scanner lib) -->
   <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+
+  <!-- Minimal ZXing wrapper: openScannerModal / closeScannerModal / switchCamera -->
+  <script>
+  (function(){
+    let codeReader = null;
+    let availableVideoDevices = [];
+    let currentDeviceIndex = -1;
+    let isScannerOpen = false;
+    let barcodeHandled = false;
+
+    function updateDeviceLabel(text) {
+      const lab = document.getElementById('deviceLabel');
+      if (lab) lab.textContent = text || '';
+    }
+
+    async function stopScanner() {
+      if (codeReader && typeof codeReader.reset === 'function') {
+        try { await codeReader.reset(); } catch(e){ /* ignore */ }
+      }
+      const v = document.getElementById('scannerVideo');
+      if (v && v.srcObject) {
+        try {
+          v.srcObject.getTracks().forEach(t => { try{ t.stop(); }catch(e){} });
+        } catch(e){}
+        v.srcObject = null;
+      }
+      try { if (v) v.pause(); } catch(e){}
+      codeReader = null;
+      isScannerOpen = false;
+      barcodeHandled = false;
+      updateDeviceLabel('');
+    }
+
+    async function prepareDevicesAndChoosePreferred() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
+          .then(s => { s.getTracks().forEach(t => t.stop()); })
+          .catch(()=>{});
+      } catch(e){}
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      availableVideoDevices = devices.filter(d => d.kind === 'videoinput').map(d => ({ deviceId: d.deviceId, label: d.label || 'Camera' }));
+      let idx = availableVideoDevices.findIndex(d => /back|rear|environment|posteriore/gi.test(d.label));
+      if (idx === -1) idx = (availableVideoDevices.length > 0 ? 0 : -1);
+      currentDeviceIndex = idx;
+      return currentDeviceIndex;
+    }
+
+    async function openScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      if (modal) { modal.classList.remove('hidden'); modal.removeAttribute('aria-hidden'); }
+      isScannerOpen = true;
+      barcodeHandled = false;
+
+      try {
+        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+      } catch (e) {
+        console.error('ZXing init error', e);
+        alert('Scanner non disponibile in questo dispositivo.');
+        closeScannerModal();
+        return;
+      }
+
+      try {
+        const chosenIndex = await prepareDevicesAndChoosePreferred();
+        if (chosenIndex === -1) { alert('Nessuna videocamera disponibile.'); closeScannerModal(); return; }
+        const chosen = availableVideoDevices[chosenIndex];
+        updateDeviceLabel('Camera: ' + (chosen.label || 'Sconosciuta'));
+
+        const videoElem = document.getElementById('scannerVideo');
+        await codeReader.decodeFromVideoDevice(chosen.deviceId, videoElem, (result, err) => {
+          if (result && result.getText) {
+            const code = (result.getText ? result.getText() : (result.text || '')).trim();
+            handleBarcodeFound(code);
+          }
+        });
+      } catch (err) {
+        console.error('Camera/Scanner error', err);
+        alert('Impossibile avviare lo scanner. Controlla i permessi o riprova.');
+        closeScannerModal();
+      }
+    }
+
+    async function closeScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      try { await stopScanner(); } catch(e){}
+      if (modal) { modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); }
+    }
+
+    async function switchCamera() {
+      if (!isScannerOpen) return;
+      if (!availableVideoDevices || availableVideoDevices.length <= 1) {
+        alert('Nessun altra camera disponibile.');
+        return;
+      }
+      try { await stopScanner(); } catch(e){}
+      currentDeviceIndex = (currentDeviceIndex + 1) % availableVideoDevices.length;
+      const chosen = availableVideoDevices[currentDeviceIndex];
+      updateDeviceLabel('Camera: ' + (chosen.label || 'Sconosciuta'));
+      try {
+        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+        const videoElem = document.getElementById('scannerVideo');
+        await codeReader.decodeFromVideoDevice(chosen.deviceId, videoElem, (result, err) => {
+          if (result && result.getText) {
+            const code = (result.getText ? result.getText() : (result.text || '')).trim();
+            handleBarcodeFound(code);
+          }
+        });
+      } catch (err) {
+        console.error('Errore switching camera', err);
+        alert('Errore cambio camera.');
+        await stopScanner();
+      }
+    }
+
+    async function handleBarcodeFound(barcode) {
+      if (!barcode || barcodeHandled) return;
+      barcodeHandled = true;
+      const toast = document.getElementById('toast');
+      if (toast) { toast.textContent = 'Codice rilevato: ' + barcode; toast.style.display = 'block'; setTimeout(()=>toast.style.display='none',1400); }
+
+      try { if (window.app && typeof app.setLastScannedBarcode === 'function') app.setLastScannedBarcode(barcode); } catch(e){}
+
+      try {
+        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(barcode)}.json`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.status === 1 && json.product) {
+            const p = json.product;
+            const nameField = document.getElementById('drawerProductName') || document.getElementById('productName');
+            const notesField = document.getElementById('drawerProductNotes') || document.getElementById('productNotes');
+            const categoryField = document.getElementById('drawerProductCategory') || document.getElementById('productCategory');
+
+            const prodName = p.product_name || p.generic_name || p.brands || '';
+            if (nameField && prodName) nameField.value = prodName;
+
+            let noteParts = [];
+            if (p.brands) noteParts.push(p.brands);
+            if (p.quantity) noteParts.push(p.quantity);
+            if (p.categories) noteParts.push(p.categories.split(',').slice(0,2).join(' • '));
+            if (notesField && noteParts.length) notesField.value = noteParts.join(' • ');
+
+            if (categoryField && Array.isArray(p.categories_tags) && p.categories_tags.length) {
+              const tag = p.categories_tags[0] || '';
+              const human = (p.categories || '').split(',')[0] || tag.replace('en:', '').replace(/-/g,' ');
+              Array.from(categoryField.options).forEach(o => {
+                if (human && o.value && o.value.toLowerCase().includes(human.toLowerCase())) {
+                  categoryField.value = o.value;
+                }
+              });
+            }
+
+            const imageCandidates = [p.image_front_small_url, p.image_front_thumb_url, p.image_small_url, p.image_url, p.image_front_url].filter(Boolean);
+            const chosenImage = imageCandidates.length ? imageCandidates[0] : null;
+            try { if (chosenImage && window.app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(chosenImage); } catch(e){}
+          }
+        }
+      } catch (err) {
+        console.warn('OFF fetch error', err);
+      } finally {
+        setTimeout(async ()=> { await closeScannerModal(); barcodeHandled = false; }, 700);
+      }
+    }
+
+    // export globals
+    window.openScannerModal = openScannerModal;
+    window.closeScannerModal = closeScannerModal;
+    window.switchCamera = switchCamera;
+  })();
+  </script>
 
   <!-- bottom navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
@@ -427,6 +621,7 @@
             card.classList.add('selected');
             selectedStore = sName;
             confirmBtn.disabled = false;
+            confirmBtn.removeAttribute('aria-disabled');
           });
 
           storeListGrid.appendChild(card);
@@ -436,6 +631,20 @@
       // call initially
       renderStoreCards();
       document.addEventListener('app:stores-changed', renderStoreCards);
+
+      // ensure confirm starts disabled
+      confirmBtn.disabled = true;
+      confirmBtn.setAttribute('aria-disabled','true');
+
+      // accessibility: keep aria-disabled in sync with disabled state
+      if (confirmBtn) {
+        const mo = new MutationObserver(() => {
+          if (confirmBtn.disabled) confirmBtn.setAttribute('aria-disabled','true');
+          else confirmBtn.removeAttribute('aria-disabled');
+        });
+        mo.observe(confirmBtn, { attributes: true, attributeFilter: ['disabled'] });
+        if (confirmBtn.disabled) confirmBtn.setAttribute('aria-disabled','true');
+      }
 
       // confirm selection behaviour
       confirmBtn?.addEventListener('click', () => {
@@ -472,14 +681,14 @@
 
       // Drawer open/close
       function openDrawer() {
-        // don't allow open if still on storeChoice (shouldn't, because floating is hidden)
+        // don't allow open if still on storeChoice
         if (!storeChoiceCard.classList.contains('hidden')) return;
         drawerOverlay.classList.add('visible');
         drawer.classList.remove('hidden');
         drawer.removeAttribute('aria-hidden');
         document.body.classList.add('no-scroll');
 
-        // hide floating buttons to avoid overlap (just in case)
+        // hide floating buttons to avoid overlap
         hideFloating();
       }
       function closeDrawer() {
@@ -574,8 +783,17 @@
         if (typeof openScannerModal === 'function') {
           try { await openScannerModal(); } catch (err) { console.warn(err); alert('Impossibile aprire la fotocamera.'); }
         } else {
-          // fallback: trigger existing scan button if present somewhere
           document.getElementById('scanBarcodeBtn')?.click();
+        }
+      });
+
+      // wire scanner buttons inside modal
+      document.getElementById('scannerCancelBtn')?.addEventListener('click', () => {
+        if (typeof closeScannerModal === 'function') closeScannerModal();
+      });
+      document.getElementById('switchCameraBtn')?.addEventListener('click', async () => {
+        if (typeof switchCamera === 'function') {
+          try { await switchCamera(); } catch(e) { console.warn(e); }
         }
       });
 
@@ -586,7 +804,6 @@
       document.addEventListener('app:cart-changed', (ev) => {
         const cart = (app && app.currentCart) ? app.currentCart : (ev && ev.detail) ? ev.detail : [];
         if (!cart || cart.length === 0) {
-          // if store already chosen, show placeholder
           if (storeChoiceCard.classList.contains('hidden')) {
             cartMainPlaceholder.style.display = 'flex';
             document.getElementById('cartSection')?.classList.add('hidden');
@@ -597,12 +814,8 @@
           document.getElementById('cartSection')?.classList.remove('hidden');
           document.getElementById('expenseForm')?.classList.remove('hidden');
         }
-        // keep floating visible only after store chosen
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
       });
-
-      // ensure confirm starts disabled
-      confirmBtn.disabled = true;
 
       // menu overlay open/close (side menu)
       const menuToggle = document.getElementById('menuToggle');
@@ -619,12 +832,7 @@
       menuToggle?.addEventListener('click', openMenu);
       menuOverlay?.addEventListener('click', () => { closeMenu(); closeDrawer(); });
 
-      // Make sure scanner cancel button closes modal (if scanner functions exist)
-      document.getElementById('scannerCancelBtn')?.addEventListener('click', () => {
-        if (typeof closeScannerModal === 'function') closeScannerModal();
-      });
-
-      // keep bottom padding for bottom-nav
+      // Keep bottom padding for bottom-nav
       const bottomNav = document.querySelector('.bottom-nav');
       const main = document.querySelector('main');
       if (bottomNav && main) {
@@ -636,6 +844,8 @@
     }); // DOMContentLoaded
   </script>
 
-  <!-- Nota: il resto del tuo JS (scanner, updateCartDisplay, addProductBtn legacy, ecc.) deve essere incluso come prima -->
+  <!-- Nota: updateCartDisplay function and altre utility UI sono attese dalla pagina (inclusa in precedenti versioni).
+       Se non li hai ancora in un file separato, aggiungi qui la funzione updateCartDisplay (o ricopia quella che avevi prima)
+       in modo che la tabella del carrello venga popolata quando app:cart-changed viene emesso. -->
 </body>
 </html>
