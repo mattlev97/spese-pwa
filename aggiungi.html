@@ -258,6 +258,11 @@
       <button id="closeDrawerBtn" class="btn btn-secondary" aria-label="Chiudi">Chiudi</button>
     </div>
     <div class="drawer-body">
+      <!-- IMAGE PREVIEW (mostrata quando scanner ha restituito immagine) -->
+      <div id="drawerImagePreview" style="display:none;margin-bottom:8px;">
+        <img id="drawerPreviewImg" src="" alt="Anteprima prodotto" class="cart-img" />
+      </div>
+
       <div class="form-group">
         <label for="drawerProductName">Nome prodotto</label>
         <input id="drawerProductName" type="text" />
@@ -497,6 +502,18 @@
             const imageCandidates = [p.image_front_small_url, p.image_front_thumb_url, p.image_small_url, p.image_url, p.image_front_url].filter(Boolean);
             const chosenImage = imageCandidates.length ? imageCandidates[0] : null;
             try { if (chosenImage && window.app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(chosenImage); } catch(e){}
+
+            // --- dispatch evento con i dati del prodotto scansionato (drawer verrà aperto dal listener)
+            try {
+              const scannedProduct = {
+                barcode: barcode || null,
+                name: prodName || '',
+                notes: (noteParts && noteParts.length) ? noteParts.join(' • ') : '',
+                image: chosenImage || null,
+                categories: Array.isArray(p.categories_tags) ? p.categories_tags.slice(0,3) : (p.categories ? (p.categories.split(',').slice(0,3)) : [])
+              };
+              document.dispatchEvent(new CustomEvent('app:product-scanned', { detail: { product: scannedProduct } }));
+            } catch (e) { console.warn('dispatch product-scanned failed', e); }
           }
         }
       } catch (err) {
@@ -555,6 +572,8 @@
       const drawerOverlay = document.getElementById('drawerOverlay');
       const closeDrawerBtn = document.getElementById('closeDrawerBtn');
       const drawerAddBtn = document.getElementById('drawerAddBtn');
+      const drawerImagePreview = document.getElementById('drawerImagePreview');
+      const drawerPreviewImg = document.getElementById('drawerPreviewImg');
 
       function hideFloating() {
         floatingAddBtn.classList.add('hidden');
@@ -718,12 +737,102 @@
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
       }
 
+      // --- nuova funzione: apre il drawer e popola i campi con dati scanner ---
+      window.openProductDrawer = function(product){
+        try {
+          // se l'utente è ancora nella fase "scegli il supermercato", nascondiamo quella card
+          if (storeChoiceCard && !storeChoiceCard.classList.contains('hidden')) {
+            storeChoiceCard.classList.add('hidden');
+            if (cartMainPlaceholder) cartMainPlaceholder.style.display = 'flex';
+            showFloating();
+          }
+
+          // Apri drawer
+          drawerOverlay.classList.add('visible');
+          drawer.classList.remove('hidden');
+          drawer.removeAttribute('aria-hidden');
+          document.body.classList.add('no-scroll');
+          hideFloating();
+
+          // Popola i campi nella UI drawer
+          if (product && typeof product === 'object') {
+            const nameField = document.getElementById('drawerProductName');
+            const categoryField = document.getElementById('drawerProductCategory');
+            const notesField = document.getElementById('drawerProductNotes');
+            const priceKgField = document.getElementById('drawerProductPriceKg');
+            const priceField = document.getElementById('drawerProductPrice');
+
+            if (nameField && product.name) nameField.value = product.name;
+            if (notesField && product.notes) notesField.value = product.notes;
+            if (categoryField && product.categories && product.categories.length) {
+              const humanCat = String(product.categories[0] || '').split(':').pop().replace(/-/g,' ').trim();
+              Array.from(categoryField.options).forEach(o => {
+                if (humanCat && o.value && o.value.toLowerCase().includes(humanCat.toLowerCase())) {
+                  categoryField.value = o.value;
+                }
+              });
+            }
+
+            // se abbiamo una immagine, mostriamo preview
+            if (product.image && drawerPreviewImg) {
+              drawerPreviewImg.src = product.image;
+              drawerPreviewImg.alt = product.name || 'Anteprima';
+              drawerImagePreview.style.display = 'block';
+            } else if (drawerPreviewImg) {
+              drawerPreviewImg.src = '';
+              drawerImagePreview.style.display = 'none';
+            }
+
+            // se esiste un riferimento prezzo salvato (minPrice) proviamo a precompilare il prezzo
+            try {
+              if (window.app && typeof app.getProductReference === 'function' && product.name) {
+                const ref = app.getProductReference(product.name);
+                if (ref && typeof ref.minPrice !== 'undefined' && ref.minPrice !== null) {
+                  const priceField = document.getElementById('drawerProductPrice');
+                  if (priceField) priceField.value = Number(ref.minPrice).toFixed(2);
+                }
+              }
+            } catch (e) { /* ignore */ }
+
+            // conserva immagine nello stato dell'app (drawerAddBtn poi leggerà app.getLastScannedImage)
+            if (product.image && window.app && typeof app.setLastScannedImage === 'function') {
+              try { app.setLastScannedImage(product.image); } catch(e){}
+            }
+          }
+        } catch (e) {
+          console.warn('openProductDrawer error', e);
+        }
+      };
+
+      // Listener che apre il drawer quando lo scanner lancia l'evento
+      document.addEventListener('app:product-scanned', (ev) => {
+        try {
+          const p = ev && ev.detail ? ev.detail.product : null;
+          window.openProductDrawer(p);
+        } catch (e) {
+          console.warn('app:product-scanned handler error', e);
+        }
+      });
+
       document.getElementById('floatingAddBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
         openDrawer();
       });
-      closeDrawerBtn?.addEventListener('click', closeDrawer);
-      drawerOverlay?.addEventListener('click', closeDrawer);
+      closeDrawerBtn?.addEventListener('click', () => {
+        // se si chiude il drawer manualmente, rimuoviamo la preview (ma non tocciamo app._lastScannedImage)
+        if (drawerPreviewImg) {
+          drawerPreviewImg.src = '';
+          drawerImagePreview.style.display = 'none';
+        }
+        closeDrawer();
+      });
+      drawerOverlay?.addEventListener('click', () => {
+        if (drawerPreviewImg) {
+          drawerPreviewImg.src = '';
+          drawerImagePreview.style.display = 'none';
+        }
+        closeDrawer();
+      });
 
       // Drawer: add product to cart
       drawerAddBtn?.addEventListener('click', (e) => {
@@ -783,6 +892,9 @@
         document.getElementById('drawerProductPrice').value = '';
         document.getElementById('drawerProductPriceKg').value = '';
         document.getElementById('drawerProductNotes').value = '';
+
+        // clear preview image
+        if (drawerPreviewImg) { drawerPreviewImg.src = ''; drawerImagePreview.style.display = 'none'; }
 
         // clear last scanned image to avoid reuse
         try { if (app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(null); } catch(e){}
