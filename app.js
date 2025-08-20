@@ -195,17 +195,128 @@ class ExpenseTracker {
   // -------------------------
   // Stats / formatting
   // -------------------------
-  filterByPeriod(period) {
-    if (!period) return this.expenses.slice();
-    const now = new Date();
-    const start = new Date();
-    switch (period) {
-      case 'settimana': start.setDate(now.getDate() - 7); break;
-      case 'mese': start.setMonth(now.getMonth() - 1); break;
-      case 'anno': start.setFullYear(now.getFullYear() - 1); break;
-      default: return this.expenses.slice();
+  /* Helper interno: normalizza input referenceDate (accetta YYYY-MM-DD string o Date obj)
+     e ritorna { dateObj, key } dove key è 'YYYY-MM-DD' */
+  _normalizeReferenceDate(referenceDate) {
+    let d;
+    if (!referenceDate) {
+      d = new Date();
+    } else if (referenceDate instanceof Date) {
+      d = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+    } else if (typeof referenceDate === 'string') {
+      // expected 'YYYY-MM-DD' (HTML date input). Create Date using split to avoid timezone shifts.
+      const parts = referenceDate.split('-');
+      if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        d = new Date(y, m, day);
+      } else {
+        d = new Date(referenceDate);
+      }
+    } else {
+      d = new Date();
     }
-    return this.expenses.filter(exp => new Date(exp.date) >= start);
+    // ensure we have valid date
+    if (isNaN(d.getTime())) d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const key = `${y}-${m}-${day}`;
+    return { dateObj: d, key };
+  }
+
+  /* Helper: formatta una Date object come 'YYYY-MM-DD' */
+  _formatKeyFromDateObj(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  /* filterByPeriod ora supporta la firma:
+     filterByPeriod(period, referenceDate)
+     - period: 'giorno'|'settimana'|'mese'|'anno'|'settimana'|'mese'|'anno' (o undefined)
+     - referenceDate: optional, string 'YYYY-MM-DD' o Date object. Se non presente usa oggi.
+     Ritorna array di expense filtrate.
+     Mantiene retrocompatibilità se chiamata con un solo argomento.
+  */
+  filterByPeriod(period, referenceDate) {
+    // Retrocompat: se chiamato con un singolo argomento non string (es. undefined) => return all
+    if (!period) return this.expenses.slice();
+
+    // Normalize period: accept italian names + fallback
+    const p = String(period || '').toLowerCase();
+
+    // normalize reference date
+    const norm = this._normalizeReferenceDate(referenceDate);
+    const refDateObj = norm.dateObj;
+
+    // compute range start/end
+    let rangeStart = null;
+    let rangeEnd = null;
+
+    if (p === 'giorno' || p === 'day') {
+      const key = norm.key;
+      return (this.expenses || []).filter(e => (e.date === key));
+    }
+
+    if (p === 'settimana' || p === 'week') {
+      // ISO-like week: Monday .. Sunday
+      const day = refDateObj.getDay(); // 0(Sun)..6
+      // compute Monday: diff days from Monday
+      const diffToMonday = (day === 0) ? 6 : (day - 1);
+      const monday = new Date(refDateObj);
+      monday.setDate(refDateObj.getDate() - diffToMonday);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      rangeStart = this._formatKeyFromDateObj(monday);
+      rangeEnd = this._formatKeyFromDateObj(sunday);
+    } else if (p === 'mese' || p === 'month') {
+      const first = new Date(refDateObj.getFullYear(), refDateObj.getMonth(), 1);
+      const last = new Date(refDateObj.getFullYear(), refDateObj.getMonth() + 1, 0); // last day of month
+      rangeStart = this._formatKeyFromDateObj(first);
+      rangeEnd = this._formatKeyFromDateObj(last);
+    } else if (p === 'anno' || p === 'year') {
+      const first = new Date(refDateObj.getFullYear(), 0, 1);
+      const last = new Date(refDateObj.getFullYear(), 11, 31);
+      rangeStart = this._formatKeyFromDateObj(first);
+      rangeEnd = this._formatKeyFromDateObj(last);
+    } else {
+      // unknown period: fallback to previous behaviour (period interpreted relative to "now")
+      // Maintain previous semantics: settimana=>last 7 days, mese=>last month, anno=>last year
+      const now = new Date();
+      const start = new Date();
+      switch (p) {
+        case 'settimana':
+          start.setDate(now.getDate() - 7);
+          break;
+        case 'mese':
+          start.setMonth(now.getMonth() - 1);
+          break;
+        case 'anno':
+          start.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          return this.expenses.slice();
+      }
+      rangeStart = this._formatKeyFromDateObj(start);
+      rangeEnd = this._formatKeyFromDateObj(now);
+    }
+
+    // Now filter expenses whose date (assumed 'YYYY-MM-DD') is between rangeStart and rangeEnd (inclusive).
+    // Use string compare which works for 'YYYY-MM-DD' format.
+    try {
+      const all = this.expenses || [];
+      return all.filter(exp => {
+        const d = exp.date || '';
+        if (!d) return false;
+        return (d >= rangeStart && d <= rangeEnd);
+      });
+    } catch (e) {
+      console.error('filterByPeriod error', e);
+      return this.expenses.slice();
+    }
   }
 
   getStats(expenses = this.expenses) {
