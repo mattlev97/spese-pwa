@@ -1,11 +1,12 @@
-/* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, eventi, archivio prezzi
-   + supporto stores metadata (logo + description) */
+/* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, events, archivio prezzi
+   + supporto stores metadata (logo + description)
+*/
 class ExpenseTracker {
   constructor() {
     this.expensesKey = 'expenses';
     this.storesKey = 'stores';
     this.productsKey = 'productsReference'; // archivio interno prezzi
-    this.storesMetaKey = 'storesMeta'; // nuovo: meta per ogni supermercato (logo, description)
+    this.storesMetaKey = 'storesMeta'; // meta per ogni supermercato (logo, description)
 
     this.defaultStores = [
       "Conad", "Coop", "Esselunga", "Eurospin",
@@ -160,8 +161,7 @@ class ExpenseTracker {
     this.expenses.push(expense);
     this.saveExpenses();
 
-    // aggiorna archivio prezzi usando i prodotti salvati (non si modifica spese passate,
-    // ma l'archivio rappresenta il prezzo minimo osservato)
+    // aggiorna archivio prezzi usando i prodotti salvati
     (expense.products || []).forEach(p => {
       try { this.updateProductReference(p); } catch (e) { /* ignore per singolo prodotto */ }
     });
@@ -201,8 +201,6 @@ class ExpenseTracker {
   // -------------------------
   // Stats / formatting
   // -------------------------
-  /* Helper interno: normalizza input referenceDate (accetta YYYY-MM-DD string o Date obj)
-     e ritorna { dateObj, key } dove key è 'YYYY-MM-DD' */
   _normalizeReferenceDate(referenceDate) {
     let d;
     if (!referenceDate) {
@@ -210,7 +208,6 @@ class ExpenseTracker {
     } else if (referenceDate instanceof Date) {
       d = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
     } else if (typeof referenceDate === 'string') {
-      // expected 'YYYY-MM-DD' (HTML date input). Create Date using split to avoid timezone shifts.
       const parts = referenceDate.split('-');
       if (parts.length === 3) {
         const y = parseInt(parts[0], 10);
@@ -223,7 +220,6 @@ class ExpenseTracker {
     } else {
       d = new Date();
     }
-    // ensure we have valid date
     if (isNaN(d.getTime())) d = new Date();
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -232,7 +228,6 @@ class ExpenseTracker {
     return { dateObj: d, key };
   }
 
-  /* Helper: formatta una Date object come 'YYYY-MM-DD' */
   _formatKeyFromDateObj(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -240,25 +235,11 @@ class ExpenseTracker {
     return `${y}-${m}-${day}`;
   }
 
-  /* filterByPeriod ora supporta la firma:
-     filterByPeriod(period, referenceDate)
-     - period: 'giorno'|'settimana'|'mese'|'anno'|'settimana'|'mese'|'anno' (o undefined)
-     - referenceDate: optional, string 'YYYY-MM-DD' o Date object. Se non presente usa oggi.
-     Ritorna array di expense filtrate.
-     Mantiene retrocompatibilità se chiamata con un solo argomento.
-  */
   filterByPeriod(period, referenceDate) {
-    // Retrocompat: se chiamato con un singolo argomento non string (es. undefined) => return all
     if (!period) return this.expenses.slice();
-
-    // Normalize period: accept italian names + fallback
     const p = String(period || '').toLowerCase();
-
-    // normalize reference date
     const norm = this._normalizeReferenceDate(referenceDate);
     const refDateObj = norm.dateObj;
-
-    // compute range start/end
     let rangeStart = null;
     let rangeEnd = null;
 
@@ -268,9 +249,7 @@ class ExpenseTracker {
     }
 
     if (p === 'settimana' || p === 'week') {
-      // ISO-like week: Monday .. Sunday
-      const day = refDateObj.getDay(); // 0(Sun)..6
-      // compute Monday: diff days from Monday
+      const day = refDateObj.getDay();
       const diffToMonday = (day === 0) ? 6 : (day - 1);
       const monday = new Date(refDateObj);
       monday.setDate(refDateObj.getDate() - diffToMonday);
@@ -280,7 +259,7 @@ class ExpenseTracker {
       rangeEnd = this._formatKeyFromDateObj(sunday);
     } else if (p === 'mese' || p === 'month') {
       const first = new Date(refDateObj.getFullYear(), refDateObj.getMonth(), 1);
-      const last = new Date(refDateObj.getFullYear(), refDateObj.getMonth() + 1, 0); // last day of month
+      const last = new Date(refDateObj.getFullYear(), refDateObj.getMonth() + 1, 0);
       rangeStart = this._formatKeyFromDateObj(first);
       rangeEnd = this._formatKeyFromDateObj(last);
     } else if (p === 'anno' || p === 'year') {
@@ -289,8 +268,6 @@ class ExpenseTracker {
       rangeStart = this._formatKeyFromDateObj(first);
       rangeEnd = this._formatKeyFromDateObj(last);
     } else {
-      // unknown period: fallback to previous behaviour (period interpreted relative to "now")
-      // Maintain previous semantics: settimana=>last 7 days, mese=>last month, anno=>last year
       const now = new Date();
       const start = new Date();
       switch (p) {
@@ -310,8 +287,6 @@ class ExpenseTracker {
       rangeEnd = this._formatKeyFromDateObj(now);
     }
 
-    // Now filter expenses whose date (assumed 'YYYY-MM-DD') is between rangeStart and rangeEnd (inclusive).
-    // Use string compare which works for 'YYYY-MM-DD' format.
     try {
       const all = this.expenses || [];
       return all.filter(exp => {
@@ -412,9 +387,9 @@ class ExpenseTracker {
       // ensure meta entries exist for new stores, and remove meta for deleted ones
       try {
         const keepKeys = cleanList.map(s => s.trim().toLowerCase());
+        if (!this.storesMeta) this.storesMeta = {};
         // create meta if missing
         keepKeys.forEach(k => {
-          if (!this.storesMeta) this.storesMeta = {};
           if (!this.storesMeta[k]) {
             this.storesMeta[k] = { logo: null, description: null, updatedAt: new Date().toISOString() };
           }
@@ -635,12 +610,9 @@ class ExpenseTracker {
 
   saveCartAsExpense(store, date) {
     if (!store || !date) return null;
-    // before saving, ensure we don't mutate past expenses but update reference archive with current cart prices
     try {
-      // Create copy of products to persist in expense
       const toSaveProducts = (this.currentCart || []).map(p => ({ ...p }));
       const saved = this.addExpense(store, date, toSaveProducts);
-      // clear cart after save
       this.clearCart();
       return saved;
     } catch (e) {
