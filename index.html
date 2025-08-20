@@ -73,9 +73,6 @@
             <option value="mese">Mese</option>
             <option value="anno">Anno</option>
           </select>
-
-          <!-- Data di riferimento per il riepilogo -->
-          <input id="summaryRefDate" type="date" aria-label="Data di riferimento riepilogo" style="padding:6px 8px;border-radius:8px;border:1px solid #ddd;"/>
         </div>
       </div>
 
@@ -270,16 +267,12 @@
       pillEl.classList.add('selected');
       selectedDateKey = key;
 
-      // sync reference date input and period -> giorno
-      const refInput = document.getElementById('summaryRefDate');
-      if (refInput) {
-        refInput.value = key;
-      }
+      // set period to 'giorno'
       const periodSelect = document.getElementById('periodSelect');
       if (periodSelect) periodSelect.value = 'giorno';
 
       showDaySummary(key);
-      // update whole dashboard (use giorno as period + refDate)
+      // update whole dashboard (use giorno as period + selectedDateKey)
       updateDashboard();
       // intentionally DO NOT scroll page — user remains at same position
     }
@@ -364,22 +357,20 @@
     /* ===== Update dashboard content (no donut) ===== */
     function updateDashboard() {
       const periodSelect = document.getElementById('periodSelect');
-      const refInput = document.getElementById('summaryRefDate');
       const period = periodSelect?.value || 'mese';
-      // prefer reference date from input; if empty and selectedDateKey set, use that
-      const refDate = (refInput && refInput.value) ? refInput.value : (selectedDateKey || null);
 
-      // safe call to app.filterByPeriod with optional referenceDate
+      // Use selectedDateKey as reference for 'giorno'. For other periods some apps may accept a refDate argument;
+      // try to call app.filterByPeriod(period, refDate) defensively, otherwise fallback to previous behaviour.
       let filtered;
       try {
         if (typeof app.filterByPeriod === 'function') {
-          filtered = app.filterByPeriod(period, refDate);
+          const refDate = (period === 'giorno') ? selectedDateKey : null;
+          // call with two args if supported
+          filtered = app.filterByPeriod.length >= 2 ? app.filterByPeriod(period, refDate) : app.filterByPeriod(period);
         } else {
-          // fallback: previous behaviour (call with single param)
-          filtered = app.filterByPeriod ? app.filterByPeriod(period) : (app.expenses || []);
+          filtered = app.expenses || [];
         }
       } catch (e) {
-        // defensive fallback
         filtered = app.expenses || [];
       }
 
@@ -453,7 +444,6 @@
       function openMenu() {
         if (!sideMenu || !menuOverlay) return;
         menuOverlay.style.display = 'block';
-        // small delay to allow transition class
         setTimeout(() => menuOverlay.classList.add('visible'), 20);
         sideMenu.style.display = 'block';
         sideMenu.classList.add('open');
@@ -466,7 +456,6 @@
         sideMenu.classList.remove('open');
         document.body.classList.remove('no-scroll');
         menuOverlay.setAttribute('aria-hidden', 'true');
-        // hide after transition
         setTimeout(() => {
           menuOverlay.style.display = 'none';
           sideMenu.style.display = 'none';
@@ -490,28 +479,6 @@
         });
       });
 
-      // add store button (simple prompt) - kept optional (no element on this page, safe)
-      document.getElementById('addStoreBtn')?.addEventListener('click', () => {
-        const name = prompt('Nome supermercato da aggiungere:');
-        if (!name) return;
-        const ok = app.addStore ? app.addStore(name) : false;
-        if (ok) {
-          populateSideMenuStores();
-          alert('Supermercato aggiunto');
-        } else {
-          alert('Non è stato possibile aggiungere (potrebbe già esistere).');
-        }
-      });
-
-      // initialize reference date input to today if empty
-      const refInput = document.getElementById('summaryRefDate');
-      if (refInput && !refInput.value) {
-        refInput.value = isoToday();
-      }
-
-      // ensure selectedDateKey initially aligns with refInput
-      if (!selectedDateKey && refInput && refInput.value) selectedDateKey = refInput.value;
-
       // initial render
       renderCalendar();
       updateDashboard();
@@ -520,25 +487,13 @@
       // listeners
       window.addEventListener('resize', () => setTimeout(renderCalendar, 120));
 
-      // when period changes, update dashboard (and keep ref date)
+      // when period changes, update dashboard
       document.getElementById('periodSelect')?.addEventListener('change', () => {
-        // if the user switches to "giorno" and there is a selectedDateKey -> ensure ref date matches
         const p = document.getElementById('periodSelect').value;
-        const ref = document.getElementById('summaryRefDate');
-        if (p === 'giorno' && selectedDateKey && ref) {
-          ref.value = selectedDateKey;
+        // if switched to 'giorno' and we have selectedDateKey, ensure selected is used
+        if (p === 'giorno' && selectedDateKey) {
+          // nothing extra required — updateDashboard will use selectedDateKey
         }
-        updateDashboard();
-      });
-
-      // when reference date is changed manually, update selectedDateKey and calendar + dashboard
-      document.getElementById('summaryRefDate')?.addEventListener('input', (e) => {
-        const val = e.target.value;
-        if (!val) return;
-        selectedDateKey = val;
-        // re-render calendar centered on new ref
-        renderCalendar();
-        // if currently not in 'giorno', keep period as-is (user may want month/week/year relative to that date)
         updateDashboard();
       });
 
