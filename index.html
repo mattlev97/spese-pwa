@@ -76,12 +76,17 @@
     <section>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <div style="font-weight:700;font-size:1.06rem;">Riepilogo</div>
-        <div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <!-- Period selector: 'giorno' è default -->
           <select id="periodSelect" style="padding:6px 8px;border-radius:8px;border:1px solid #ddd;">
+            <option value="giorno" selected>Giorno</option>
             <option value="settimana">Settimana</option>
-            <option value="mese" selected>Mese</option>
+            <option value="mese">Mese</option>
             <option value="anno">Anno</option>
           </select>
+
+          <!-- Data di riferimento per il riepilogo -->
+          <input id="summaryRefDate" type="date" aria-label="Data di riferimento riepilogo" style="padding:6px 8px;border-radius:8px;border:1px solid #ddd;"/>
         </div>
       </div>
 
@@ -159,7 +164,7 @@
   <!-- App core (non modificato) -->
   <script src="app.js"></script>
 
-  <!-- Inline app-specific JS (calendario, widgets) — mantenuto identico al tuo originale -->
+  <!-- Inline app-specific JS (calendario, widgets) -->
   <script>
     /* ===== Helpers & settings (local) ===== */
     const SETTINGS_KEY = 'gh_settings';
@@ -207,17 +212,25 @@
       return (app.expenses || []).filter(e => e.date === key);
     }
 
+    // helper: iso today
+    function isoToday() {
+      const d = new Date();
+      return d.toISOString().split('T')[0];
+    }
+
     function renderCalendar() {
       if (!calendarRow) return;
       calendarRow.innerHTML = '';
 
-      // Exactly 5 pills: -2, -1, 0(today), +1, +2
-      const today = new Date();
+      // center on selectedDateKey if present, otherwise today
+      const centerDate = selectedDateKey ? new Date(selectedDateKey) : new Date();
+      // Exactly 5 pills: -2, -1, 0(center), +1, +2
       for (let offset = -2; offset <= 2; offset++) {
-        const d = new Date();
-        d.setDate(today.getDate() + offset);
+        const d = new Date(centerDate);
+        d.setDate(centerDate.getDate() + offset);
         const key = formatKey(d);
-        const isToday = (formatKey(today) === key);
+        const todayKey = formatKey(new Date());
+        const isToday = (todayKey === key);
         const hasExpenses = getExpensesForKey(key).length > 0;
 
         const pill = document.createElement('button');
@@ -228,8 +241,8 @@
         pill.type = 'button';
         pill.setAttribute('aria-pressed', 'false');
 
-        // initial selection: today if none
-        if (isToday && selectedDateKey === null) {
+        // selection logic
+        if (selectedDateKey === null && isToday && offset === 0) {
           pill.classList.add('selected');
           selectedDateKey = key;
         } else if (key === selectedDateKey) {
@@ -267,7 +280,18 @@
       if (prev && prev !== pillEl) prev.classList.remove('selected');
       pillEl.classList.add('selected');
       selectedDateKey = key;
+
+      // sync reference date input and period -> giorn o
+      const refInput = document.getElementById('summaryRefDate');
+      if (refInput) {
+        refInput.value = key;
+      }
+      const periodSelect = document.getElementById('periodSelect');
+      if (periodSelect) periodSelect.value = 'giorno';
+
       showDaySummary(key);
+      // update whole dashboard (use giorn o as period + refDate)
+      updateDashboard();
       // intentionally DO NOT scroll page — user remains at same position
     }
 
@@ -350,8 +374,26 @@
 
     /* ===== Update dashboard content (no donut) ===== */
     function updateDashboard() {
-      const period = document.getElementById('periodSelect')?.value || 'mese';
-      const filtered = app.filterByPeriod(period);
+      const periodSelect = document.getElementById('periodSelect');
+      const refInput = document.getElementById('summaryRefDate');
+      const period = periodSelect?.value || 'mese';
+      // prefer reference date from input; if empty and selectedDateKey set, use that
+      const refDate = (refInput && refInput.value) ? refInput.value : (selectedDateKey || null);
+
+      // safe call to app.filterByPeriod with optional referenceDate
+      let filtered;
+      try {
+        if (typeof app.filterByPeriod === 'function') {
+          filtered = app.filterByPeriod(period, refDate);
+        } else {
+          // fallback: previous behaviour (call with single param)
+          filtered = app.filterByPeriod ? app.filterByPeriod(period) : (app.expenses || []);
+        }
+      } catch (e) {
+        // defensive fallback
+        filtered = app.expenses || [];
+      }
+
       const stats = app.getStats(filtered);
 
       document.getElementById('totalAmountBlock').textContent = app.formatCurrency(stats.total);
@@ -370,6 +412,9 @@
 
       drawPieChart('storeChart', stats.storeStats, 'storeStats', palette);
       drawPieChart('categoryChart', stats.categoryStats, 'categoryStats', palette);
+
+      // update recent list relative to same filter
+      loadRecentExpenses(filtered);
     }
 
     function loadRecentExpenses(expenses) {
@@ -431,19 +476,49 @@
         }
       });
 
-      // initial
+      // initialize reference date input to today if empty
+      const refInput = document.getElementById('summaryRefDate');
+      if (refInput && !refInput.value) {
+        refInput.value = isoToday();
+      }
+
+      // ensure selectedDateKey initially aligns with refInput
+      if (!selectedDateKey && refInput && refInput.value) selectedDateKey = refInput.value;
+
+      // initial render
       renderCalendar();
       updateDashboard();
-      loadRecentExpenses(app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese'));
       populateSideMenuStores();
 
       // listeners
       window.addEventListener('resize', () => setTimeout(renderCalendar, 120));
-      document.getElementById('periodSelect')?.addEventListener('change', () => { updateDashboard(); });
+
+      // when period changes, update dashboard (and keep ref date)
+      document.getElementById('periodSelect')?.addEventListener('change', () => {
+        // if the user switches to "giorno" and there is a selectedDateKey -> ensure ref date matches
+        const p = document.getElementById('periodSelect').value;
+        const ref = document.getElementById('summaryRefDate');
+        if (p === 'giorno' && selectedDateKey && ref) {
+          ref.value = selectedDateKey;
+        }
+        updateDashboard();
+      });
+
+      // when reference date is changed manually, update selectedDateKey and calendar + dashboard
+      document.getElementById('summaryRefDate')?.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (!val) return;
+        selectedDateKey = val;
+        // re-render calendar centered on new ref
+        renderCalendar();
+        // if currently not in 'giorno', keep period as-is (user may want month/week/year relative to that date)
+        updateDashboard();
+      });
+
+      // respond to app changes
       document.addEventListener('app:expenses-changed', () => {
         renderCalendar();
         updateDashboard();
-        loadRecentExpenses(app.filterByPeriod(document.getElementById('periodSelect')?.value || 'mese'));
         populateSideMenuStores();
       });
 
