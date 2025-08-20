@@ -15,10 +15,10 @@
   <!-- Font Awesome (icone) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
 
-  <!-- Stili unificati (tuo style.css "bellissima") -->
+  <!-- Stili unificati -->
   <link rel="stylesheet" href="style.css?v=20250816" />
 
-  <!-- Stili specifici per store-choice -->
+  <!-- Stili specifici per store-choice e nuove regole -->
   <style>
     /* Grid store cards */
     .store-list-grid {
@@ -59,15 +59,43 @@
     .store-card .store-card-desc { color:var(--gh-muted); font-size:0.92rem; margin-top:4px; }
     .store-card.selected .store-card-desc { color: rgba(255,255,255,0.9); }
 
-    /* ensure confirm button aligns on small screens */
-    @media (max-width:560px) {
-      .store-list-grid { grid-template-columns: 1fr; }
-      #storeChoiceCard .section-header { gap:10px; }
+    /* cart empty placeholder after confirming store */
+    #cartMainPlaceholder {
+      display:none;
+      gap:12px;
+      align-items:center;
+      padding:18px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--panel);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.04);
+      margin-bottom:16px;
     }
+    #cartMainPlaceholder .title-row {
+      display:flex; align-items:center; gap:12px;
+    }
+    .cart-icon-circle {
+      width:56px; height:56px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--gh-salvia); color:#fff; flex:0 0 56px;
+    }
+    .cart-empty-note { color:var(--gh-muted); font-style:italic; margin-top:8px; }
+
+    /* hide floating buttons while selecting store (JS toggles .hidden class) */
+    .floating-btn { position: fixed; z-index:2200; border:none; background:var(--gh-salvia); color:#fff; width:56px; height:56px; border-radius:999px; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 30px rgba(0,0,0,0.12); }
+    .floating-left { left:18px; bottom:110px; }
+    .floating-right { right:18px; bottom:110px; }
+    .floating-btn.hidden { display:none !important; }
+
+    /* Drawer tweaks */
+    .add-product-drawer {
+      position:fixed; left:0; right:0; bottom:0; background:var(--panel); border-top-left-radius:12px; border-top-right-radius:12px; box-shadow:0 -12px 40px rgba(0,0,0,0.12); padding:12px; max-height:68vh; overflow:auto; z-index:3600;
+    }
+    .add-product-drawer .drawer-header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 6px 12px 6px; }
+    .add-product-drawer .drawer-body { padding:4px 6px 12px 6px; }
+    .menu-overlay.visible { display:block; opacity:1; }
   </style>
 </head>
 <body>
-  <!-- Header (identico a index) -->
+  <!-- Header -->
   <header>
     <div class="hamburger" id="menuToggle" aria-label="Apri menu" title="Apri menu">
       <i class="fa-solid fa-bars"></i>
@@ -81,7 +109,7 @@
     </div>
   </header>
 
-  <!-- Off-canvas side menu (ridotto come richiesto in precedenza) -->
+  <!-- Reduced side menu (niente supermercati/versione) -->
   <nav id="sideMenu" class="hidden" aria-hidden="true">
     <div class="menu-header">
       <div class="menu-logo">GH</div>
@@ -100,12 +128,11 @@
     </div>
   </nav>
 
-  <!-- overlay per side menu tappabile -->
+  <!-- overlay for side menu & drawer -->
   <div id="menuOverlay" class="menu-overlay" tabindex="-1" aria-hidden="true"></div>
 
-  <!-- Main content -->
   <main class="dashboard add-expense" role="main" aria-live="polite">
-    <!-- STORE CHOICE CARD: visibile all'apertura -->
+    <!-- STORE CHOICE CARD -->
     <section id="storeChoiceCard" class="panel store-choice-card" aria-labelledby="storeChoiceTitle">
       <div class="section-header">
         <span class="icon-circle" aria-hidden="true"><i class="fa-solid fa-store"></i></span>
@@ -120,14 +147,25 @@
       </div>
 
       <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px;">
-        <button id="skipStoreChoiceBtn" class="btn btn-secondary">Scegli manualmente</button>
+        <!-- "Scegli manualmente" rimosso su richiesta -->
         <button id="confirmStoreBtn" class="btn" disabled>✔️ Conferma</button>
       </div>
     </section>
 
-    <!-- EXISTING FORM: inizialmente nascosto; verrà mostrato dopo conferma -->
+    <!-- After confirm: empty cart placeholder (visible only after confirm and when cart empty) -->
+    <section id="cartMainPlaceholder" aria-hidden="true">
+      <div class="title-row">
+        <div class="cart-icon-circle" aria-hidden="true"><i class="fa-solid fa-cart-shopping" style="font-size:20px"></i></div>
+        <div>
+          <div style="font-weight:700;font-size:1.06rem;">Il tuo carrello</div>
+          <div class="cart-empty-note"><em>Nessun prodotto nel carrello</em></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hidden original form and cart (will appear when user adds product) -->
     <form id="expenseForm" class="expense-form hidden" novalidate>
-      <!-- SEZIONE 1: Informazioni Generali (in panel) -->
+      <!-- detailed form as before (kept hidden until products exist) -->
       <section class="form-section panel" aria-labelledby="info-header">
         <div class="section-header" id="info-header">
           <span class="icon-circle" aria-hidden="true"><i class="fa-solid fa-store"></i></span>
@@ -153,71 +191,7 @@
         </div>
       </section>
 
-      <!-- SEZIONE 2: Aggiungi Prodotti (in panel) -->
-      <section class="form-section panel" aria-labelledby="add-header">
-        <div class="section-header" id="add-header">
-          <span class="icon-circle" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>
-          <div class="title-lines">
-            <h2 style="line-height:1;">Aggiungi</h2>
-            <div class="subtitle">Prodotti</div>
-          </div>
-        </div>
-
-        <div class="product-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="productCategory">Tipologia</label>
-              <select id="productCategory" required>
-                <option value="">Seleziona tipologia</option>
-                <option value="Carne">Carne</option>
-                <option value="Pesce">Pesce</option>
-                <option value="Verdura">Verdura</option>
-                <option value="Frutta">Frutta</option>
-                <option value="Latticini">Latticini</option>
-                <option value="Pane">Pane e Cereali</option>
-                <option value="Bevande">Bevande</option>
-                <option value="Surgelati">Surgelati</option>
-                <option value="Dolci">Dolci</option>
-                <option value="Pulizia">Prodotti Pulizia</option>
-                <option value="Igiene">Igiene Personale</option>
-                <option value="Altro">Altro</option>
-              </select>
-            </div>
-
-            <div class="form-group suggestions">
-              <label for="productName">Nome prodotto</label>
-              <input type="text" id="productName" placeholder="Es. Pomodori" autocomplete="off" required />
-              <!-- container per suggerimenti -->
-              <div id="suggestions" aria-hidden="true" class="suggestions-list"></div>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="productPrice">Prezzo (€)</label>
-              <input type="number" id="productPrice" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required />
-              <div id="priceDiff" aria-live="polite"></div>
-            </div>
-
-            <div class="form-group">
-              <label for="productPriceKg">Prezzo/kg (€)</label>
-              <input type="number" id="productPriceKg" step="0.01" min="0" inputmode="decimal" placeholder="0.00" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="productNotes">Note</label>
-            <input type="text" id="productNotes" placeholder="Note aggiuntive (opzionale)" />
-          </div>
-
-          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <button type="button" id="scanBarcodeBtn" class="btn btn-secondary">Scansiona codice a barre</button>
-            <button type="button" id="addProductBtn" class="btn">Aggiungi Prodotto al Carrello</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- SEZIONE 3: Carrello (visibile solo quando ci sono prodotti) -->
+      <!-- product area (we will show cartSection separately) -->
       <section class="cart-section panel hidden" id="cartSection" aria-hidden="true">
         <div class="section-header">
           <span style="width:44px;"></span>
@@ -238,7 +212,6 @@
         <div class="cart-total"><strong>Totale: <span id="cartTotal">€0.00</span></strong></div>
       </section>
 
-      <!-- SEZIONE 4: Azioni finali -->
       <section class="form-actions" style="margin-top:12px;display:flex;gap:10px;">
         <button type="submit" id="saveExpenseBtn" class="btn" disabled>💾 Salva Spesa Completa</button>
         <button type="button" id="clearCartBtn" class="btn btn-danger">🗑️ Svuota Carrello</button>
@@ -246,7 +219,7 @@
     </form>
   </main>
 
-  <!-- Drawer per aggiungere prodotto (overlay bottom sheet) -->
+  <!-- Drawer: add product (bottom sheet) -->
   <div id="drawerOverlay" class="menu-overlay" aria-hidden="true"></div>
   <div id="addProductDrawer" class="add-product-drawer hidden" role="dialog" aria-hidden="true" aria-labelledby="drawerTitle">
     <div class="drawer-header">
@@ -266,9 +239,19 @@
           <option>Latticini</option><option>Pane</option><option>Bevande</option><option>Altro</option>
         </select>
       </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1">
+          <label for="drawerProductPrice">Prezzo (€)</label>
+          <input id="drawerProductPrice" type="number" step="0.01" inputmode="decimal" />
+        </div>
+        <div class="form-group" style="flex:1">
+          <label for="drawerProductPriceKg">Prezzo/kg (€)</label>
+          <input id="drawerProductPriceKg" type="number" step="0.01" inputmode="decimal" />
+        </div>
+      </div>
       <div class="form-group">
-        <label for="drawerProductPrice">Prezzo (€)</label>
-        <input id="drawerProductPrice" type="number" step="0.01" min="0" />
+        <label for="drawerProductNotes">Note</label>
+        <input id="drawerProductNotes" type="text" />
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
         <button id="drawerAddBtn" class="btn">Aggiungi al carrello</button>
@@ -276,7 +259,7 @@
     </div>
   </div>
 
-  <!-- Scanner modal (esistente) -->
+  <!-- Scanner modal (existing) -->
   <div id="scannerModal" class="modal hidden" aria-hidden="true">
     <div class="modal-content">
       <h3>📷 Scansione Codice a Barre</h3>
@@ -305,9 +288,9 @@
 
   <div id="toast" class="toast" aria-hidden="true"></div>
 
-  <!-- app.js (la tua logica condivisa) -->
+  <!-- app core -->
   <script src="app.js"></script>
-  <!-- ZXing library (UMD build) -->
+  <!-- ZXing (scanner lib) -->
   <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
 
   <!-- bottom navigation -->
@@ -330,64 +313,43 @@
     </a>
   </nav>
 
-  <!-- pulsanti flottanti: fotocamera (sx) + aggiungi (dx) -->
+  <!-- floating action buttons -->
   <button id="floatingCameraBtn" class="floating-btn floating-left" aria-label="Apri fotocamera"><i class="fa-solid fa-camera"></i></button>
   <button id="floatingAddBtn" class="floating-btn floating-right" aria-label="Aggiungi prodotto"><i class="fa-solid fa-plus"></i></button>
 
-  <!-- sincronia bottom-nav active -->
+  <!-- Script: behavior -->
   <script>
-    (function () {
-      const path = location.pathname.split('/').pop() || 'index.html';
-      document.querySelectorAll('.bottom-nav .nav-item').forEach(a => {
-        const href = a.getAttribute('href') || '';
-        a.classList.toggle('nav-active', href.endsWith(path));
-      });
-    })();
-  </script>
+    // helper escape
+    function escapeHtml(txt){ const d = document.createElement('div'); d.textContent = txt || ''; return d.innerHTML; }
 
-  <!-- Script: menu handling + populate side menu stores + store choice flow + drawer + logos -->
-  <script>
-    /***** MENU OPEN/CLOSE WITH OVERLAY (tap outside to close) *****/
     document.addEventListener('DOMContentLoaded', () => {
-      const menuToggle = document.getElementById('menuToggle');
-      const sideMenu = document.getElementById('sideMenu');
-      const menuOverlay = document.getElementById('menuOverlay');
-
-      function openMenu() {
-        sideMenu.classList.remove('hidden');
-        sideMenu.classList.add('open');
-        sideMenu.removeAttribute('aria-hidden');
-        menuOverlay.classList.add('visible');
-        document.body.classList.add('no-scroll');
-      }
-      function closeMenu() {
-        sideMenu.classList.add('hidden');
-        sideMenu.classList.remove('open');
-        sideMenu.setAttribute('aria-hidden','true');
-        menuOverlay.classList.remove('visible');
-        document.body.classList.remove('no-scroll');
-      }
-
-      menuToggle?.addEventListener('click', openMenu);
-      menuOverlay?.addEventListener('click', closeMenu);
-
-      // populate menu stores list (if present)
-      populateSideMenuStores();
-      document.addEventListener('app:stores-changed', () => populateSideMenuStores());
-    });
-
-    /***** STORE CHOICE UI (first card) *****/
-    (function() {
+      // Elements
       const storeListGrid = document.getElementById('storeListGrid');
       const confirmBtn = document.getElementById('confirmStoreBtn');
-      const skipBtn = document.getElementById('skipStoreChoiceBtn');
       const storeChoiceCard = document.getElementById('storeChoiceCard');
       const expenseForm = document.getElementById('expenseForm');
+      const cartMainPlaceholder = document.getElementById('cartMainPlaceholder');
+      const floatingAddBtn = document.getElementById('floatingAddBtn');
+      const floatingCameraBtn = document.getElementById('floatingCameraBtn');
+      const drawer = document.getElementById('addProductDrawer');
+      const drawerOverlay = document.getElementById('drawerOverlay');
+      const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+      const drawerAddBtn = document.getElementById('drawerAddBtn');
 
-      let selectedStore = null;
+      // ensure floating buttons hidden while choosing store
+      function hideFloating() {
+        floatingAddBtn.classList.add('hidden');
+        floatingCameraBtn.classList.add('hidden');
+      }
+      function showFloating() {
+        floatingAddBtn.classList.remove('hidden');
+        floatingCameraBtn.classList.remove('hidden');
+      }
 
-      // Map: store name -> domain used to fetch logo via Clearbit
-      // If Clearbit doesn't return an image, we fallback to generated SVG
+      // start with floating hidden because storeChoiceCard is visible
+      hideFloating();
+
+      // map store -> domain for Clearbit plus custom descriptions
       const logoMap = {
         "Conad": "conad.it",
         "Coop": "coop.it",
@@ -401,7 +363,22 @@
         "Iper": "iper.it"
       };
 
-      // generate a lightweight placeholder SVG avatar with initials (data URL)
+      const descriptions = {
+        "Conad": "Catena presente capillarmente in Italia, ideale per prodotti freschi e offerte locali.",
+        "Coop": "Coop punta su qualità e sostenibilità, con un'ampia selezione di prodotti biologici.",
+        "Esselunga": "Esselunga offre grandi reparti freschi e numerose promozioni settimanali.",
+        "Eurospin": "Discount concentrato sul prezzo: ottime offerte su prodotti essenziali.",
+        "Carrefour": "Supermercati e ipermercati con vasta scelta e marchi internazionali.",
+        "Lidl": "Discount europeo con prodotti a marchio e offerte settimanali competitive.",
+        "MD": "Catena discount con assortimento conveniente e offerte locali frequenti.",
+        "Pam": "Supermercati focalizzati su freschi e prodotti regionali, utile per la spesa quotidiana.",
+        "Simply": "Punto vendita con offerta pratica per la spesa di tutti i giorni.",
+        "Iper": "Ipermercati con grande assortimento e reparti specializzati."
+      };
+
+      let selectedStore = null;
+
+      // placeholder svg generator
       function placeholderSVG(name, diameter=64) {
         const initials = (name || '').split(' ').slice(0,2).map(s => s[0]?.toUpperCase()||'').join('');
         const bg = getComputedStyle(document.documentElement).getPropertyValue('--gh-salvia') || '#7aa986';
@@ -411,31 +388,27 @@
       }
 
       function describeFor(name) {
-        // short, neutral description in italic (2 lines or less)
-        return `Sezione ${name}: ampia scelta, offerte e prodotti freschi. Controlla le promozioni locali.`;
+        return descriptions[name] || `Ampia scelta di prodotti e offerte presso ${name}.`;
       }
 
       function renderStoreCards() {
-        if (!storeListGrid) return;
         storeListGrid.innerHTML = '';
-        const stores = (typeof app?.getStores === 'function') ? app.getStores() : [];
-        // fallback default if app not ready
-        const defaultList = ["Conad","Coop","Esselunga","Eurospin","Carrefour","Lidl","MD","Pam","Simply","Iper"];
-        const finalStores = (stores && stores.length) ? stores : defaultList;
+        const stores = (typeof app?.getStores === 'function') ? app.getStores() : Object.keys(logoMap);
+        const finalStores = (stores && stores.length) ? stores : Object.keys(logoMap);
 
-        finalStores.forEach((sName) => {
+        finalStores.forEach(sName => {
           const card = document.createElement('button');
           card.type = 'button';
           card.className = 'store-card';
           card.setAttribute('role','listitem');
-          // determine logo src (clearbit)
+
           const domain = logoMap[sName] || '';
           const clearbitUrl = domain ? `https://logo.clearbit.com/${domain}?size=128` : '';
           const imgSrc = clearbitUrl || placeholderSVG(sName,64);
 
           card.innerHTML = `
             <div class="store-card-left">
-              <img class="store-logo" src="${imgSrc}" alt="${sName} logo" />
+              <img class="store-logo" src="${imgSrc}" alt="${escapeHtml(sName)} logo" />
             </div>
             <div class="store-card-body">
               <div class="store-card-title">${escapeHtml(sName)}</div>
@@ -443,177 +416,226 @@
             </div>
           `;
 
-          // if clearbit image fails, fallback to placeholder SVG
           const imgEl = card.querySelector('img.store-logo');
           if (imgEl) {
-            imgEl.addEventListener('error', () => {
-              imgEl.src = placeholderSVG(sName,64);
-            });
-            // provide a small onload check to ensure not broken (optional)
-            imgEl.addEventListener('load', () => {
-              // if the loaded image is tiny or generic, we still keep it; user can change later
-            });
+            imgEl.addEventListener('error', () => { imgEl.src = placeholderSVG(sName,64); });
           }
 
           card.addEventListener('click', () => {
-            // toggle selection (single select)
+            // single select
             document.querySelectorAll('.store-card.selected').forEach(el => el.classList.remove('selected'));
             card.classList.add('selected');
             selectedStore = sName;
             confirmBtn.disabled = false;
           });
+
           storeListGrid.appendChild(card);
         });
       }
 
-      function escapeHtml(txt){ const d = document.createElement('div'); d.textContent = txt || ''; return d.innerHTML; }
+      // call initially
+      renderStoreCards();
+      document.addEventListener('app:stores-changed', renderStoreCards);
 
-      function confirmSelection() {
-        if (!selectedStore) {
-          alert('Seleziona un supermercato dalla lista (o premi "Scegli manualmente").');
-          return;
-        }
-        // reveal main form
-        storeChoiceCard.classList.add('hidden');
-        expenseForm.classList.remove('hidden');
-        // make sure storeSelect is populated
+      // confirm selection behaviour
+      confirmBtn?.addEventListener('click', () => {
+        if (!selectedStore) return;
+        // set storeSelect value for later saving
         try { app.populateAllStoreSelects(); } catch(e){}
-        // set the select value
         const storeSel = document.getElementById('storeSelect');
         if (storeSel) {
-          // if option exists, set; otherwise create it then set
           const exists = Array.from(storeSel.options).some(o => o.value === selectedStore);
           if (!exists) {
             const opt = document.createElement('option'); opt.value = selectedStore; opt.textContent = selectedStore;
             storeSel.appendChild(opt);
           }
           storeSel.value = selectedStore;
-          // trigger change (to toggle custom store UI)
           storeSel.dispatchEvent(new Event('change', { bubbles:true }));
         }
-        // scroll to top of main content
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
 
-      // Skip: show form anyway (user chooses manual)
-      function skipChoice() {
+        // Hide store choice card
         storeChoiceCard.classList.add('hidden');
-        expenseForm.classList.remove('hidden');
-        try { app.populateAllStoreSelects(); } catch(e){}
-      }
 
-      // wire buttons
-      document.addEventListener('DOMContentLoaded', () => {
-        renderStoreCards();
-        document.getElementById('confirmStoreBtn')?.addEventListener('click', confirmSelection);
-        document.getElementById('skipStoreChoiceBtn')?.addEventListener('click', skipChoice);
+        // Show empty cart placeholder (not the old aggiungi form)
+        cartMainPlaceholder.style.display = 'flex';
+        cartMainPlaceholder.removeAttribute('aria-hidden');
+
+        // ensure floating buttons re-appear
+        showFloating();
+
+        // ensure expenseForm remains hidden until the user adds a product (then we'll show it)
+        expenseForm.classList.add('hidden');
+
+        // scroll top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
-      // re-render if stores change
-      document.addEventListener('app:stores-changed', renderStoreCards);
-    })();
-
-    /***** Drawer (bottom sheet) behavior *****/
-    (function(){
-      const drawer = document.getElementById('addProductDrawer');
-      const overlay = document.getElementById('drawerOverlay');
-      const openBtn = document.getElementById('floatingAddBtn');
-      const closeBtn = document.getElementById('closeDrawerBtn');
-      const addBtn = document.getElementById('drawerAddBtn');
-
+      // Drawer open/close
       function openDrawer() {
-        overlay.classList.add('visible');
+        // don't allow open if still on storeChoice (shouldn't, because floating is hidden)
+        if (!storeChoiceCard.classList.contains('hidden')) return;
+        drawerOverlay.classList.add('visible');
         drawer.classList.remove('hidden');
-        drawer.setAttribute('aria-hidden','false');
-        overlay.removeAttribute('aria-hidden');
+        drawer.removeAttribute('aria-hidden');
         document.body.classList.add('no-scroll');
+
+        // hide floating buttons to avoid overlap (just in case)
+        hideFloating();
       }
       function closeDrawer() {
-        overlay.classList.remove('visible');
+        drawerOverlay.classList.remove('visible');
         drawer.classList.add('hidden');
         drawer.setAttribute('aria-hidden','true');
-        overlay.setAttribute('aria-hidden','true');
         document.body.classList.remove('no-scroll');
+
+        // show floating buttons again (only if store already chosen)
+        if (storeChoiceCard.classList.contains('hidden')) showFloating();
       }
 
-      openBtn?.addEventListener('click', () => {
-        // if the main form is hidden, show it first
-        const expenseForm = document.getElementById('expenseForm');
-        const storeChoice = document.getElementById('storeChoiceCard');
-        if (storeChoice && !storeChoice.classList.contains('hidden')) {
-          // force user to choose a store first
-          alert('Seleziona prima un supermercato per iniziare (o premi "Scegli manualmente").');
-          return;
-        }
+      document.getElementById('floatingAddBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
         openDrawer();
       });
-      closeBtn?.addEventListener('click', closeDrawer);
-      overlay?.addEventListener('click', closeDrawer);
+      closeDrawerBtn?.addEventListener('click', closeDrawer);
+      drawerOverlay?.addEventListener('click', closeDrawer);
 
-      // add product from drawer
-      addBtn?.addEventListener('click', (e) => {
+      // Drawer: add product to cart
+      drawerAddBtn?.addEventListener('click', (e) => {
         e.preventDefault();
         const name = (document.getElementById('drawerProductName')?.value || '').trim();
         const cat = (document.getElementById('drawerProductCategory')?.value || '').trim();
-        const price = parseFloat(document.getElementById('drawerProductPrice')?.value || 0);
+        const priceRaw = (document.getElementById('drawerProductPrice')?.value || '').trim();
+        const priceKgRaw = (document.getElementById('drawerProductPriceKg')?.value || '').trim();
+        const notes = (document.getElementById('drawerProductNotes')?.value || '').trim();
+
+        const price = parseFloat(priceRaw || 0);
+        const priceKg = priceKgRaw ? parseFloat(priceKgRaw) : null;
+
         if (!name || !cat || !price || isNaN(price) || price <= 0) {
           alert('Compila nome, categoria e prezzo correttamente.');
           return;
         }
+
+        // Create product object
         const product = {
-          id: app.generateId ? app.generateId() : ('p_' + Date.now()),
-          name, category: cat, price
+          id: app.generateId ? app.generateId() : ('p_'+Date.now()),
+          name, category: cat, price, priceKg, notes
         };
+
+        // If scanner provided an image, attach
+        try {
+          if (app && typeof app.getLastScannedImage === 'function') {
+            const img = app.getLastScannedImage();
+            if (img) product.image = img;
+          }
+        } catch(e){}
+
+        // Add via app API if available
         if (app && typeof app.addProductToCart === 'function') {
           app.addProductToCart(product);
         } else {
-          // fallback local
           if (!app.currentCart) app.currentCart = [];
           app.currentCart.push(product);
           document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: app.currentCart }));
         }
-        // reset drawer
+
+        // After adding the first product: hide cartMainPlaceholder and show expenseForm/cartSection
+        const cartSection = document.getElementById('cartSection');
+        if (cartSection) {
+          cartSection.classList.remove('hidden');
+          cartSection.removeAttribute('aria-hidden');
+        }
+        cartMainPlaceholder.style.display = 'none';
+
+        // ensure expense form (with cart) becomes visible so user can save
+        expenseForm.classList.remove('hidden');
+
+        // trigger UI update (updateCartDisplay if available)
+        try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
+
+        // reset drawer fields and close drawer
         document.getElementById('drawerProductName').value = '';
         document.getElementById('drawerProductCategory').value = '';
         document.getElementById('drawerProductPrice').value = '';
+        document.getElementById('drawerProductPriceKg').value = '';
+        document.getElementById('drawerProductNotes').value = '';
+
+        // clear last scanned image to avoid reuse
+        try { if (app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(null); } catch(e){}
+
         closeDrawer();
       });
-    })();
 
-    /***** Floating camera button opens scanner modal (reuse existing functions) *****/
-    document.addEventListener('DOMContentLoaded', () => {
-      const camBtn = document.getElementById('floatingCameraBtn');
-      camBtn?.addEventListener('click', async (e) => {
+      // Floating camera button opens scanner
+      document.getElementById('floatingCameraBtn')?.addEventListener('click', async (e) => {
         e.preventDefault();
-        try {
-          // openScannerModal is defined earlier in the page script
-          if (typeof openScannerModal === 'function') {
-            await openScannerModal();
-          } else {
-            // fallback: trigger existing scan button
-            document.getElementById('scanBarcodeBtn')?.click();
-          }
-        } catch (err) {
-          console.warn('Impossibile aprire scanner', err);
-          if (confirm('Impossibile aprire la fotocamera. Vuoi inserire manualmente il codice a barre?')) {
-            manualBarcodePrompt();
-          }
+        // if still selecting store, ignore
+        if (!storeChoiceCard.classList.contains('hidden')) return;
+        if (typeof openScannerModal === 'function') {
+          try { await openScannerModal(); } catch (err) { console.warn(err); alert('Impossibile aprire la fotocamera.'); }
+        } else {
+          // fallback: trigger existing scan button if present somewhere
+          document.getElementById('scanBarcodeBtn')?.click();
         }
       });
-    });
 
-    /***** Ensure cart display updates when app fires event (existing function updateCartDisplay is present) *****/
-    document.addEventListener('app:cart-changed', (e) => {
-      try { updateCartDisplay(); } catch (err) { console.warn('updateCartDisplay not available', err); }
-    });
+      // populate selects if user skipped (or for confirm)
+      try { app.populateAllStoreSelects(); } catch(e){}
 
-    // small helper to populate storeSelect when user skipped store choice
-    document.addEventListener('DOMContentLoaded', () => {
-      try { app.populateAllStoreSelects(); } catch (e) {}
-      // wire scan buttons already in the original script
-    });
+      // small: when cart changed, hide placeholder if items exist or show placeholder if empty
+      document.addEventListener('app:cart-changed', (ev) => {
+        const cart = (app && app.currentCart) ? app.currentCart : (ev && ev.detail) ? ev.detail : [];
+        if (!cart || cart.length === 0) {
+          // if store already chosen, show placeholder
+          if (storeChoiceCard.classList.contains('hidden')) {
+            cartMainPlaceholder.style.display = 'flex';
+            document.getElementById('cartSection')?.classList.add('hidden');
+            document.getElementById('expenseForm')?.classList.add('hidden');
+          }
+        } else {
+          cartMainPlaceholder.style.display = 'none';
+          document.getElementById('cartSection')?.classList.remove('hidden');
+          document.getElementById('expenseForm')?.classList.remove('hidden');
+        }
+        // keep floating visible only after store chosen
+        if (storeChoiceCard.classList.contains('hidden')) showFloating();
+      });
+
+      // ensure confirm starts disabled
+      confirmBtn.disabled = true;
+
+      // menu overlay open/close (side menu)
+      const menuToggle = document.getElementById('menuToggle');
+      const sideMenu = document.getElementById('sideMenu');
+      const menuOverlay = document.getElementById('menuOverlay');
+      function openMenu() {
+        sideMenu.classList.remove('hidden'); sideMenu.classList.add('open'); sideMenu.removeAttribute('aria-hidden');
+        menuOverlay.classList.add('visible'); document.body.classList.add('no-scroll');
+      }
+      function closeMenu() {
+        sideMenu.classList.add('hidden'); sideMenu.classList.remove('open'); sideMenu.setAttribute('aria-hidden','true');
+        menuOverlay.classList.remove('visible'); document.body.classList.remove('no-scroll');
+      }
+      menuToggle?.addEventListener('click', openMenu);
+      menuOverlay?.addEventListener('click', () => { closeMenu(); closeDrawer(); });
+
+      // Make sure scanner cancel button closes modal (if scanner functions exist)
+      document.getElementById('scannerCancelBtn')?.addEventListener('click', () => {
+        if (typeof closeScannerModal === 'function') closeScannerModal();
+      });
+
+      // keep bottom padding for bottom-nav
+      const bottomNav = document.querySelector('.bottom-nav');
+      const main = document.querySelector('main');
+      if (bottomNav && main) {
+        const navH = bottomNav.offsetHeight || 0;
+        const extra = 28;
+        main.style.paddingBottom = (navH + extra) + 'px';
+        document.body.style.paddingBottom = (navH + extra) + 'px';
+      }
+    }); // DOMContentLoaded
   </script>
 
-  <!-- Tutto il JS di aggiungi (scanner, cart, autocomplete) - mantenuto identico e collocato qui -->
+  <!-- Nota: il resto del tuo JS (scanner, updateCartDisplay, addProductBtn legacy, ecc.) deve essere incluso come prima -->
 </body>
 </html>
