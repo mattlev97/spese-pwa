@@ -1,10 +1,11 @@
-/* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, eventi, archivio prezzi */
-
+/* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, eventi, archivio prezzi
+   + supporto stores metadata (logo + description) */
 class ExpenseTracker {
   constructor() {
     this.expensesKey = 'expenses';
     this.storesKey = 'stores';
     this.productsKey = 'productsReference'; // archivio interno prezzi
+    this.storesMetaKey = 'storesMeta'; // nuovo: meta per ogni supermercato (logo, description)
 
     this.defaultStores = [
       "Conad", "Coop", "Esselunga", "Eurospin",
@@ -15,6 +16,7 @@ class ExpenseTracker {
     this.currentCart = [];
     this.stores = this.loadStores();
     this.productsReference = this.loadProductsReference();
+    this.storesMeta = this.loadStoresMeta(); // NEW
 
     // ultimo barcode / immagine recuperata dall'API (url) — usato da aggiungi pagina
     this._lastScannedImage = null;
@@ -34,6 +36,10 @@ class ExpenseTracker {
       if (e.key === this.productsKey) {
         this.productsReference = this.loadProductsReference();
         document.dispatchEvent(new CustomEvent('app:productsReference-changed', { detail: this.productsReference }));
+      }
+      if (e.key === this.storesMetaKey) { // NEW
+        this.storesMeta = this.loadStoresMeta();
+        document.dispatchEvent(new CustomEvent('app:storesMeta-changed', { detail: this.storesMeta }));
       }
     });
   }
@@ -402,6 +408,26 @@ class ExpenseTracker {
       localStorage.setItem(this.storesKey, JSON.stringify(cleanList));
       this.stores = cleanList;
       this.populateAllStoreSelects();
+
+      // ensure meta entries exist for new stores, and remove meta for deleted ones
+      try {
+        const keepKeys = cleanList.map(s => s.trim().toLowerCase());
+        // create meta if missing
+        keepKeys.forEach(k => {
+          if (!this.storesMeta) this.storesMeta = {};
+          if (!this.storesMeta[k]) {
+            this.storesMeta[k] = { logo: null, description: null, updatedAt: new Date().toISOString() };
+          }
+        });
+        // remove meta of stores not present
+        Object.keys(this.storesMeta || {}).forEach(k => {
+          if (!keepKeys.includes(k)) delete this.storesMeta[k];
+        });
+        this.saveStoresMeta();
+      } catch (e) {
+        // ignore non-critical
+      }
+
       document.dispatchEvent(new CustomEvent('app:stores-changed', { detail: this.stores }));
     } catch (e) {
       console.error('Errore saveStores', e);
@@ -475,6 +501,108 @@ class ExpenseTracker {
   }
 
   // -------------------------
+  // Stores Meta (logo, description)
+  // -------------------------
+  loadStoresMeta() {
+    try {
+      const raw = localStorage.getItem(this.storesMetaKey);
+      if (!raw) {
+        // initialize default meta for default stores (descriptions, logos null)
+        const obj = {};
+        (this.defaultStores || []).forEach(s => {
+          obj[s.trim().toLowerCase()] = { logo: null, description: null, updatedAt: new Date().toISOString() };
+        });
+        localStorage.setItem(this.storesMetaKey, JSON.stringify(obj));
+        return obj;
+      }
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.error('Errore loadStoresMeta', e);
+      return {};
+    }
+  }
+
+  saveStoresMeta() {
+    try {
+      localStorage.setItem(this.storesMetaKey, JSON.stringify(this.storesMeta || {}));
+      document.dispatchEvent(new CustomEvent('app:storesMeta-changed', { detail: this.storesMeta }));
+    } catch (e) {
+      console.error('Errore saveStoresMeta', e);
+    }
+  }
+
+  /**
+   * Recupera i metadati per un supermercato (case-insensitive).
+   * Ritorna oggetto {logo, description, updatedAt} oppure null
+   */
+  getStoreMeta(name) {
+    if (!name) return null;
+    try {
+      const key = name.trim().toLowerCase();
+      return (this.storesMeta && this.storesMeta[key]) ? this.storesMeta[key] : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * Imposta/aggiorna i metadati per un supermercato.
+   * meta: { logo?: string|null, description?: string|null }
+   */
+  setStoreMeta(name, meta) {
+    if (!name || !meta) return false;
+    try {
+      const key = name.trim().toLowerCase();
+      if (!this.storesMeta) this.storesMeta = {};
+      const existing = this.storesMeta[key] || {};
+      this.storesMeta[key] = {
+        logo: (typeof meta.logo !== 'undefined') ? meta.logo : existing.logo || null,
+        description: (typeof meta.description !== 'undefined') ? meta.description : existing.description || null,
+        updatedAt: new Date().toISOString()
+      };
+      this.saveStoresMeta();
+      return true;
+    } catch (e) {
+      console.error('setStoreMeta error', e);
+      return false;
+    }
+  }
+
+  /**
+   * Import di massa dei metadati:
+   * obj = { "<store-lowercase>": { logo, description }, ... }
+   */
+  importStoresMeta(obj) {
+    if (!obj || typeof obj !== 'object') return false;
+    try {
+      this.storesMeta = this.storesMeta || {};
+      Object.keys(obj).forEach(k => {
+        const meta = obj[k] || {};
+        const normalized = String(k || '').trim().toLowerCase();
+        this.storesMeta[normalized] = {
+          logo: meta.logo || null,
+          description: meta.description || null,
+          updatedAt: new Date().toISOString()
+        };
+      });
+      this.saveStoresMeta();
+      return true;
+    } catch (e) {
+      console.error('importStoresMeta error', e);
+      return false;
+    }
+  }
+
+  /**
+   * Utility: ritorna lista di stores con meta (utile per view)
+   * [{ name, meta }, ...]
+   */
+  getStoresWithMeta() {
+    const stores = this.getStores();
+    return stores.map(s => ({ name: s, meta: this.getStoreMeta(s) || {} }));
+  }
+
+  // -------------------------
   // CART API (event-driven)
   // -------------------------
   addProductToCart(product) {
@@ -543,4 +671,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: app.currentCart }));
   // emit productsReference changed (initial)
   document.dispatchEvent(new CustomEvent('app:productsReference-changed', { detail: app.productsReference }));
+  // emit storesMeta changed (initial)
+  document.dispatchEvent(new CustomEvent('app:storesMeta-changed', { detail: app.storesMeta }));
 });
