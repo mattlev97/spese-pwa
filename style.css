@@ -972,3 +972,125 @@ body.no-scroll {
   vertical-align: middle;
   word-break: break-word;
 }
+
+/* ===== Patch scanner modal & video visibility =====
+   Questa sezione fa due cose:
+   1) mostra il modal quando JS rimuove 'hidden' (usiamo :not(.hidden))
+   2) assicura che #scannerContainer / #scannerVideo abbiano dimensioni visibili
+   3) impedisce che lo overlay catturi gli eventi e/o copra il video
+*/
+
+.modal {
+  /* non impostiamo display:none qui: lo controlliamo tramite .hidden o :not(.hidden) */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+
+/* comportamento "nascosto" esplicito (compatibilità con il tuo markup .modal.hidden) */
+.modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+  display: none !important;
+}
+
+/* quando la classe hidden viene rimossa, mostra il modal */
+.modal:not(.hidden) {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto;
+}
+
+/* contenuto del modal: assicurati non tagli l'altezza del video e permetti scrolling interno */
+.modal .modal-content {
+  background: #fff;
+  color: var(--gh-text-strong);
+  margin: 0 12px;
+  padding: 18px;
+  width: min(920px, calc(100% - 36px));
+  max-width: 920px;
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* Scanner container e video: dimensioni visibili e corretto stacking */
+#scannerContainer {
+  position: relative;
+  width: 100% !important;
+  height: 60vh !important;      /* abbastanza alto su mobile */
+  max-height: 60vh !important;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 4000;
+}
+
+/* Forza il video a occupare il container correttamente */
+#scannerVideo {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover;
+  display: block !important;
+  background: #000;
+  z-index: 4010;
+}
+
+/* Overlay grafico (cornice/linea di scan): non deve bloccare il puntamento del video */
+#scannerOverlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78%;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(0,122,255,0.85);
+  pointer-events: none; /* importantissimo: non bloccare il video o i click */
+  z-index: 4020;
+}
+
+/* scan-line già definita: assicurati sia sopra il video ma non blocchi */
+#scannerOverlay .scan-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 1px;
+  animation: scanMove 1.6s linear infinite;
+  z-index: 4030;
+}
+
+/* piccola regola di fallback per iOS/Safari: se il video è initially hidden, forzalo visibile */
+#scannerVideo[style*="display:none"], #scannerVideo[hidden] {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* se stai mostrando drawer/modal anche sotto altre regole, assicurati che overlay usato per il drawer non copra il modal */
+#drawerOverlay, .menu-overlay {
+  z-index: 3590;
+}
+
+/* Fine patch scanner modal */
