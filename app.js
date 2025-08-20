@@ -38,7 +38,7 @@ class ExpenseTracker {
         this.productsReference = this.loadProductsReference();
         document.dispatchEvent(new CustomEvent('app:productsReference-changed', { detail: this.productsReference }));
       }
-      if (e.key === this.storesMetaKey) { // NEW
+      if (e.key === this.storesMetaKey) {
         this.storesMeta = this.loadStoresMeta();
         document.dispatchEvent(new CustomEvent('app:storesMeta-changed', { detail: this.storesMeta }));
       }
@@ -67,10 +67,6 @@ class ExpenseTracker {
     }
   }
 
-  /**
-   * Aggiorna l'archivio referenze prodotto. Registra solo il prezzo minimo osservato.
-   * product: { name, price, priceKg?, ... }
-   */
   updateProductReference(product) {
     try {
       if (!product || !product.name) return;
@@ -103,10 +99,6 @@ class ExpenseTracker {
     }
   }
 
-  /**
-   * Confronta il prodotto passato con la referenza (minPrice).
-   * Ritorna { reference: number, difference: number } oppure null
-   */
   compareWithReference(product) {
     try {
       if (!product || !product.name) return null;
@@ -161,7 +153,6 @@ class ExpenseTracker {
     this.expenses.push(expense);
     this.saveExpenses();
 
-    // aggiorna archivio prezzi usando i prodotti salvati
     (expense.products || []).forEach(p => {
       try { this.updateProductReference(p); } catch (e) { /* ignore per singolo prodotto */ }
     });
@@ -384,24 +375,19 @@ class ExpenseTracker {
       this.stores = cleanList;
       this.populateAllStoreSelects();
 
-      // ensure meta entries exist for new stores, and remove meta for deleted ones
       try {
         const keepKeys = cleanList.map(s => s.trim().toLowerCase());
         if (!this.storesMeta) this.storesMeta = {};
-        // create meta if missing
         keepKeys.forEach(k => {
           if (!this.storesMeta[k]) {
             this.storesMeta[k] = { logo: null, description: null, updatedAt: new Date().toISOString() };
           }
         });
-        // remove meta of stores not present
         Object.keys(this.storesMeta || {}).forEach(k => {
           if (!keepKeys.includes(k)) delete this.storesMeta[k];
         });
         this.saveStoresMeta();
-      } catch (e) {
-        // ignore non-critical
-      }
+      } catch (e) {}
 
       document.dispatchEvent(new CustomEvent('app:stores-changed', { detail: this.stores }));
     } catch (e) {
@@ -482,7 +468,6 @@ class ExpenseTracker {
     try {
       const raw = localStorage.getItem(this.storesMetaKey);
       if (!raw) {
-        // initialize default meta for default stores (descriptions, logos null)
         const obj = {};
         (this.defaultStores || []).forEach(s => {
           obj[s.trim().toLowerCase()] = { logo: null, description: null, updatedAt: new Date().toISOString() };
@@ -506,10 +491,6 @@ class ExpenseTracker {
     }
   }
 
-  /**
-   * Recupera i metadati per un supermercato (case-insensitive).
-   * Ritorna oggetto {logo, description, updatedAt} oppure null
-   */
   getStoreMeta(name) {
     if (!name) return null;
     try {
@@ -520,10 +501,6 @@ class ExpenseTracker {
     }
   }
 
-  /**
-   * Imposta/aggiorna i metadati per un supermercato.
-   * meta: { logo?: string|null, description?: string|null }
-   */
   setStoreMeta(name, meta) {
     if (!name || !meta) return false;
     try {
@@ -543,10 +520,6 @@ class ExpenseTracker {
     }
   }
 
-  /**
-   * Import di massa dei metadati:
-   * obj = { "<store-lowercase>": { logo, description }, ... }
-   */
   importStoresMeta(obj) {
     if (!obj || typeof obj !== 'object') return false;
     try {
@@ -568,10 +541,6 @@ class ExpenseTracker {
     }
   }
 
-  /**
-   * Utility: ritorna lista di stores con meta (utile per view)
-   * [{ name, meta }, ...]
-   */
   getStoresWithMeta() {
     const stores = this.getStores();
     return stores.map(s => ({ name: s, meta: this.getStoreMeta(s) || {} }));
@@ -581,9 +550,7 @@ class ExpenseTracker {
   // CART API (event-driven)
   // -------------------------
   addProductToCart(product) {
-    // product: { id?, name, price, category, notes, image? }
     const p = { id: product.id || this.generateId(), ...product };
-    // attach price comparison if possible
     try {
       const comparison = this.compareWithReference(p);
       if (comparison) p._priceComparison = comparison;
@@ -639,10 +606,7 @@ const app = new ExpenseTracker();
 // on DOM ready, populate selects and emit initial state
 document.addEventListener('DOMContentLoaded', () => {
   try { app.populateAllStoreSelects(); } catch (e) {}
-  // emit initial cart state
   document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: app.currentCart }));
-  // emit productsReference changed (initial)
   document.dispatchEvent(new CustomEvent('app:productsReference-changed', { detail: app.productsReference }));
-  // emit storesMeta changed (initial)
   document.dispatchEvent(new CustomEvent('app:storesMeta-changed', { detail: app.storesMeta }));
 });
