@@ -765,3 +765,49 @@ main.dashboard .blocks .block:nth-child(even) .label .meta { color: rgba(122,169
 main.dashboard .blocks .block:focus { outline: 3px solid rgba(122,169,134,0.12); outline-offset: 4px; }
 
 /* End new rules */
+
+/* ===== Menu overlay + behavior ===== */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 3400;
+  display: none;
+  opacity: 0;
+  transition: opacity .18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* When visible, fade it in */
+.menu-overlay.visible {
+  display: block;
+  opacity: 1;
+}
+
+/* Prevent background scroll when menu open */
+body.no-scroll {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* Side menu slide-in (subtle) */
+#sideMenu {
+  transform: translateX(-8px);
+  transition: transform .22s ease, opacity .18s ease;
+  will-change: transform;
+}
+
+/* "open" state: ensure fully in view */
+#sideMenu.open {
+  transform: translateX(0);
+}
+
+/* Minor polish: links inside menu get visible focus ring for accessibility */
+#sideMenu a:focus {
+  outline: 3px solid rgba(122,169,134,0.18);
+  outline-offset: 2px;
+}
+
+/* Small tweak to ensure overlay sits under sideMenu but above page */
+#sideMenu { z-index: 3500; }
+.menu-overlay { z-index: 3400; }
