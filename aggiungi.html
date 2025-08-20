@@ -117,6 +117,13 @@
     .add-product-drawer .drawer-header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 6px 12px 6px; }
     .add-product-drawer .drawer-body { padding:4px 6px 12px 6px; }
     .menu-overlay.visible { display:block; opacity:1; }
+
+    /* small table tweaks */
+    #cartTable td, #cartTable th { padding:10px 8px; vertical-align:middle; }
+    .cart-product-name { font-weight:600; }
+    .cart-product-meta { color:var(--gh-muted); font-size:0.9rem; }
+    .cart-remove-btn { background:transparent; border:none; color:var(--gh-danger); cursor:pointer; font-size:1rem; padding:6px; }
+    .cart-thumb { width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid rgba(0,0,0,0.04); }
   </style>
 </head>
 <body>
@@ -172,7 +179,6 @@
       </div>
 
       <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px;">
-        <!-- "Scegli manualmente" rimosso su richiesta -->
         <button id="confirmStoreBtn" class="btn" disabled aria-disabled="true">✔️ Conferma</button>
       </div>
     </section>
@@ -318,7 +324,7 @@
   <!-- ZXing (scanner lib) -->
   <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
 
-  <!-- Minimal ZXing wrapper: openScannerModal / closeScannerModal / switchCamera -->
+  <!-- Minimal ZXing wrapper: openScannerModal / closeScannerModal / switchCamera (robust) -->
   <script>
   (function(){
     let codeReader = null;
@@ -326,6 +332,15 @@
     let currentDeviceIndex = -1;
     let isScannerOpen = false;
     let barcodeHandled = false;
+
+    // find the correct global for ZXing Browser class
+    function getZXingNamespace() {
+      if (window.ZXingBrowser) return window.ZXingBrowser;
+      if (window.ZXing) return window.ZXing;
+      // UMD sometimes exposes BrowserMultiFormatReader directly
+      if (window.BrowserMultiFormatReader) return { BrowserMultiFormatReader: window.BrowserMultiFormatReader };
+      return null;
+    }
 
     function updateDeviceLabel(text) {
       const lab = document.getElementById('deviceLabel');
@@ -351,6 +366,7 @@
     }
 
     async function prepareDevicesAndChoosePreferred() {
+      // Try to request permission to populate device labels
       try {
         await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
           .then(s => { s.getTracks().forEach(t => t.stop()); })
@@ -370,8 +386,16 @@
       isScannerOpen = true;
       barcodeHandled = false;
 
+      const ns = getZXingNamespace();
+      if (!ns || !ns.BrowserMultiFormatReader) {
+        console.error('ZXing library not found');
+        alert('Scanner non disponibile (libreria mancante).');
+        closeScannerModal();
+        return;
+      }
+
       try {
-        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+        codeReader = new ns.BrowserMultiFormatReader();
       } catch (e) {
         console.error('ZXing init error', e);
         alert('Scanner non disponibile in questo dispositivo.');
@@ -416,7 +440,9 @@
       const chosen = availableVideoDevices[currentDeviceIndex];
       updateDeviceLabel('Camera: ' + (chosen.label || 'Sconosciuta'));
       try {
-        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+        const ns = getZXingNamespace();
+        if (!ns || !ns.BrowserMultiFormatReader) { alert('Errore con la libreria scanner.'); return; }
+        codeReader = new ns.BrowserMultiFormatReader();
         const videoElem = document.getElementById('scannerVideo');
         await codeReader.decodeFromVideoDevice(chosen.deviceId, videoElem, (result, err) => {
           if (result && result.getText) {
@@ -530,7 +556,6 @@
       const closeDrawerBtn = document.getElementById('closeDrawerBtn');
       const drawerAddBtn = document.getElementById('drawerAddBtn');
 
-      // ensure floating buttons hidden while choosing store
       function hideFloating() {
         floatingAddBtn.classList.add('hidden');
         floatingCameraBtn.classList.add('hidden');
@@ -543,7 +568,6 @@
       // start with floating hidden because storeChoiceCard is visible
       hideFloating();
 
-      // map store -> domain for Clearbit plus custom descriptions
       const logoMap = {
         "Conad": "conad.it",
         "Coop": "coop.it",
@@ -572,7 +596,6 @@
 
       let selectedStore = null;
 
-      // placeholder svg generator
       function placeholderSVG(name, diameter=64) {
         const initials = (name || '').split(' ').slice(0,2).map(s => s[0]?.toUpperCase()||'').join('');
         const bg = getComputedStyle(document.documentElement).getPropertyValue('--gh-salvia') || '#7aa986';
@@ -616,7 +639,6 @@
           }
 
           card.addEventListener('click', () => {
-            // single select
             document.querySelectorAll('.store-card.selected').forEach(el => el.classList.remove('selected'));
             card.classList.add('selected');
             selectedStore = sName;
@@ -636,7 +658,6 @@
       confirmBtn.disabled = true;
       confirmBtn.setAttribute('aria-disabled','true');
 
-      // accessibility: keep aria-disabled in sync with disabled state
       if (confirmBtn) {
         const mo = new MutationObserver(() => {
           if (confirmBtn.disabled) confirmBtn.setAttribute('aria-disabled','true');
@@ -649,7 +670,6 @@
       // confirm selection behaviour
       confirmBtn?.addEventListener('click', () => {
         if (!selectedStore) return;
-        // set storeSelect value for later saving
         try { app.populateAllStoreSelects(); } catch(e){}
         const storeSel = document.getElementById('storeSelect');
         if (storeSel) {
@@ -665,23 +685,21 @@
         // Hide store choice card
         storeChoiceCard.classList.add('hidden');
 
-        // Show empty cart placeholder (not the old aggiungi form)
+        // Show empty cart placeholder
         cartMainPlaceholder.style.display = 'flex';
         cartMainPlaceholder.removeAttribute('aria-hidden');
 
         // ensure floating buttons re-appear
         showFloating();
 
-        // ensure expenseForm remains hidden until the user adds a product (then we'll show it)
+        // ensure expenseForm remains hidden until the user adds a product
         expenseForm.classList.add('hidden');
 
-        // scroll top
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
       // Drawer open/close
       function openDrawer() {
-        // don't allow open if still on storeChoice
         if (!storeChoiceCard.classList.contains('hidden')) return;
         drawerOverlay.classList.add('visible');
         drawer.classList.remove('hidden');
@@ -697,7 +715,6 @@
         drawer.setAttribute('aria-hidden','true');
         document.body.classList.remove('no-scroll');
 
-        // show floating buttons again (only if store already chosen)
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
       }
 
@@ -725,7 +742,7 @@
           return;
         }
 
-        // Create product object
+        // Create product object (do not include store here)
         const product = {
           id: app.generateId ? app.generateId() : ('p_'+Date.now()),
           name, category: cat, price, priceKg, notes
@@ -748,18 +765,16 @@
           document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: app.currentCart }));
         }
 
-        // After adding the first product: hide cartMainPlaceholder and show expenseForm/cartSection
+        // After adding the first product: hide placeholder and show cartSection
         const cartSection = document.getElementById('cartSection');
         if (cartSection) {
           cartSection.classList.remove('hidden');
           cartSection.removeAttribute('aria-hidden');
         }
         cartMainPlaceholder.style.display = 'none';
-
-        // ensure expense form (with cart) becomes visible so user can save
         expenseForm.classList.remove('hidden');
 
-        // trigger UI update (updateCartDisplay if available)
+        // explicit UI update
         try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
 
         // reset drawer fields and close drawer
@@ -778,7 +793,6 @@
       // Floating camera button opens scanner
       document.getElementById('floatingCameraBtn')?.addEventListener('click', async (e) => {
         e.preventDefault();
-        // if still selecting store, ignore
         if (!storeChoiceCard.classList.contains('hidden')) return;
         if (typeof openScannerModal === 'function') {
           try { await openScannerModal(); } catch (err) { console.warn(err); alert('Impossibile aprire la fotocamera.'); }
@@ -800,7 +814,7 @@
       // populate selects if user skipped (or for confirm)
       try { app.populateAllStoreSelects(); } catch(e){}
 
-      // small: when cart changed, hide placeholder if items exist or show placeholder if empty
+      // when cart changed, update UI
       document.addEventListener('app:cart-changed', (ev) => {
         const cart = (app && app.currentCart) ? app.currentCart : (ev && ev.detail) ? ev.detail : [];
         if (!cart || cart.length === 0) {
@@ -815,6 +829,9 @@
           document.getElementById('expenseForm')?.classList.remove('hidden');
         }
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
+
+        // update table
+        try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
       });
 
       // menu overlay open/close (side menu)
@@ -844,8 +861,117 @@
     }); // DOMContentLoaded
   </script>
 
-  <!-- Nota: updateCartDisplay function and altre utility UI sono attese dalla pagina (inclusa in precedenti versioni).
-       Se non li hai ancora in un file separato, aggiungi qui la funzione updateCartDisplay (o ricopia quella che avevi prima)
-       in modo che la tabella del carrello venga popolata quando app:cart-changed viene emesso. -->
+  <!-- updateCartDisplay: popola #cartBody, aggiorna totale, abilita pulsanti -->
+  <script>
+    function updateCartDisplay() {
+      try {
+        const tbody = document.getElementById('cartBody');
+        if (!tbody) return;
+        // get cart from app (fallback to event detail)
+        const cart = (window.app && Array.isArray(window.app.currentCart)) ? window.app.currentCart : [];
+        tbody.innerHTML = '';
+
+        if (!cart || cart.length === 0) {
+          document.getElementById('cartTotal').textContent = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(0) : '€0.00';
+          document.getElementById('saveExpenseBtn').disabled = true;
+          return;
+        }
+
+        cart.forEach(item => {
+          const tr = document.createElement('tr');
+
+          // Product column: thumbnail + name + meta(category, notes)
+          const tdProd = document.createElement('td');
+          const prodWrap = document.createElement('div');
+          prodWrap.style.display = 'flex';
+          prodWrap.style.gap = '10px';
+          prodWrap.style.alignItems = 'center';
+
+          if (item.image) {
+            const img = document.createElement('img');
+            img.src = item.image;
+            img.alt = item.name || 'img';
+            img.className = 'cart-thumb';
+            prodWrap.appendChild(img);
+          } else {
+            const placeholder = document.createElement('div');
+            placeholder.style.width = '48px';
+            placeholder.style.height = '48px';
+            placeholder.style.borderRadius = '6px';
+            placeholder.style.background = 'rgba(0,0,0,0.04)';
+            prodWrap.appendChild(placeholder);
+          }
+
+          const info = document.createElement('div');
+          const nameEl = document.createElement('div');
+          nameEl.className = 'cart-product-name';
+          nameEl.textContent = item.name || '';
+
+          const metaEl = document.createElement('div');
+          metaEl.className = 'cart-product-meta';
+          const cat = item.category ? item.category : '';
+          const notes = item.notes ? (' — ' + item.notes) : '';
+          metaEl.textContent = cat + (item.priceKg ? (` • ${item.priceKg} €/kg`) : '') + (notes ? notes : '');
+
+          info.appendChild(nameEl);
+          info.appendChild(metaEl);
+          prodWrap.appendChild(info);
+          tdProd.appendChild(prodWrap);
+          tr.appendChild(tdProd);
+
+          // Price column
+          const tdPrice = document.createElement('td');
+          tdPrice.style.whiteSpace = 'nowrap';
+          const priceText = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(parseFloat(item.price || 0)) : `€${Number(item.price||0).toFixed(2)}`;
+          tdPrice.textContent = priceText;
+          tr.appendChild(tdPrice);
+
+          // Actions column: remove button
+          const tdActions = document.createElement('td');
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'cart-remove-btn';
+          removeBtn.type = 'button';
+          removeBtn.title = 'Rimuovi';
+          removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+          removeBtn.addEventListener('click', () => {
+            try {
+              if (window.app && typeof app.removeProductFromCart === 'function') {
+                app.removeProductFromCart(item.id);
+              } else {
+                // fallback
+                const idx = window.app.currentCart.findIndex(p => p.id === item.id);
+                if (idx !== -1) { window.app.currentCart.splice(idx,1); document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart })); }
+              }
+            } catch (e) {
+              console.error('remove from cart error', e);
+            }
+          });
+          tdActions.appendChild(removeBtn);
+          tr.appendChild(tdActions);
+
+          tbody.appendChild(tr);
+        });
+
+        // update total & enable save button
+        const total = (window.app && typeof app.getCartTotal === 'function') ? app.getCartTotal() : cart.reduce((s,i)=> s + (parseFloat(i.price)||0),0);
+        document.getElementById('cartTotal').textContent = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(total) : `€${total.toFixed(2)}`;
+        const saveBtn = document.getElementById('saveExpenseBtn');
+        if (saveBtn) saveBtn.disabled = !(cart && cart.length > 0);
+
+      } catch (err) {
+        console.error('updateCartDisplay error', err);
+      }
+    }
+
+    // initial render (in case there are items already)
+    document.addEventListener('DOMContentLoaded', () => {
+      try { updateCartDisplay(); } catch (e) { console.warn(e); }
+    });
+
+    // also listen to app:cart-changed if emitted elsewhere
+    document.addEventListener('app:cart-changed', () => {
+      try { updateCartDisplay(); } catch(e){ console.warn(e); }
+    });
+  </script>
 </body>
 </html>
