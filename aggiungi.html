@@ -17,6 +17,54 @@
 
   <!-- Stili unificati (tuo style.css "bellissima") -->
   <link rel="stylesheet" href="style.css?v=20250816" />
+
+  <!-- Stili specifici per store-choice -->
+  <style>
+    /* Grid store cards */
+    .store-list-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .store-card {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: var(--panel);
+      cursor: pointer;
+      text-align:left;
+      transition: transform .12s ease, box-shadow .14s ease, background .12s ease;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+      width:100%;
+    }
+    .store-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.06); }
+    .store-card.selected {
+      background: var(--gh-salvia);
+      color: #fff;
+      border-color: rgba(0,0,0,0.04);
+      box-shadow: 0 12px 38px rgba(122,169,134,0.14);
+    }
+    .store-card .store-logo {
+      width:64px; height:64px; object-fit:contain; border-radius:8px; background:transparent;
+      flex:0 0 64px;
+      border: none;
+    }
+    .store-card .store-card-body { flex:1; min-width:0; }
+    .store-card .store-card-title { font-weight:700; color:var(--gh-text-strong); }
+    .store-card.selected .store-card-title { color: #fff; }
+    .store-card .store-card-desc { color:var(--gh-muted); font-size:0.92rem; margin-top:4px; }
+    .store-card.selected .store-card-desc { color: rgba(255,255,255,0.9); }
+
+    /* ensure confirm button aligns on small screens */
+    @media (max-width:560px) {
+      .store-list-grid { grid-template-columns: 1fr; }
+      #storeChoiceCard .section-header { gap:10px; }
+    }
+  </style>
 </head>
 <body>
   <!-- Header (identico a index) -->
@@ -33,7 +81,7 @@
     </div>
   </header>
 
-  <!-- Off-canvas side menu -->
+  <!-- Off-canvas side menu (ridotto come richiesto in precedenza) -->
   <nav id="sideMenu" class="hidden" aria-hidden="true">
     <div class="menu-header">
       <div class="menu-logo">GH</div>
@@ -119,7 +167,21 @@
           <div class="form-row">
             <div class="form-group">
               <label for="productCategory">Tipologia</label>
-              <select id="productCategory" required>...</select>
+              <select id="productCategory" required>
+                <option value="">Seleziona tipologia</option>
+                <option value="Carne">Carne</option>
+                <option value="Pesce">Pesce</option>
+                <option value="Verdura">Verdura</option>
+                <option value="Frutta">Frutta</option>
+                <option value="Latticini">Latticini</option>
+                <option value="Pane">Pane e Cereali</option>
+                <option value="Bevande">Bevande</option>
+                <option value="Surgelati">Surgelati</option>
+                <option value="Dolci">Dolci</option>
+                <option value="Pulizia">Prodotti Pulizia</option>
+                <option value="Igiene">Igiene Personale</option>
+                <option value="Altro">Altro</option>
+              </select>
             </div>
 
             <div class="form-group suggestions">
@@ -283,7 +345,7 @@
     })();
   </script>
 
-  <!-- Script: menu handling + populate side menu stores + store choice flow + drawer -->
+  <!-- Script: menu handling + populate side menu stores + store choice flow + drawer + logos -->
   <script>
     /***** MENU OPEN/CLOSE WITH OVERLAY (tap outside to close) *****/
     document.addEventListener('DOMContentLoaded', () => {
@@ -324,8 +386,23 @@
 
       let selectedStore = null;
 
-      // generate a lightweight placeholder SVG avatar with initials
-      function placeholderSVG(name, diameter=56) {
+      // Map: store name -> domain used to fetch logo via Clearbit
+      // If Clearbit doesn't return an image, we fallback to generated SVG
+      const logoMap = {
+        "Conad": "conad.it",
+        "Coop": "coop.it",
+        "Esselunga": "esselunga.it",
+        "Eurospin": "eurospin.it",
+        "Carrefour": "carrefour.it",
+        "Lidl": "lidl.it",
+        "MD": "mdspa.it",
+        "Pam": "pam.it",
+        "Simply": "simplymarket.it",
+        "Iper": "iper.it"
+      };
+
+      // generate a lightweight placeholder SVG avatar with initials (data URL)
+      function placeholderSVG(name, diameter=64) {
         const initials = (name || '').split(' ').slice(0,2).map(s => s[0]?.toUpperCase()||'').join('');
         const bg = getComputedStyle(document.documentElement).getPropertyValue('--gh-salvia') || '#7aa986';
         const fg = '#fff';
@@ -342,27 +419,44 @@
         if (!storeListGrid) return;
         storeListGrid.innerHTML = '';
         const stores = (typeof app?.getStores === 'function') ? app.getStores() : [];
-        if (!stores || !stores.length) {
-          storeListGrid.innerHTML = '<div class="no-expenses">Nessun supermercato disponibile</div>';
-          return;
-        }
+        // fallback default if app not ready
+        const defaultList = ["Conad","Coop","Esselunga","Eurospin","Carrefour","Lidl","MD","Pam","Simply","Iper"];
+        const finalStores = (stores && stores.length) ? stores : defaultList;
 
-        stores.forEach((sName) => {
+        finalStores.forEach((sName) => {
           const card = document.createElement('button');
           card.type = 'button';
           card.className = 'store-card';
           card.setAttribute('role','listitem');
+          // determine logo src (clearbit)
+          const domain = logoMap[sName] || '';
+          const clearbitUrl = domain ? `https://logo.clearbit.com/${domain}?size=128` : '';
+          const imgSrc = clearbitUrl || placeholderSVG(sName,64);
+
           card.innerHTML = `
             <div class="store-card-left">
-              <img class="store-logo" src="${placeholderSVG(sName,64)}" alt="${sName} logo" />
+              <img class="store-logo" src="${imgSrc}" alt="${sName} logo" />
             </div>
             <div class="store-card-body">
-              <div class="store-card-title">${sName}</div>
+              <div class="store-card-title">${escapeHtml(sName)}</div>
               <div class="store-card-desc"><em>${escapeHtml(describeFor(sName))}</em></div>
             </div>
           `;
+
+          // if clearbit image fails, fallback to placeholder SVG
+          const imgEl = card.querySelector('img.store-logo');
+          if (imgEl) {
+            imgEl.addEventListener('error', () => {
+              imgEl.src = placeholderSVG(sName,64);
+            });
+            // provide a small onload check to ensure not broken (optional)
+            imgEl.addEventListener('load', () => {
+              // if the loaded image is tiny or generic, we still keep it; user can change later
+            });
+          }
+
           card.addEventListener('click', () => {
-            // toggle selection
+            // toggle selection (single select)
             document.querySelectorAll('.store-card.selected').forEach(el => el.classList.remove('selected'));
             card.classList.add('selected');
             selectedStore = sName;
@@ -521,6 +615,5 @@
   </script>
 
   <!-- Tutto il JS di aggiungi (scanner, cart, autocomplete) - mantenuto identico e collocato qui -->
-  <!-- (Il resto del tuo script esistente rimane nello stesso file sotto; non l'ho rimosso) -->
 </body>
 </html>
