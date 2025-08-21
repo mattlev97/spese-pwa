@@ -1,5 +1,6 @@
 /* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, events, archivio prezzi
    + supporto stores metadata (logo + description)
+   NOTE: versione aggiornata con API add/remove/update/clear e eventi coerenti
 */
 class ExpenseTracker {
   constructor() {
@@ -292,14 +293,46 @@ class ExpenseTracker {
   addProductToCart(product) {
     const p = { id: product.id || this.generateId(), ...product };
     try { const comparison = this.compareWithReference(p); if (comparison) p._priceComparison = comparison; } catch (e) {}
+    // ensure numeric price
+    p.price = this._normalizePriceValue(p.price);
     this.currentCart.push(p);
     document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
     return p;
   }
-  removeProductFromCart(productId) { this.currentCart = this.currentCart.filter(p => p.id !== productId); document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart })); }
-  clearCart() { this.currentCart = []; document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart })); }
+  removeProductFromCart(productId) {
+    this.currentCart = this.currentCart.filter(p => p.id !== productId);
+    document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
+  }
+  updateProductInCart(product) {
+    try {
+      const idx = this.currentCart.findIndex(p => p.id === product.id);
+      if (idx === -1) return null;
+      const updated = { ...this.currentCart[idx], ...product };
+      updated.price = this._normalizePriceValue(updated.price);
+      this.currentCart[idx] = updated;
+      document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
+      return updated;
+    } catch (e) { console.error('updateProductInCart error', e); return null; }
+  }
+  clearCart() {
+    this.currentCart = [];
+    document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
+  }
   getCartTotal() { return this.currentCart.reduce((s,p) => s + (parseFloat(p.price)||0), 0); }
   saveCartAsExpense(store, date) { if (!store || !date) return null; try { const toSaveProducts = (this.currentCart || []).map(p => ({ ...p })); const saved = this.addExpense(store, date, toSaveProducts); this.clearCart(); return saved; } catch (e) { console.error('saveCartAsExpense error', e); return null; } }
+
+  // normalize price (accept comma or dot)
+  _normalizePriceValue(raw) {
+    try {
+      if (typeof raw === 'number') return raw;
+      if (!raw) return 0;
+      let s = String(raw).trim();
+      // replace comma with dot (italian decimal)
+      s = s.replace(/\s/g,'').replace(',', '.');
+      const v = parseFloat(s);
+      return isNaN(v) ? 0 : v;
+    } catch(e) { return 0; }
+  }
 
   // scanned image helpers
   setLastScannedImage(urlOrNull) { this._lastScannedImage = urlOrNull || null; document.dispatchEvent(new CustomEvent('app:last-scanned-image-changed', { detail: this._lastScannedImage })); }
