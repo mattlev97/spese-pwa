@@ -106,7 +106,8 @@
     #cartTable td, #cartTable th { padding:10px 8px; vertical-align:middle; }
     .cart-product-name { font-weight:600; }
     .cart-product-meta { color:var(--gh-muted); font-size:0.9rem; }
-    .cart-remove-btn { background:transparent; border:none; color:var(--gh-danger); cursor:pointer; font-size:1rem; padding:6px; }
+    .cart-remove-btn { background:transparent; border:none; color:var(--gh-terracotta); cursor:pointer; font-size:1rem; padding:6px; }
+    .cart-edit-btn { background:transparent; border:none; color:var(--gh-text-strong); cursor:pointer; font-size:1rem; padding:6px; margin-right:6px; }
     .cart-thumb { width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid rgba(0,0,0,0.04); }
 
     /* drawer image preview */
@@ -228,7 +229,7 @@
             <tbody id="cartBody"></tbody>
           </table>
         </div>
-        <div class="cart-total"><strong>Totale: <span id="cartTotal">€0.00</span></strong></div>
+        <div class="cart-total" style="margin-top:8px;"><strong>Totale: <span id="cartTotal">€0.00</span></strong></div>
       </section>
 
       <section class="form-actions" style="margin-top:12px;display:flex;gap:10px;">
@@ -543,6 +544,64 @@
     // helper escape
     function escapeHtml(txt){ const d = document.createElement('div'); d.textContent = txt || ''; return d.innerHTML; }
 
+    // create category placeholder (SVG data url) containing an emoji/icon on grey bg
+    function categoryPlaceholderSVG(category, diameter=48) {
+      const map = {
+        'Latticini': '🧀',
+        'Verdura': '🥬',
+        'Frutta': '🍎',
+        'Carne': '🥩',
+        'Pesce': '🐟',
+        'Pane': '🥖',
+        'Bevande': '🥤',
+        'Altro': '🧾'
+      };
+      const icon = map[category] || '🛒';
+      const bg = '#cfcfcf';
+      const fg = '#ffffff';
+      const fontSize = Math.round(diameter * 0.6);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
+        <rect width="100%" height="100%" rx="6" fill="${bg}"/>
+        <text x="50%" y="50%" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" fill="${fg}" dominant-baseline="middle" text-anchor="middle">${icon}</text>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    function showToast(msg, timeout = 1400) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.style.display = 'block';
+      t.setAttribute('aria-hidden','false');
+      setTimeout(()=>{ t.style.display='none'; t.setAttribute('aria-hidden','true'); }, timeout);
+    }
+
+    // Ensure window.app exists (app.js should create it)
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.app) window.app = new ExpenseTracker();
+
+      // Add helper updateProductInCart if not present on app
+      if (!window.app.updateProductInCart) {
+        window.app.updateProductInCart = function(updatedProduct) {
+          try {
+            if (!this.currentCart) this.currentCart = [];
+            const idx = this.currentCart.findIndex(p => p.id === updatedProduct.id);
+            if (idx === -1) {
+              // add if not exist
+              this.currentCart.push(updatedProduct);
+            } else {
+              this.currentCart[idx] = { ...this.currentCart[idx], ...updatedProduct };
+            }
+            document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
+            return true;
+          } catch (e) {
+            console.error('updateProductInCart error', e);
+            return false;
+          }
+        };
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
       // Elements
       const storeListGrid = document.getElementById('storeListGrid');
@@ -717,6 +776,38 @@
         document.body.classList.remove('no-scroll');
 
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
+
+        // reset any edit mode
+        const addBtn = document.getElementById('drawerAddBtn');
+        if (addBtn) {
+          delete addBtn.dataset.editing;
+          addBtn.textContent = 'Aggiungi al carrello';
+        }
+      }
+
+      function openDrawerWithProduct(product) {
+        // populate fields and open drawer in edit mode
+        if (!product) return;
+        openDrawer();
+        document.getElementById('drawerProductName').value = product.name || '';
+        document.getElementById('drawerProductCategory').value = product.category || '';
+        document.getElementById('drawerProductPrice').value = (product.price !== undefined) ? product.price : '';
+        document.getElementById('drawerProductPriceKg').value = (product.priceKg !== undefined && product.priceKg !== null) ? product.priceKg : '';
+        document.getElementById('drawerProductNotes').value = product.notes || '';
+
+        const previewWrap = document.getElementById('drawerImagePreview');
+        const previewImg = document.getElementById('drawerPreviewImg');
+        if (product.image) {
+          previewImg.src = product.image;
+          previewWrap.style.display = 'block';
+        } else {
+          previewImg.src = categoryPlaceholderSVG(product.category || 'Altro', 64);
+          previewWrap.style.display = 'block';
+        }
+
+        const addBtn = document.getElementById('drawerAddBtn');
+        addBtn.dataset.editing = product.id;
+        addBtn.textContent = 'Salva modifica';
       }
 
       document.getElementById('floatingAddBtn')?.addEventListener('click', (e) => {
@@ -761,37 +852,64 @@
         const priceKgRaw = (priceKgInput?.value || '').trim();
         const notes = (notesInput?.value || '').trim();
 
-        const price = parseFloat(priceRaw || 0);
-        const priceKg = priceKgRaw ? parseFloat(priceKgRaw) : null;
+        // normalize decimals (comma -> dot)
+        const normalize = s => (s||'').toString().trim().replace(',', '.');
+
+        const price = parseFloat(normalize(priceRaw)) || 0;
+        const priceKg = priceKgRaw ? (parseFloat(normalize(priceKgRaw)) || null) : null;
 
         if (!name || !cat || !price || isNaN(price) || price <= 0) {
           alert('Compila nome, categoria e prezzo correttamente.');
           return;
         }
 
-        const product = {
-          id: (window.app && typeof app.generateId === 'function') ? app.generateId() : ('p_'+Date.now()),
-          name, category: cat, price, priceKg, notes
-        };
-
-        // attach scanned image if any (prefer app.getLastScannedImage)
-        try {
-          if (window.app && typeof app.getLastScannedImage === 'function') {
-            const img = app.getLastScannedImage();
-            if (img) product.image = img;
+        const editingId = drawerAddBtn.dataset.editing;
+        if (editingId) {
+          // update existing product in cart (use app.updateProductInCart if available)
+          const updated = { id: editingId, name, category: cat, price, priceKg, notes };
+          if (window.app && typeof window.app.updateProductInCart === 'function') {
+            window.app.updateProductInCart(updated);
+            showToast('Prodotto aggiornato');
+          } else {
+            // fallback: replace in currentCart
+            if (!window.app.currentCart) window.app.currentCart = [];
+            const idx = window.app.currentCart.findIndex(p => p.id === editingId);
+            if (idx !== -1) {
+              const prevImg = window.app.currentCart[idx].image;
+              window.app.currentCart[idx] = { ...window.app.currentCart[idx], ...updated, image: prevImg };
+              document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart }));
+              showToast('Prodotto aggiornato');
+            }
           }
-        } catch(e){}
+        } else {
+          const product = {
+            id: (window.app && typeof app.generateId === 'function') ? app.generateId() : ('p_'+Date.now()),
+            name, category: cat, price, priceKg, notes
+          };
 
-        // also check drawer preview if available
-        try {
-          const previewImg = document.getElementById('drawerPreviewImg');
-          if (!product.image && previewImg && previewImg.src) {
-            product.image = previewImg.src;
-          }
-        } catch(e){}
+          // attach scanned image if any (prefer app.getLastScannedImage)
+          try {
+            if (window.app && typeof app.getLastScannedImage === 'function') {
+              const img = app.getLastScannedImage();
+              if (img) product.image = img;
+            }
+          } catch(e){}
 
-        // add product (safe)
-        safeAddProductToCart(product);
+          // also check drawer preview if available
+          try {
+            const previewImg = document.getElementById('drawerPreviewImg');
+            if (!product.image && previewImg && previewImg.src) {
+              product.image = previewImg.src;
+            }
+          } catch(e){}
+
+          // add product (safe)
+          safeAddProductToCart(product);
+          showToast('Prodotto aggiunto al carrello');
+
+          // clear last scanned image to avoid reuse
+          try { if (app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(null); } catch(e){}
+        }
 
         // ensure UI shows cart and updates
         document.getElementById('cartSection')?.classList.remove('hidden');
@@ -802,20 +920,22 @@
         try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
 
         // reset drawer fields and preview
-        if (nameInput) nameInput.value = '';
-        if (catInput) catInput.value = '';
-        if (priceInput) priceInput.value = '';
-        if (priceKgInput) priceKgInput.value = '';
-        if (notesInput) notesInput.value = '';
+        if (!drawerAddBtn.dataset.editing) { // if not editing, clear
+          if (nameInput) nameInput.value = '';
+          if (catInput) catInput.value = '';
+          if (priceInput) priceInput.value = '';
+          if (priceKgInput) priceKgInput.value = '';
+          if (notesInput) notesInput.value = '';
+        }
 
         const previewWrap = document.getElementById('drawerImagePreview');
         const previewImg = document.getElementById('drawerPreviewImg');
-        if (previewImg) previewImg.src = '';
-        if (previewWrap) previewWrap.style.display = 'none';
+        if (!drawerAddBtn.dataset.editing) {
+          if (previewImg) previewImg.src = '';
+          if (previewWrap) previewWrap.style.display = 'none';
+        }
 
-        // clear last scanned image to avoid reuse
-        try { if (app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(null); } catch(e){}
-
+        // close drawer (which will also reset editing flag)
         closeDrawer();
       });
 
@@ -842,12 +962,7 @@
 
       // LISTEN for barcode-scanned event to open drawer & populate preview
       document.addEventListener('app:barcode-scanned', (ev) => {
-        // only react if store already selected (storeChoiceCard hidden) — this mirrors openDrawer guard
         try {
-          if (!storeChoiceCard.classList.contains('hidden')) {
-            // if user hasn't selected store yet, keep scanner results but don't open drawer
-            // still populate drawer fields in background (we will open only when user confirms store)
-          }
           // open drawer if store confirmed
           if (storeChoiceCard.classList.contains('hidden')) openDrawer();
 
@@ -941,7 +1056,62 @@
         main.style.paddingBottom = (navH + extra) + 'px';
         document.body.style.paddingBottom = (navH + extra) + 'px';
       }
-    }); // DOMContentLoaded
+
+      // clear cart button
+      const clearCartBtn = document.getElementById('clearCartBtn');
+      if (clearCartBtn) {
+        clearCartBtn.addEventListener('click', () => {
+          if (!confirm('Vuoi davvero svuotare il carrello?')) return;
+          try {
+            if (window.app && typeof window.app.clearCart === 'function') {
+              window.app.clearCart();
+              showToast('Carrello svuotato');
+            } else {
+              if (!window.app) window.app = {};
+              window.app.currentCart = [];
+              document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart }));
+              showToast('Carrello svuotato');
+            }
+          } catch (e) { console.error('clear cart error', e); }
+        });
+      }
+
+      // save expense button
+      const saveExpenseBtn = document.getElementById('saveExpenseBtn');
+      if (saveExpenseBtn) {
+        saveExpenseBtn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const storeSelect = document.getElementById('storeSelect');
+          const dateInput = document.getElementById('expenseDate');
+          const store = storeSelect ? (storeSelect.value || '') : '';
+          const date = dateInput ? dateInput.value : '';
+
+          if (!store) { alert('Seleziona il supermercato prima di salvare.'); return; }
+          if (!date) { alert('Seleziona la data della spesa.'); return; }
+          if (!window.app || !Array.isArray(window.app.currentCart) || window.app.currentCart.length === 0) { alert('Il carrello è vuoto.'); return; }
+
+          try {
+            const saved = window.app.saveCartAsExpense(store, date);
+            if (saved) {
+              showToast('Spesa salvata con successo', 1600);
+              // ensure UI resets to empty cart state
+              document.getElementById('cartMainPlaceholder').style.display = 'flex';
+              document.getElementById('cartSection')?.classList.add('hidden');
+              document.getElementById('expenseForm')?.classList.add('hidden');
+              // force update displays
+              document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: window.app.expenses }));
+              document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart }));
+              updateCartDisplay();
+            } else {
+              alert('Errore durante il salvataggio della spesa.');
+            }
+          } catch (e) {
+            console.error('save expense error', e);
+            alert('Errore durante il salvataggio della spesa.');
+          }
+        });
+      }
+    }); // end DOMContentLoaded
   </script>
 
   <!-- updateCartDisplay: popola #cartBody, aggiorna totale, abilita pulsanti -->
@@ -970,20 +1140,16 @@
           prodWrap.style.gap = '10px';
           prodWrap.style.alignItems = 'center';
 
+          const img = document.createElement('img');
+          img.className = 'cart-thumb';
           if (item.image) {
-            const img = document.createElement('img');
             img.src = item.image;
             img.alt = item.name || 'img';
-            img.className = 'cart-thumb';
-            prodWrap.appendChild(img);
           } else {
-            const placeholder = document.createElement('div');
-            placeholder.style.width = '48px';
-            placeholder.style.height = '48px';
-            placeholder.style.borderRadius = '6px';
-            placeholder.style.background = 'rgba(0,0,0,0.04)';
-            prodWrap.appendChild(placeholder);
+            img.src = categoryPlaceholderSVG(item.category || 'Altro', 48);
+            img.alt = item.name || '';
           }
+          prodWrap.appendChild(img);
 
           const info = document.createElement('div');
           const nameEl = document.createElement('div');
@@ -1009,8 +1175,20 @@
           tdPrice.textContent = priceText;
           tr.appendChild(tdPrice);
 
-          // Actions column: remove button
+          // Actions column: edit + remove
           const tdActions = document.createElement('td');
+
+          const editBtn = document.createElement('button');
+          editBtn.className = 'cart-edit-btn';
+          editBtn.type = 'button';
+          editBtn.title = 'Modifica';
+          editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+          editBtn.addEventListener('click', () => {
+            // open drawer with data and set edit mode
+            openDrawerWithProduct(item);
+          });
+          tdActions.appendChild(editBtn);
+
           const removeBtn = document.createElement('button');
           removeBtn.className = 'cart-remove-btn';
           removeBtn.type = 'button';
@@ -1019,17 +1197,18 @@
           removeBtn.addEventListener('click', () => {
             try {
               if (window.app && typeof app.removeProductFromCart === 'function') {
-                app.removeProductFromCart(item.id);
+                window.app.removeProductFromCart(item.id);
+                showToast('Prodotto rimosso');
               } else {
-                // fallback
                 const idx = (window.app && Array.isArray(window.app.currentCart)) ? window.app.currentCart.findIndex(p => p.id === item.id) : -1;
-                if (idx !== -1) { window.app.currentCart.splice(idx,1); document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart })); }
+                if (idx !== -1) { window.app.currentCart.splice(idx,1); document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart })); showToast('Prodotto rimosso'); }
               }
             } catch (e) {
               console.error('remove from cart error', e);
             }
           });
           tdActions.appendChild(removeBtn);
+
           tr.appendChild(tdActions);
 
           tbody.appendChild(tr);
