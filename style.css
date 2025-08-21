@@ -1244,3 +1244,47 @@ body.no-scroll {
 body.no-scroll main { pointer-events: auto; }
 
 /* End of style.css updated */
+
+/* ===========================
+   FIX: overlay / store-list visibility patches
+   - previene che l'overlay del menu blocchi la griglia quando il sideMenu è chiuso
+   - garantisce che la griglia dei supermercati sia visibile e interattiva dopo il render
+   - non cambia lo stacking quando il menu è effettivamente aperto
+   =========================== */
+
+/* Se il sideMenu è marcato come hidden, assicurati che l'overlay non blocchi niente (for robustness) */
+#sideMenu.hidden + .menu-overlay,
+#sideMenu.hidden ~ .menu-overlay,
+.menu-overlay:not(.visible) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Garantisce la visibilità e l'interattività della griglia supermercati (id e classe) */
+#storeListGrid,
+.store-list-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 12px !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  position: relative;
+  /* non alziamo z-index oltre gli overlay/modal consciamente:
+     ci fidiamo della regola sopra che nasconde l'overlay quando il sideMenu è hidden */
+}
+
+/* Assicura che le singole card siano cliccabili */
+.store-card {
+  pointer-events: auto !important;
+  position: relative;
+}
+
+/* Se per qualche motivo l'overlay resta visibile erroneamente, evita che tocchi il pannello store-choice (più specifico)
+   Nota: questo solo come salvaguardia locale, non altera il comportamento previsto quando il menu è apert o drawer è visibile */
+.store-choice-card {
+  position: relative;
+  z-index: 1;
+}
+
+/* End FIX */
