@@ -1,7 +1,10 @@
-/* app.js - ExpenseTracker esteso: gestione images da OpenFoodFacts, carrello, events, archivio prezzi
-   + supporto stores metadata (logo + description)
-   NOTE: versione aggiornata con API add/remove/update/clear e eventi coerenti
+/* app.js - ExpenseTracker esteso (versione aggiornata)
+   - populate default store meta logos (clearbit) se mancanti
+   - garantisce prezzi normalizzati sempre come number
+   - aggiorna product references durante add/update
+   - eventi coerenti (app:cart-changed, app:stores-changed, ecc.)
 */
+
 class ExpenseTracker {
   constructor() {
     this.expensesKey = 'expenses';
@@ -14,11 +17,28 @@ class ExpenseTracker {
       "Carrefour", "Lidl", "MD", "Pam", "Simply", "Iper"
     ];
 
+    // mapping utile per popolare loghi tramite Clearbit (usato da UI)
+    this.defaultLogoMap = {
+      "Conad": "conad.it",
+      "Coop": "coop.it",
+      "Esselunga": "esselunga.it",
+      "Eurospin": "eurospin.it",
+      "Carrefour": "carrefour.it",
+      "Lidl": "lidl.it",
+      "MD": "mdspa.it",
+      "Pam": "pam.it",
+      "Simply": "simplymarket.it",
+      "Iper": "iper.it"
+    };
+
     this.expenses = this.loadExpenses();
     this.currentCart = [];
     this.stores = this.loadStores();
     this.productsReference = this.loadProductsReference();
     this.storesMeta = this.loadStoresMeta();
+
+    // try to ensure meta contains logos for default stores (non-destructive)
+    try { this.ensureStoresMetaLogos(); } catch (e) { console.warn('ensureStoresMetaLogos error', e); }
 
     this._lastScannedImage = null;
     this._lastScannedBarcode = null;
@@ -44,7 +64,9 @@ class ExpenseTracker {
     });
   }
 
-  // products reference
+  /* -------------------------
+     Products reference
+     ------------------------- */
   loadProductsReference() {
     try {
       const raw = localStorage.getItem(this.productsKey);
@@ -70,6 +92,7 @@ class ExpenseTracker {
       if (!this.productsReference[name]) {
         this.productsReference[name] = { minPrice: price, lastSeen: new Date().toISOString() };
       } else {
+        // update minPrice if the new is lower
         if (price < (this.productsReference[name].minPrice || Infinity)) {
           this.productsReference[name].minPrice = price;
         }
@@ -97,7 +120,9 @@ class ExpenseTracker {
     } catch (e) { console.error('compareWithReference error', e); return null; }
   }
 
-  // expenses CRUD
+  /* -------------------------
+     Expenses CRUD
+     ------------------------- */
   loadExpenses() {
     try {
       const raw = localStorage.getItem(this.expensesKey);
@@ -144,7 +169,9 @@ class ExpenseTracker {
     return true;
   }
 
-  // formatting / stats
+  /* -------------------------
+     Formatting / stats
+     ------------------------- */
   _normalizeReferenceDate(referenceDate) {
     let d;
     if (!referenceDate) d = new Date();
@@ -227,7 +254,9 @@ class ExpenseTracker {
     try { return new Intl.DateTimeFormat('it-IT', { year:'numeric', month:'short', day:'numeric' }).format(new Date(dateString)); } catch { return dateString || ''; }
   }
 
-  // Stores
+  /* -------------------------
+     Stores
+     ------------------------- */
   loadStores() {
     try {
       const raw = localStorage.getItem(this.storesKey);
@@ -272,7 +301,9 @@ class ExpenseTracker {
     } catch (e) { console.error('populateAllStoreSelects error', e); }
   }
 
-  // stores meta
+  /* -------------------------
+     Stores meta
+     ------------------------- */
   loadStoresMeta() {
     try {
       const raw = localStorage.getItem(this.storesMetaKey);
@@ -289,45 +320,118 @@ class ExpenseTracker {
   importStoresMeta(obj) { if (!obj || typeof obj !== 'object') return false; try { this.storesMeta = this.storesMeta || {}; Object.keys(obj).forEach(k => { const meta = obj[k] || {}; const normalized = String(k || '').trim().toLowerCase(); this.storesMeta[normalized] = { logo: meta.logo || null, description: meta.description || null, updatedAt: new Date().toISOString() }; }); this.saveStoresMeta(); return true; } catch (e) { console.error('importStoresMeta error', e); return false; } }
   getStoresWithMeta() { const stores = this.getStores(); return stores.map(s => ({ name: s, meta: this.getStoreMeta(s) || {} })); }
 
-  // cart API
+  // Helper: build clearbit url from name/domain map
+  _getClearbitLogoUrl(storeName, size=256) {
+    try {
+      if (!storeName) return null;
+      const d = this.defaultLogoMap[storeName] || null;
+      if (!d) return null;
+      return `https://logo.clearbit.com/${d}?size=${size}`;
+    } catch (e) { return null; }
+  }
+
+  // Ensure storesMeta has logos for known defaults (non-destructive)
+  ensureStoresMetaLogos() {
+    try {
+      if (!this.storesMeta) this.storesMeta = {};
+      (this.getStores() || []).forEach(storeName => {
+        const key = storeName.trim().toLowerCase();
+        if (!this.storesMeta[key]) this.storesMeta[key] = { logo: null, description: null, updatedAt: new Date().toISOString() };
+        // if logo missing, attempt to set from defaultLogoMap
+        if (!this.storesMeta[key].logo) {
+          const candidate = this._getClearbitLogoUrl(storeName, 256);
+          if (candidate) this.storesMeta[key].logo = candidate;
+        }
+        // if description missing, leave null (UI will fallback to static description)
+      });
+      this.saveStoresMeta();
+    } catch (e) { console.warn('ensureStoresMetaLogos failed', e); }
+  }
+
+  /* -------------------------
+     Cart API
+     ------------------------- */
   addProductToCart(product) {
+    if (!product || typeof product !== 'object') return null;
+    // create shallow copy and ensure fields are normalized
     const p = { id: product.id || this.generateId(), ...product };
-    try { const comparison = this.compareWithReference(p); if (comparison) p._priceComparison = comparison; } catch (e) {}
-    // ensure numeric price
+
+    // normalize numeric price
     p.price = this._normalizePriceValue(p.price);
+    if (typeof p.price !== 'number' || isNaN(p.price)) p.price = 0;
+    if (!p.category) p.category = p.category || 'Altro';
+
+    try {
+      // price reference comparison
+      const comparison = this.compareWithReference(p);
+      if (comparison) p._priceComparison = comparison;
+    } catch (e) { /* ignore */ }
+
+    // push and emit event
     this.currentCart.push(p);
+
+    // update product reference database (store minima, lastSeen)
+    try { this.updateProductReference(p); } catch (e) {}
+
     document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
     return p;
   }
+
   removeProductFromCart(productId) {
     this.currentCart = this.currentCart.filter(p => p.id !== productId);
     document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
   }
+
   updateProductInCart(product) {
     try {
       const idx = this.currentCart.findIndex(p => p.id === product.id);
       if (idx === -1) return null;
-      const updated = { ...this.currentCart[idx], ...product };
-      updated.price = this._normalizePriceValue(updated.price);
-      this.currentCart[idx] = updated;
+      const merged = { ...this.currentCart[idx], ...product };
+      // normalize price
+      merged.price = this._normalizePriceValue(merged.price);
+      // re-evaluate price comparison and update reference
+      try { merged._priceComparison = this.compareWithReference(merged); } catch(e){}
+      this.currentCart[idx] = merged;
+
+      // update product reference DB
+      try { this.updateProductReference(merged); } catch (e) {}
+
       document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
-      return updated;
+      return merged;
     } catch (e) { console.error('updateProductInCart error', e); return null; }
   }
+
   clearCart() {
     this.currentCart = [];
     document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
   }
-  getCartTotal() { return this.currentCart.reduce((s,p) => s + (parseFloat(p.price)||0), 0); }
-  saveCartAsExpense(store, date) { if (!store || !date) return null; try { const toSaveProducts = (this.currentCart || []).map(p => ({ ...p })); const saved = this.addExpense(store, date, toSaveProducts); this.clearCart(); return saved; } catch (e) { console.error('saveCartAsExpense error', e); return null; } }
 
-  // normalize price (accept comma or dot)
+  getCartTotal() {
+    try {
+      return this.currentCart.reduce((s,p) => s + (parseFloat(p.price) || 0), 0);
+    } catch (e) { console.error('getCartTotal error', e); return 0; }
+  }
+
+  saveCartAsExpense(store, date) {
+    if (!store || !date) return null;
+    try {
+      // ensure cart product objects are plain copies
+      const toSaveProducts = (this.currentCart || []).map(p => ({ ...p }));
+      const saved = this.addExpense(store, date, toSaveProducts);
+      // clear cart on success
+      this.clearCart();
+      return saved;
+    } catch (e) { console.error('saveCartAsExpense error', e); return null; }
+  }
+
+  /* -------------------------
+     Helpers
+     ------------------------- */
   _normalizePriceValue(raw) {
     try {
       if (typeof raw === 'number') return raw;
-      if (!raw) return 0;
+      if (!raw && raw !== 0) return 0;
       let s = String(raw).trim();
-      // replace comma with dot (italian decimal)
       s = s.replace(/\s/g,'').replace(',', '.');
       const v = parseFloat(s);
       return isNaN(v) ? 0 : v;
@@ -341,11 +445,12 @@ class ExpenseTracker {
   getLastScannedBarcode() { return this._lastScannedBarcode; }
 }
 
-// export instance
+// export instance (compatibile con il markup che si aspetta `app`)
 const app = new ExpenseTracker();
 
 document.addEventListener('DOMContentLoaded', () => {
-  try { app.populateAllStoreSelects(); } catch (e) {}
+  try { app.populateAllStoreSelects(); } catch (e) { console.warn(e); }
+  // ensure UI knows initial state
   document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: app.currentCart }));
   document.dispatchEvent(new CustomEvent('app:productsReference-changed', { detail: app.productsReference }));
   document.dispatchEvent(new CustomEvent('app:storesMeta-changed', { detail: app.storesMeta }));
