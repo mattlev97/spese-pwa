@@ -18,101 +18,44 @@
   <!-- Stili unificati -->
   <link rel="stylesheet" href="style.css?v=20250816" />
 
-  <!-- Stili specifici per store-choice e nuove regole -->
+  <!-- Stili specifici aggiuntivi per questa pagina -->
   <style>
-    /* (ho lasciato i tuoi stili - solo quelli essenziali sono qui per brevità) */
-    /* Grid store cards */
-    .store-list-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 10px;
-      margin-top: 12px;
+    /* Placeholder icon inside cart-thumb when no image */
+    .cart-thumb.placeholder {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      flex: 0 0 48px;
+      background: rgba(0,0,0,0.04);
+      border: 1px solid rgba(0,0,0,0.02);
     }
-    .store-card {
-      display:flex;
-      gap:12px;
-      align-items:center;
-      padding:10px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      background: var(--panel);
-      cursor: pointer;
-      text-align:left;
-      transition: transform .12s ease, box-shadow .14s ease, background .12s ease;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
-      width:100%;
-    }
-    .store-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.06); }
-    .store-card.selected {
+    .cart-thumb.placeholder .placeholder-inner {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
       background: var(--gh-salvia);
-      color: #fff;
-      border-color: rgba(0,0,0,0.04);
-      box-shadow: 0 12px 38px rgba(122,169,134,0.14);
-    }
-    .store-card .store-logo {
-      width:64px; height:64px; object-fit:contain; border-radius:8px; background:transparent;
-      flex:0 0 64px;
-      border: none;
-    }
-    .store-card .store-card-body { flex:1; min-width:0; }
-    .store-card .store-card-title { font-weight:700; color:var(--gh-text-strong); }
-    .store-card.selected .store-card-title { color: #fff; }
-    .store-card .store-card-desc { color:var(--gh-muted); font-size:0.92rem; margin-top:4px; }
-    .store-card.selected .store-card-desc { color: rgba(255,255,255,0.9); }
-
-    /* cart empty placeholder after confirming store */
-    #cartMainPlaceholder {
-      display:none;
-      gap:12px;
+      display:flex;
       align-items:center;
-      padding:18px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:var(--panel);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.04);
-      margin-bottom:16px;
+      justify-content:center;
+      color:#fff;
+      font-size:18px;
     }
-    #cartMainPlaceholder .title-row {
-      display:flex; align-items:center; gap:12px;
-    }
-    .cart-icon-circle {
-      width:56px; height:56px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--gh-salvia); color:#fff; flex:0 0 56px;
-    }
-    .cart-empty-note { color:var(--gh-muted); font-style:italic; margin-top:8px; }
 
-    /* Drawer bottom-sheet centrato e responsive */
-    .add-product-drawer {
-      position:fixed !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      bottom: 16px !important;
-      width: calc(100% - 32px) !important;
-      max-width: 720px !important;
-      border-top-left-radius: 12px !important;
-      border-top-right-radius: 12px !important;
-      box-shadow: 0 -12px 40px rgba(0,0,0,0.12) !important;
-      padding: 12px !important;
-      max-height: 78vh !important;
-      overflow: auto !important;
-      z-index: 3600 !important;
-      pointer-events: auto !important;
-      background: var(--panel);
-    }
-    .add-product-drawer .drawer-header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 6px 12px 6px; }
-    .add-product-drawer .drawer-body { padding:4px 6px 12px 6px; }
-    .menu-overlay.visible { display:block; opacity:1; }
+    /* Store header card (sostituisce la sezione "Informazioni Generali") */
+    #storeHeaderCard { display:none; margin-bottom:16px; }
+    #storeHeaderCard .store-header-row { display:flex; gap:12px; align-items:center; }
+    #storeHeaderCard .store-logo-large { width:64px; height:64px; object-fit:cover; border-radius:10px; border:1px solid rgba(0,0,0,0.04); flex:0 0 64px; }
+    #storeHeaderCard .store-header-body { display:flex; flex-direction:column; gap:6px; }
+    #storeHeaderCard .store-name { font-weight:800; font-size:1.05rem; color:var(--gh-text-strong); }
+    #storeHeaderCard .store-desc { color:var(--gh-muted); font-size:0.95rem; }
+    #storeHeaderCard .store-date { margin-top:10px; display:flex; gap:8px; align-items:center; }
+    #storeHeaderCard input[type="date"] { width: 200px; }
 
-    /* small table tweaks */
-    #cartTable td, #cartTable th { padding:10px 8px; vertical-align:middle; }
-    .cart-product-name { font-weight:600; }
-    .cart-product-meta { color:var(--gh-muted); font-size:0.9rem; }
-    .cart-remove-btn { background:transparent; border:none; color:var(--gh-terracotta); cursor:pointer; font-size:1rem; padding:6px; }
-    .cart-edit-btn { background:transparent; border:none; color:var(--gh-text-strong); cursor:pointer; font-size:1rem; padding:6px; margin-right:6px; }
-    .cart-thumb { width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid rgba(0,0,0,0.04); }
-
-    /* drawer image preview */
-    #drawerImagePreview { display:none; margin-bottom:8px; }
-    #drawerImagePreview img { width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid rgba(0,0,0,0.06); }
+    /* minor: ensure cart total stands out */
+    .cart-total { font-size:1.08rem; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -130,7 +73,7 @@
     </div>
   </header>
 
-  <!-- Reduced side menu (niente supermercati/versione) -->
+  <!-- Reduced side menu -->
   <nav id="sideMenu" class="hidden" aria-hidden="true">
     <div class="menu-header">
       <div class="menu-logo">GH</div>
@@ -183,33 +126,31 @@
       </div>
     </section>
 
-    <!-- Hidden original form and cart (will appear when user adds product) -->
-    <form id="expenseForm" class="expense-form hidden" novalidate>
-      <!-- detailed form as before (kept hidden until products exist) -->
-      <section class="form-section panel" aria-labelledby="info-header">
-        <div class="section-header" id="info-header">
-          <span class="icon-circle" aria-hidden="true"><i class="fa-solid fa-store"></i></span>
-          <div class="title-lines">
-            <h2>Informazioni Generali</h2>
-            <div class="subtitle">Dati della spesa</div>
+    <!-- NEW: Store Header Card (logo + title + description + date) -->
+    <section id="storeHeaderCard" class="panel" aria-hidden="true">
+      <div class="store-header-row">
+        <img id="headerStoreLogo" class="store-logo-large" src="" alt="Logo supermercato" />
+        <div class="store-header-body">
+          <div class="store-name" id="headerStoreName">—</div>
+          <div class="store-desc" id="headerStoreDesc">—</div>
+
+          <div class="store-date">
+            <label for="expenseDate" style="font-weight:700;color:var(--gh-text-strong);font-size:0.95rem;">Data spesa</label>
+            <input type="date" id="expenseDate" />
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="form-group">
-          <label for="storeSelect">Supermercato</label>
-          <select id="storeSelect" class="store-select" required></select>
-        </div>
-
-        <div class="form-group" id="customStoreGroup" aria-hidden="true" hidden>
-          <label for="customStore">Nome supermercato</label>
+    <!-- Hidden original form and cart (will appear when user adds product) -->
+    <form id="expenseForm" class="expense-form hidden" novalidate>
+      <!-- storeSelect only (kept hidden but used to save) -->
+      <div style="display:none;">
+        <select id="storeSelect" class="store-select" required></select>
+        <div id="customStoreGroup" class="form-group" aria-hidden="true" hidden>
           <input type="text" id="customStore" placeholder="Inserisci nome supermercato" />
         </div>
-
-        <div class="form-group">
-          <label for="expenseDate">Data</label>
-          <input type="date" id="expenseDate" required />
-        </div>
-      </section>
+      </div>
 
       <!-- product area (we will show cartSection separately) -->
       <section class="cart-section panel hidden" id="cartSection" aria-hidden="true">
@@ -267,11 +208,11 @@
       <div class="form-row">
         <div class="form-group" style="flex:1">
           <label for="drawerProductPrice">Prezzo (€)</label>
-          <input id="drawerProductPrice" type="number" step="0.01" inputmode="decimal" />
+          <input id="drawerProductPrice" type="text" inputmode="decimal" />
         </div>
         <div class="form-group" style="flex:1">
           <label for="drawerProductPriceKg">Prezzo/kg (€)</label>
-          <input id="drawerProductPriceKg" type="number" step="0.01" inputmode="decimal" />
+          <input id="drawerProductPriceKg" type="text" inputmode="decimal" />
         </div>
       </div>
       <div class="form-group">
@@ -318,253 +259,26 @@
   <!-- ZXing (scanner lib) -->
   <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
 
-  <!-- Minimal ZXing wrapper: openScannerModal / closeScannerModal / switchCamera (robust) -->
-  <script>
-  (function(){
-    let codeReader = null;
-    let availableVideoDevices = [];
-    let currentDeviceIndex = -1;
-    let isScannerOpen = false;
-    let barcodeHandled = false;
-
-    // find the correct global for ZXing Browser class
-    function getZXingNamespace() {
-      if (window.ZXingBrowser) return window.ZXingBrowser;
-      if (window.ZXing) return window.ZXing;
-      // UMD sometimes exposes BrowserMultiFormatReader directly
-      if (window.BrowserMultiFormatReader) return { BrowserMultiFormatReader: window.BrowserMultiFormatReader };
-      return null;
-    }
-
-    function updateDeviceLabel(text) {
-      const lab = document.getElementById('deviceLabel');
-      if (lab) lab.textContent = text || '';
-    }
-
-    async function stopScanner() {
-      if (codeReader && typeof codeReader.reset === 'function') {
-        try { await codeReader.reset(); } catch(e){ /* ignore */ }
-      }
-      const v = document.getElementById('scannerVideo');
-      if (v && v.srcObject) {
-        try {
-          v.srcObject.getTracks().forEach(t => { try{ t.stop(); }catch(e){} });
-        } catch(e){}
-        v.srcObject = null;
-      }
-      try { if (v) v.pause(); } catch(e){}
-      codeReader = null;
-      isScannerOpen = false;
-      barcodeHandled = false;
-      updateDeviceLabel('');
-    }
-
-    async function prepareDevicesAndChoosePreferred() {
-      // Try to request permission to populate device labels
-      try {
-        await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
-          .then(s => { s.getTracks().forEach(t => t.stop()); })
-          .catch(()=>{});
-      } catch(e){}
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      availableVideoDevices = devices.filter(d => d.kind === 'videoinput').map(d => ({ deviceId: d.deviceId, label: d.label || 'Camera' }));
-      let idx = availableVideoDevices.findIndex(d => /back|rear|environment|posteriore/gi.test(d.label));
-      if (idx === -1) idx = (availableVideoDevices.length > 0 ? 0 : -1);
-      currentDeviceIndex = idx;
-      return currentDeviceIndex;
-    }
-
-    async function openScannerModal() {
-      const modal = document.getElementById('scannerModal');
-      if (modal) { modal.classList.remove('hidden'); modal.removeAttribute('aria-hidden'); }
-      isScannerOpen = true;
-      barcodeHandled = false;
-
-      const ns = getZXingNamespace();
-      if (!ns || !ns.BrowserMultiFormatReader) {
-        console.error('ZXing library not found');
-        alert('Scanner non disponibile (libreria mancante).');
-        closeScannerModal();
-        return;
-      }
-
-      try {
-        codeReader = new ns.BrowserMultiFormatReader();
-      } catch (e) {
-        console.error('ZXing init error', e);
-        alert('Scanner non disponibile in questo dispositivo.');
-        closeScannerModal();
-        return;
-      }
-
-      try {
-        const chosenIndex = await prepareDevicesAndChoosePreferred();
-        if (chosenIndex === -1) { alert('Nessuna videocamera disponibile.'); closeScannerModal(); return; }
-        const chosen = availableVideoDevices[chosenIndex];
-        updateDeviceLabel('Camera: ' + (chosen.label || 'Sconosciuta'));
-
-        const videoElem = document.getElementById('scannerVideo');
-        await codeReader.decodeFromVideoDevice(chosen.deviceId, videoElem, (result, err) => {
-          if (result && result.getText) {
-            const code = (result.getText ? result.getText() : (result.text || '')).trim();
-            handleBarcodeFound(code);
-          }
-        });
-      } catch (err) {
-        console.error('Camera/Scanner error', err);
-        alert('Impossibile avviare lo scanner. Controlla i permessi o riprova.');
-        closeScannerModal();
-      }
-    }
-
-    async function closeScannerModal() {
-      const modal = document.getElementById('scannerModal');
-      try { await stopScanner(); } catch(e){}
-      if (modal) { modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); }
-    }
-
-    async function switchCamera() {
-      if (!isScannerOpen) return;
-      if (!availableVideoDevices || availableVideoDevices.length <= 1) {
-        alert('Nessun altra camera disponibile.');
-        return;
-      }
-      try { await stopScanner(); } catch(e){}
-      currentDeviceIndex = (currentDeviceIndex + 1) % availableVideoDevices.length;
-      const chosen = availableVideoDevices[currentDeviceIndex];
-      updateDeviceLabel('Camera: ' + (chosen.label || 'Sconosciuta'));
-      try {
-        const ns = getZXingNamespace();
-        if (!ns || !ns.BrowserMultiFormatReader) { alert('Errore con la libreria scanner.'); return; }
-        codeReader = new ns.BrowserMultiFormatReader();
-        const videoElem = document.getElementById('scannerVideo');
-        await codeReader.decodeFromVideoDevice(chosen.deviceId, videoElem, (result, err) => {
-          if (result && result.getText) {
-            const code = (result.getText ? result.getText() : (result.text || '')).trim();
-            handleBarcodeFound(code);
-          }
-        });
-      } catch (err) {
-        console.error('Errore switching camera', err);
-        alert('Errore cambio camera.');
-        await stopScanner();
-      }
-    }
-
-    async function handleBarcodeFound(barcode) {
-      if (!barcode || barcodeHandled) return;
-      barcodeHandled = true;
-      const toast = document.getElementById('toast');
-      if (toast) { toast.textContent = 'Codice rilevato: ' + barcode; toast.style.display = 'block'; setTimeout(()=>toast.style.display='none',1400); }
-
-      try { if (window.app && typeof app.setLastScannedBarcode === 'function') app.setLastScannedBarcode(barcode); } catch(e){}
-
-      try {
-        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(barcode)}.json`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json.status === 1 && json.product) {
-            const p = json.product;
-            const nameField = document.getElementById('drawerProductName') || document.getElementById('productName');
-            const notesField = document.getElementById('drawerProductNotes') || document.getElementById('productNotes');
-            const categoryField = document.getElementById('drawerProductCategory') || document.getElementById('productCategory');
-
-            const prodName = p.product_name || p.generic_name || p.brands || '';
-            if (nameField && prodName) nameField.value = prodName;
-
-            let noteParts = [];
-            if (p.brands) noteParts.push(p.brands);
-            if (p.quantity) noteParts.push(p.quantity);
-            if (p.categories) noteParts.push(p.categories.split(',').slice(0,2).join(' • '));
-            if (notesField && noteParts.length) notesField.value = noteParts.join(' • ');
-
-            if (categoryField && Array.isArray(p.categories_tags) && p.categories_tags.length) {
-              const tag = p.categories_tags[0] || '';
-              const human = (p.categories || '').split(',')[0] || tag.replace('en:', '').replace(/-/g,' ');
-              Array.from(categoryField.options).forEach(o => {
-                if (human && o.value && o.value.toLowerCase().includes(human.toLowerCase())) {
-                  categoryField.value = o.value;
-                }
-              });
-            }
-
-            const imageCandidates = [p.image_front_small_url, p.image_front_thumb_url, p.image_small_url, p.image_url, p.image_front_url].filter(Boolean);
-            const chosenImage = imageCandidates.length ? imageCandidates[0] : null;
-            try {
-              if (chosenImage && window.app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(chosenImage);
-            } catch(e){}
-
-            // DISPATCH EVENT so the page (behavior script) can open the drawer and populate UI
-            try {
-              document.dispatchEvent(new CustomEvent('app:barcode-scanned', { detail: { barcode: barcode, product: p, image: chosenImage } }));
-            } catch(e){ console.warn('dispatch barcode-scanned failed', e); }
-          }
-        }
-      } catch (err) {
-        console.warn('OFF fetch error', err);
-      } finally {
-        // close scanner after a short delay to let UI show toast
-        setTimeout(async ()=> { await closeScannerModal(); barcodeHandled = false; }, 700);
-      }
-    }
-
-    // export globals
-    window.openScannerModal = openScannerModal;
-    window.closeScannerModal = closeScannerModal;
-    window.switchCamera = switchCamera;
-  })();
-  </script>
-
-  <!-- bottom navigation -->
-  <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
-    <a class="nav-item" href="index.html" aria-label="Dashboard">
-      <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
-      <span class="label">Dashboard</span>
-    </a>
-    <a class="nav-item nav-active" href="aggiungi.html" aria-label="Aggiungi">
-      <span class="icon-wrap"><i class="fa-solid fa-plus-circle"></i></span>
-      <span class="label">Aggiungi</span>
-    </a>
-    <a class="nav-item" href="archivio.html" aria-label="Archivio">
-      <span class="icon-wrap"><i class="fa-solid fa-box-archive"></i></span>
-      <span class="label">Archivio</span>
-    </a>
-    <a class="nav-item" href="impostazioni.html" aria-label="Impostazioni">
-      <span class="icon-wrap"><i class="fa-solid fa-gear"></i></span>
-      <span class="label">Impostazioni</span>
-    </a>
-  </nav>
-
-  <!-- floating action buttons -->
-  <button id="floatingCameraBtn" class="floating-btn floating-left" aria-label="Apri fotocamera"><i class="fa-solid fa-camera"></i></button>
-  <button id="floatingAddBtn" class="floating-btn floating-right" aria-label="Aggiungi prodotto"><i class="fa-solid fa-plus"></i></button>
-
-  <!-- Script: behavior -->
+  <!-- Behavior & glue -->
   <script>
     // helper escape
     function escapeHtml(txt){ const d = document.createElement('div'); d.textContent = txt || ''; return d.innerHTML; }
 
-    // create category placeholder (SVG data url) containing an emoji/icon on grey bg
-    function categoryPlaceholderSVG(category, diameter=48) {
-      const map = {
-        'Latticini': '🧀',
-        'Verdura': '🥬',
-        'Frutta': '🍎',
-        'Carne': '🥩',
-        'Pesce': '🐟',
-        'Pane': '🥖',
-        'Bevande': '🥤',
-        'Altro': '🧾'
-      };
-      const icon = map[category] || '🛒';
-      const bg = '#cfcfcf';
-      const fg = '#ffffff';
-      const fontSize = Math.round(diameter * 0.6);
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
-        <rect width="100%" height="100%" rx="6" fill="${bg}"/>
-        <text x="50%" y="50%" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" fill="${fg}" dominant-baseline="middle" text-anchor="middle">${icon}</text>
-      </svg>`;
-      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    // category -> FA icon class mapping (used for placeholders)
+    const categoryIconMap = {
+      'Latticini': 'fa-solid fa-cheese',
+      'Verdura': 'fa-solid fa-carrot',
+      'Frutta': 'fa-solid fa-apple-alt',
+      'Carne': 'fa-solid fa-drumstick-bite',
+      'Pesce': 'fa-solid fa-fish',
+      'Pane': 'fa-solid fa-bread-slice',
+      'Bevande': 'fa-solid fa-wine-bottle',
+      'Altro': 'fa-solid fa-box'
+    };
+
+    function getIconClassForCategory(cat) {
+      if (!cat) return categoryIconMap['Altro'];
+      return categoryIconMap[cat] || categoryIconMap['Altro'];
     }
 
     function showToast(msg, timeout = 1400) {
@@ -580,14 +294,13 @@
     document.addEventListener('DOMContentLoaded', () => {
       if (!window.app) window.app = new ExpenseTracker();
 
-      // Add helper updateProductInCart if not present on app
+      // Add helper updateProductInCart if not present on app - fallback already in your app.js, kept here as backup
       if (!window.app.updateProductInCart) {
         window.app.updateProductInCart = function(updatedProduct) {
           try {
             if (!this.currentCart) this.currentCart = [];
             const idx = this.currentCart.findIndex(p => p.id === updatedProduct.id);
             if (idx === -1) {
-              // add if not exist
               this.currentCart.push(updatedProduct);
             } else {
               this.currentCart[idx] = { ...this.currentCart[idx], ...updatedProduct };
@@ -615,6 +328,13 @@
       const drawerOverlay = document.getElementById('drawerOverlay');
       const closeDrawerBtn = document.getElementById('closeDrawerBtn');
       const drawerAddBtn = document.getElementById('drawerAddBtn');
+
+      const headerCard = document.getElementById('storeHeaderCard');
+      const headerLogo = document.getElementById('headerStoreLogo');
+      const headerName = document.getElementById('headerStoreName');
+      const headerDesc = document.getElementById('headerStoreDesc');
+      const expenseDate = document.getElementById('expenseDate');
+      const storeSelect = document.getElementById('storeSelect');
 
       function hideFloating() {
         floatingAddBtn.classList.add('hidden');
@@ -727,19 +447,40 @@
         if (confirmBtn.disabled) confirmBtn.setAttribute('aria-disabled','true');
       }
 
+      // Helper: set header card content and show it
+      function showHeaderForStore(storeName) {
+        if (!storeName) return;
+        const domain = logoMap[storeName] || '';
+        const logoUrl = domain ? `https://logo.clearbit.com/${domain}?size=256` : placeholderSVG(storeName,64);
+        headerLogo.src = logoUrl;
+        headerLogo.alt = storeName + ' logo';
+        headerLogo.addEventListener('error', () => { headerLogo.src = placeholderSVG(storeName,64); }, { once:true });
+        headerName.textContent = storeName;
+        headerDesc.textContent = describeFor(storeName);
+        // set date to today if empty
+        if (!expenseDate.value) {
+          const d = new Date();
+          const mm = String(d.getMonth()+1).padStart(2,'0');
+          const dd = String(d.getDate()).padStart(2,'0');
+          const y = d.getFullYear();
+          expenseDate.value = `${y}-${mm}-${dd}`;
+        }
+        headerCard.style.display = 'block';
+        headerCard.removeAttribute('aria-hidden');
+      }
+
       // confirm selection behaviour
       confirmBtn?.addEventListener('click', () => {
         if (!selectedStore) return;
         try { app.populateAllStoreSelects(); } catch(e){}
-        const storeSel = document.getElementById('storeSelect');
-        if (storeSel) {
-          const exists = Array.from(storeSel.options).some(o => o.value === selectedStore);
+        if (storeSelect) {
+          const exists = Array.from(storeSelect.options).some(o => o.value === selectedStore);
           if (!exists) {
             const opt = document.createElement('option'); opt.value = selectedStore; opt.textContent = selectedStore;
-            storeSel.appendChild(opt);
+            storeSelect.appendChild(opt);
           }
-          storeSel.value = selectedStore;
-          storeSel.dispatchEvent(new Event('change', { bubbles:true }));
+          storeSelect.value = selectedStore;
+          storeSelect.dispatchEvent(new Event('change', { bubbles:true }));
         }
 
         // Hide store choice card
@@ -752,14 +493,18 @@
         // ensure floating buttons re-appear
         showFloating();
 
-        // ensure expenseForm remains hidden until the user adds a product
+        // ensure expenseForm remains hidden until the user adds a product (we'll show header)
         expenseForm.classList.add('hidden');
+
+        // show header card for selected store + set date
+        showHeaderForStore(selectedStore);
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
       // Drawer open/close
       function openDrawer() {
+        // only allow after store selected
         if (!storeChoiceCard.classList.contains('hidden')) return;
         drawerOverlay.classList.add('visible');
         drawer.classList.remove('hidden');
@@ -777,7 +522,7 @@
 
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
 
-        // reset any edit mode
+        // reset edit mode button state
         const addBtn = document.getElementById('drawerAddBtn');
         if (addBtn) {
           delete addBtn.dataset.editing;
@@ -785,8 +530,12 @@
         }
       }
 
+      // Expose drawer helpers to global scope so updateCartDisplay can call them
+      window.openDrawer = openDrawer;
+      window.closeDrawer = closeDrawer;
+
+      // open drawer with product data (edit mode)
       function openDrawerWithProduct(product) {
-        // populate fields and open drawer in edit mode
         if (!product) return;
         openDrawer();
         document.getElementById('drawerProductName').value = product.name || '';
@@ -801,14 +550,19 @@
           previewImg.src = product.image;
           previewWrap.style.display = 'block';
         } else {
-          previewImg.src = categoryPlaceholderSVG(product.category || 'Altro', 64);
+          // show placeholder inside preview when no image
+          previewImg.src = '';
           previewWrap.style.display = 'block';
+          previewImg.style.display = 'none';
+          // create a small placeholder visual
+          // we will show the preview img element only when actual image exists
         }
 
         const addBtn = document.getElementById('drawerAddBtn');
         addBtn.dataset.editing = product.id;
         addBtn.textContent = 'Salva modifica';
       }
+      window.openDrawerWithProduct = openDrawerWithProduct; // expose globally
 
       document.getElementById('floatingAddBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
@@ -836,7 +590,7 @@
         return product;
       }
 
-      // Drawer: add product to cart (replaced with robust version)
+      // Drawer: add product to cart (handles both add and edit)
       drawerAddBtn?.addEventListener('click', (e) => {
         e.preventDefault();
 
@@ -865,7 +619,7 @@
 
         const editingId = drawerAddBtn.dataset.editing;
         if (editingId) {
-          // update existing product in cart (use app.updateProductInCart if available)
+          // update existing product in cart
           const updated = { id: editingId, name, category: cat, price, priceKg, notes };
           if (window.app && typeof window.app.updateProductInCart === 'function') {
             window.app.updateProductInCart(updated);
@@ -919,18 +673,15 @@
 
         try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
 
-        // reset drawer fields and preview
-        if (!drawerAddBtn.dataset.editing) { // if not editing, clear
+        // reset drawer fields and preview if not editing
+        if (!drawerAddBtn.dataset.editing) {
           if (nameInput) nameInput.value = '';
           if (catInput) catInput.value = '';
           if (priceInput) priceInput.value = '';
           if (priceKgInput) priceKgInput.value = '';
           if (notesInput) notesInput.value = '';
-        }
-
-        const previewWrap = document.getElementById('drawerImagePreview');
-        const previewImg = document.getElementById('drawerPreviewImg');
-        if (!drawerAddBtn.dataset.editing) {
+          const previewWrap = document.getElementById('drawerImagePreview');
+          const previewImg = document.getElementById('drawerPreviewImg');
           if (previewImg) previewImg.src = '';
           if (previewWrap) previewWrap.style.display = 'none';
         }
@@ -999,10 +750,12 @@
           const previewImg = document.getElementById('drawerPreviewImg');
           if (img && previewImg) {
             previewImg.src = img;
+            previewImg.style.display = 'block';
             if (previewWrap) previewWrap.style.display = 'block';
           } else {
             if (previewImg) previewImg.src = '';
-            if (previewWrap) previewWrap.style.display = 'none';
+            if (previewImg) previewImg.style.display = 'none';
+            if (previewWrap) previewWrap.style.display = 'block';
           }
         } catch (e) {
           console.warn('app:barcode-scanned handler error', e);
@@ -1081,10 +834,8 @@
       if (saveExpenseBtn) {
         saveExpenseBtn.addEventListener('click', (ev) => {
           ev.preventDefault();
-          const storeSelect = document.getElementById('storeSelect');
-          const dateInput = document.getElementById('expenseDate');
           const store = storeSelect ? (storeSelect.value || '') : '';
-          const date = dateInput ? dateInput.value : '';
+          const date = expenseDate ? expenseDate.value : '';
 
           if (!store) { alert('Seleziona il supermercato prima di salvare.'); return; }
           if (!date) { alert('Seleziona la data della spesa.'); return; }
@@ -1098,6 +849,7 @@
               document.getElementById('cartMainPlaceholder').style.display = 'flex';
               document.getElementById('cartSection')?.classList.add('hidden');
               document.getElementById('expenseForm')?.classList.add('hidden');
+              // keep header but you may want to hide it; keep as chosen store summary
               // force update displays
               document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: window.app.expenses }));
               document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart }));
@@ -1112,10 +864,11 @@
         });
       }
     }); // end DOMContentLoaded
-  </script>
 
-  <!-- updateCartDisplay: popola #cartBody, aggiorna totale, abilita pulsanti -->
-  <script>
+    // ----------------------------------------------------
+    // updateCartDisplay: popola #cartBody, aggiorna totale, abilita pulsanti
+    // Nota: usa window.openDrawerWithProduct per aprire drawer in edit mode (esposto global)
+    // ----------------------------------------------------
     function updateCartDisplay() {
       try {
         const tbody = document.getElementById('cartBody');
@@ -1125,8 +878,10 @@
         tbody.innerHTML = '';
 
         if (!cart || cart.length === 0) {
-          document.getElementById('cartTotal').textContent = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(0) : '€0.00';
-          document.getElementById('saveExpenseBtn').disabled = true;
+          const totalEl = document.getElementById('cartTotal');
+          if (totalEl) totalEl.textContent = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(0) : '€0.00';
+          const saveBtn = document.getElementById('saveExpenseBtn');
+          if (saveBtn) saveBtn.disabled = true;
           return;
         }
 
@@ -1140,16 +895,27 @@
           prodWrap.style.gap = '10px';
           prodWrap.style.alignItems = 'center';
 
-          const img = document.createElement('img');
-          img.className = 'cart-thumb';
+          // Thumbnail or placeholder (using FontAwesome icons inside a small salvia circle)
           if (item.image) {
+            const img = document.createElement('img');
             img.src = item.image;
             img.alt = item.name || 'img';
+            img.className = 'cart-thumb';
+            prodWrap.appendChild(img);
           } else {
-            img.src = categoryPlaceholderSVG(item.category || 'Altro', 48);
-            img.alt = item.name || '';
+            // create placeholder element with FA icon
+            const placeholder = document.createElement('div');
+            placeholder.className = 'cart-thumb placeholder';
+            const inner = document.createElement('div');
+            inner.className = 'placeholder-inner';
+            const iconClass = getIconClassForCategory(item.category);
+            const i = document.createElement('i');
+            // split classes and add
+            iconClass.split(' ').forEach(c => i.classList.add(c));
+            inner.appendChild(i);
+            placeholder.appendChild(inner);
+            prodWrap.appendChild(placeholder);
           }
-          prodWrap.appendChild(img);
 
           const info = document.createElement('div');
           const nameEl = document.createElement('div');
@@ -1184,8 +950,12 @@
           editBtn.title = 'Modifica';
           editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
           editBtn.addEventListener('click', () => {
-            // open drawer with data and set edit mode
-            openDrawerWithProduct(item);
+            // use global function (exposed earlier)
+            if (typeof window.openDrawerWithProduct === 'function') {
+              window.openDrawerWithProduct(item);
+            } else {
+              console.warn('openDrawerWithProduct not available');
+            }
           });
           tdActions.appendChild(editBtn);
 
@@ -1197,7 +967,7 @@
           removeBtn.addEventListener('click', () => {
             try {
               if (window.app && typeof app.removeProductFromCart === 'function') {
-                window.app.removeProductFromCart(item.id);
+                app.removeProductFromCart(item.id);
                 showToast('Prodotto rimosso');
               } else {
                 const idx = (window.app && Array.isArray(window.app.currentCart)) ? window.app.currentCart.findIndex(p => p.id === item.id) : -1;
@@ -1216,10 +986,10 @@
 
         // update total & enable save button
         const total = (window.app && typeof app.getCartTotal === 'function') ? app.getCartTotal() : cart.reduce((s,i)=> s + (parseFloat(i.price)||0),0);
-        document.getElementById('cartTotal').textContent = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(total) : `€${total.toFixed(2)}`;
+        const totalEl = document.getElementById('cartTotal');
+        if (totalEl) totalEl.textContent = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(total) : `€${total.toFixed(2)}`;
         const saveBtn = document.getElementById('saveExpenseBtn');
         if (saveBtn) saveBtn.disabled = !(cart && cart.length > 0);
-
       } catch (err) {
         console.error('updateCartDisplay error', err);
       }
