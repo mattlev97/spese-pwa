@@ -390,7 +390,7 @@
 
       function renderStoreCards() {
         storeListGrid.innerHTML = '';
-        const stores = (typeof app?.getStores === 'function') ? app.getStores() : Object.keys(logoMap);
+        const stores = (window.app && typeof window.app.getStores === 'function') ? window.app.getStores() : Object.keys(logoMap);
         const finalStores = (stores && stores.length) ? stores : Object.keys(logoMap);
 
         finalStores.forEach(sName => {
