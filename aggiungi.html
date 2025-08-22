@@ -20,6 +20,9 @@
 
   <!-- Stili specifici aggiuntivi per questa pagina -->
   <style>
+    /* Fallback/minor fixes per visibilità store-list su iOS/mobile */
+    .store-list-grid { min-height: 120px; }
+    .store-card { -webkit-tap-highlight-color: rgba(0,0,0,0.06); }
     /* Placeholder icon inside cart-thumb when no image */
     .cart-thumb.placeholder {
       display: inline-flex;
@@ -110,6 +113,8 @@
         <!-- JS popola le store-card qui -->
       </div>
 
+      <div id="noStoresMsg" style="display:none;margin-top:8px;color:var(--gh-muted)">Nessun supermercato disponibile.</div>
+
       <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px;">
         <button id="confirmStoreBtn" class="btn" disabled aria-disabled="true">✔️ Conferma</button>
       </div>
@@ -189,7 +194,7 @@
     </div>
     <div class="drawer-body">
       <!-- image preview area (aggiunto) -->
-      <div id="drawerImagePreview" aria-hidden="true">
+      <div id="drawerImagePreview" aria-hidden="true" style="display:none;">
         <img id="drawerPreviewImg" src="" alt="Anteprima prodotto" />
       </div>
 
@@ -292,27 +297,7 @@
 
     // Ensure window.app exists (app.js should create it)
     document.addEventListener('DOMContentLoaded', () => {
-      if (!window.app) window.app = new ExpenseTracker();
-
-      // Add helper updateProductInCart if not present on app - fallback already in your app.js, kept here as backup
-      if (!window.app.updateProductInCart) {
-        window.app.updateProductInCart = function(updatedProduct) {
-          try {
-            if (!this.currentCart) this.currentCart = [];
-            const idx = this.currentCart.findIndex(p => p.id === updatedProduct.id);
-            if (idx === -1) {
-              this.currentCart.push(updatedProduct);
-            } else {
-              this.currentCart[idx] = { ...this.currentCart[idx], ...updatedProduct };
-            }
-            document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
-            return true;
-          } catch (e) {
-            console.error('updateProductInCart error', e);
-            return false;
-          }
-        };
-      }
+      if (!window.app && typeof ExpenseTracker !== 'undefined') window.app = new ExpenseTracker();
     });
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -322,8 +307,6 @@
       const storeChoiceCard = document.getElementById('storeChoiceCard');
       const expenseForm = document.getElementById('expenseForm');
       const cartMainPlaceholder = document.getElementById('cartMainPlaceholder');
-      const floatingAddBtn = document.getElementById('floatingAddBtn');
-      const floatingCameraBtn = document.getElementById('floatingCameraBtn');
       const drawer = document.getElementById('addProductDrawer');
       const drawerOverlay = document.getElementById('drawerOverlay');
       const closeDrawerBtn = document.getElementById('closeDrawerBtn');
@@ -335,14 +318,19 @@
       const headerDesc = document.getElementById('headerStoreDesc');
       const expenseDate = document.getElementById('expenseDate');
       const storeSelect = document.getElementById('storeSelect');
+      const noStoresMsg = document.getElementById('noStoresMsg');
+
+      // floating btns safe refs (may be defined in layout elsewhere)
+      const floatingAddBtn = document.getElementById('floatingAddBtn');
+      const floatingCameraBtn = document.getElementById('floatingCameraBtn');
 
       function hideFloating() {
-        floatingAddBtn.classList.add('hidden');
-        floatingCameraBtn.classList.add('hidden');
+        if (floatingAddBtn) floatingAddBtn.classList.add('hidden');
+        if (floatingCameraBtn) floatingCameraBtn.classList.add('hidden');
       }
       function showFloating() {
-        floatingAddBtn.classList.remove('hidden');
-        floatingCameraBtn.classList.remove('hidden');
+        if (floatingAddBtn) floatingAddBtn.classList.remove('hidden');
+        if (floatingCameraBtn) floatingCameraBtn.classList.remove('hidden');
       }
 
       // start with floating hidden because storeChoiceCard is visible
@@ -388,63 +376,92 @@
         return descriptions[name] || `Ampia scelta di prodotti e offerte presso ${name}.`;
       }
 
-      function renderStoreCards() {
-        storeListGrid.innerHTML = '';
-        const stores = (window.app && typeof window.app.getStores === 'function') ? window.app.getStores() : Object.keys(logoMap);
-        const finalStores = (stores && stores.length) ? stores : Object.keys(logoMap);
+      function createStoreCard(sName) {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'store-card';
+        card.setAttribute('role','listitem');
+        card.setAttribute('aria-pressed','false');
+        card.tabIndex = 0;
 
-        finalStores.forEach(sName => {
-          const card = document.createElement('button');
-          card.type = 'button';
-          card.className = 'store-card';
-          card.setAttribute('role','listitem');
+        const domain = logoMap[sName] || '';
+        const clearbitUrl = domain ? `https://logo.clearbit.com/${domain}?size=128` : '';
+        const imgSrc = clearbitUrl || placeholderSVG(sName,64);
 
-          const domain = logoMap[sName] || '';
-          const clearbitUrl = domain ? `https://logo.clearbit.com/${domain}?size=128` : '';
-          const imgSrc = clearbitUrl || placeholderSVG(sName,64);
+        card.innerHTML = `
+          <div class="store-card-left">
+            <img class="store-logo" src="${imgSrc}" alt="${escapeHtml(sName)} logo" />
+          </div>
+          <div class="store-card-body">
+            <div class="store-card-title">${escapeHtml(sName)}</div>
+            <div class="store-card-desc"><em>${escapeHtml(describeFor(sName))}</em></div>
+          </div>
+        `;
 
-          card.innerHTML = `
-            <div class="store-card-left">
-              <img class="store-logo" src="${imgSrc}" alt="${escapeHtml(sName)} logo" />
-            </div>
-            <div class="store-card-body">
-              <div class="store-card-title">${escapeHtml(sName)}</div>
-              <div class="store-card-desc"><em>${escapeHtml(describeFor(sName))}</em></div>
-            </div>
-          `;
+        const imgEl = card.querySelector('img.store-logo');
+        if (imgEl) {
+          imgEl.addEventListener('error', () => { imgEl.src = placeholderSVG(sName,64); });
+        }
 
-          const imgEl = card.querySelector('img.store-logo');
-          if (imgEl) {
-            imgEl.addEventListener('error', () => { imgEl.src = placeholderSVG(sName,64); });
-          }
-
-          card.addEventListener('click', () => {
-            document.querySelectorAll('.store-card.selected').forEach(el => el.classList.remove('selected'));
-            card.classList.add('selected');
-            selectedStore = sName;
-            confirmBtn.disabled = false;
-            confirmBtn.removeAttribute('aria-disabled');
+        const onSelect = () => {
+          document.querySelectorAll('.store-card.selected').forEach(el => {
+            el.classList.remove('selected');
+            el.setAttribute('aria-pressed','false');
           });
+          card.classList.add('selected');
+          card.setAttribute('aria-pressed','true');
+          selectedStore = sName;
+          if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.removeAttribute('aria-disabled'); }
+        };
 
-          storeListGrid.appendChild(card);
+        card.addEventListener('click', onSelect);
+        card.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onSelect(); }
         });
+
+        return card;
       }
 
-      // call initially
-      renderStoreCards();
+      function renderStoreCards() {
+        if (!storeListGrid) return;
+        storeListGrid.innerHTML = '';
+        noStoresMsg.style.display = 'none';
+
+        // Try app.getStores first, fallback to default logoMap keys
+        const appStores = (window.app && typeof window.app.getStores === 'function') ? (window.app.getStores() || []) : [];
+        const defaultStores = Object.keys(logoMap);
+        const finalStores = (Array.isArray(appStores) && appStores.length) ? appStores : (defaultStores.length ? defaultStores : []);
+
+        if (!finalStores || finalStores.length === 0) {
+          noStoresMsg.style.display = 'block';
+          return;
+        }
+
+        finalStores.forEach(sName => {
+          try {
+            const card = createStoreCard(sName);
+            storeListGrid.appendChild(card);
+          } catch (e) { console.warn('renderStoreCards error for', sName, e); }
+        });
+
+        // Accessibility: ensure grid visible height for small screens
+        storeListGrid.style.minHeight = (finalStores.length ? Math.min(finalStores.length, 6) * 80 + 'px' : '120px');
+      }
+
+      // call initially (with defensive timeout to ensure app.js had chance)
+      setTimeout(renderStoreCards, 10);
+      // also listen to stores-changed
       document.addEventListener('app:stores-changed', renderStoreCards);
 
       // ensure confirm starts disabled
-      confirmBtn.disabled = true;
-      confirmBtn.setAttribute('aria-disabled','true');
-
       if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.setAttribute('aria-disabled','true');
         const mo = new MutationObserver(() => {
           if (confirmBtn.disabled) confirmBtn.setAttribute('aria-disabled','true');
           else confirmBtn.removeAttribute('aria-disabled');
         });
         mo.observe(confirmBtn, { attributes: true, attributeFilter: ['disabled'] });
-        if (confirmBtn.disabled) confirmBtn.setAttribute('aria-disabled','true');
       }
 
       // Helper: set header card content and show it
@@ -457,12 +474,8 @@
         headerLogo.addEventListener('error', () => { headerLogo.src = placeholderSVG(storeName,64); }, { once:true });
         headerName.textContent = storeName;
         headerDesc.textContent = describeFor(storeName);
-        // set date to today if empty
         if (!expenseDate.value) {
-          const d = new Date();
-          const mm = String(d.getMonth()+1).padStart(2,'0');
-          const dd = String(d.getDate()).padStart(2,'0');
-          const y = d.getFullYear();
+          const d = new Date(); const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); const y = d.getFullYear();
           expenseDate.value = `${y}-${mm}-${dd}`;
         }
         headerCard.style.display = 'block';
@@ -472,7 +485,7 @@
       // confirm selection behaviour
       confirmBtn?.addEventListener('click', () => {
         if (!selectedStore) return;
-        try { app.populateAllStoreSelects(); } catch(e){}
+        try { if (window.app && typeof window.app.populateAllStoreSelects === 'function') app.populateAllStoreSelects(); } catch(e){}
         if (storeSelect) {
           const exists = Array.from(storeSelect.options).some(o => o.value === selectedStore);
           if (!exists) {
@@ -504,14 +517,11 @@
 
       // Drawer open/close
       function openDrawer() {
-        // only allow after store selected
         if (!storeChoiceCard.classList.contains('hidden')) return;
         drawerOverlay.classList.add('visible');
         drawer.classList.remove('hidden');
         drawer.removeAttribute('aria-hidden');
         document.body.classList.add('no-scroll');
-
-        // hide floating buttons to avoid overlap
         hideFloating();
       }
       function closeDrawer() {
@@ -519,18 +529,12 @@
         drawer.classList.add('hidden');
         drawer.setAttribute('aria-hidden','true');
         document.body.classList.remove('no-scroll');
-
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
-
-        // reset edit mode button state
         const addBtn = document.getElementById('drawerAddBtn');
-        if (addBtn) {
-          delete addBtn.dataset.editing;
-          addBtn.textContent = 'Aggiungi al carrello';
-        }
+        if (addBtn) { delete addBtn.dataset.editing; addBtn.textContent = 'Aggiungi al carrello'; }
       }
 
-      // Expose drawer helpers to global scope so updateCartDisplay can call them
+      // Expose drawer helpers
       window.openDrawer = openDrawer;
       window.closeDrawer = closeDrawer;
 
@@ -543,46 +547,23 @@
         document.getElementById('drawerProductPrice').value = (product.price !== undefined) ? product.price : '';
         document.getElementById('drawerProductPriceKg').value = (product.priceKg !== undefined && product.priceKg !== null) ? product.priceKg : '';
         document.getElementById('drawerProductNotes').value = product.notes || '';
-
         const previewWrap = document.getElementById('drawerImagePreview');
         const previewImg = document.getElementById('drawerPreviewImg');
-        if (product.image) {
-          previewImg.src = product.image;
-          previewWrap.style.display = 'block';
-        } else {
-          // show placeholder inside preview when no image
-          previewImg.src = '';
-          previewWrap.style.display = 'block';
-          previewImg.style.display = 'none';
-          // create a small placeholder visual
-          // we will show the preview img element only when actual image exists
-        }
-
+        if (product.image) { previewImg.src = product.image; if (previewWrap) previewWrap.style.display = 'block'; }
+        else { if (previewWrap) previewWrap.style.display = 'none'; }
         const addBtn = document.getElementById('drawerAddBtn');
-        addBtn.dataset.editing = product.id;
-        addBtn.textContent = 'Salva modifica';
+        if (addBtn) { addBtn.dataset.editing = product.id; addBtn.textContent = 'Salva modifica'; }
       }
-      window.openDrawerWithProduct = openDrawerWithProduct; // expose globally
+      window.openDrawerWithProduct = openDrawerWithProduct;
 
-      document.getElementById('floatingAddBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        openDrawer();
-      });
+      document.getElementById('floatingAddBtn')?.addEventListener('click', (e) => { e.preventDefault(); openDrawer(); });
       closeDrawerBtn?.addEventListener('click', closeDrawer);
       drawerOverlay?.addEventListener('click', closeDrawer);
 
-      // ---- Robust: single place to add product to cart (uses app if available) ----
+      // ---- Robust add product ----
       function safeAddProductToCart(product) {
         if (!product) return;
-        // use app API if present
-        try {
-          if (window.app && typeof window.app.addProductToCart === 'function') {
-            return window.app.addProductToCart(product);
-          }
-        } catch(e) {
-          console.warn('app.addProductToCart failed', e);
-        }
-        // fallback manual push + event
+        try { if (window.app && typeof window.app.addProductToCart === 'function') return window.app.addProductToCart(product); } catch(e){ console.warn(e); }
         if (!window.app) window.app = {};
         if (!Array.isArray(window.app.currentCart)) window.app.currentCart = [];
         window.app.currentCart.push(product);
@@ -590,42 +571,31 @@
         return product;
       }
 
-      // Drawer: add product to cart (handles both add and edit)
       drawerAddBtn?.addEventListener('click', (e) => {
         e.preventDefault();
-
         const nameInput = document.getElementById('drawerProductName');
         const catInput = document.getElementById('drawerProductCategory');
         const priceInput = document.getElementById('drawerProductPrice');
         const priceKgInput = document.getElementById('drawerProductPriceKg');
         const notesInput = document.getElementById('drawerProductNotes');
-
         const name = (nameInput?.value || '').trim();
         const cat = (catInput?.value || '').trim();
         const priceRaw = (priceInput?.value || '').trim();
         const priceKgRaw = (priceKgInput?.value || '').trim();
         const notes = (notesInput?.value || '').trim();
-
-        // normalize decimals (comma -> dot)
         const normalize = s => (s||'').toString().trim().replace(',', '.');
-
         const price = parseFloat(normalize(priceRaw)) || 0;
         const priceKg = priceKgRaw ? (parseFloat(normalize(priceKgRaw)) || null) : null;
-
         if (!name || !cat || !price || isNaN(price) || price <= 0) {
           alert('Compila nome, categoria e prezzo correttamente.');
           return;
         }
-
         const editingId = drawerAddBtn.dataset.editing;
         if (editingId) {
-          // update existing product in cart
           const updated = { id: editingId, name, category: cat, price, priceKg, notes };
           if (window.app && typeof window.app.updateProductInCart === 'function') {
-            window.app.updateProductInCart(updated);
-            showToast('Prodotto aggiornato');
+            window.app.updateProductInCart(updated); showToast('Prodotto aggiornato');
           } else {
-            // fallback: replace in currentCart
             if (!window.app.currentCart) window.app.currentCart = [];
             const idx = window.app.currentCart.findIndex(p => p.id === editingId);
             if (idx !== -1) {
@@ -636,44 +606,17 @@
             }
           }
         } else {
-          const product = {
-            id: (window.app && typeof app.generateId === 'function') ? app.generateId() : ('p_'+Date.now()),
-            name, category: cat, price, priceKg, notes
-          };
-
-          // attach scanned image if any (prefer app.getLastScannedImage)
-          try {
-            if (window.app && typeof app.getLastScannedImage === 'function') {
-              const img = app.getLastScannedImage();
-              if (img) product.image = img;
-            }
-          } catch(e){}
-
-          // also check drawer preview if available
-          try {
-            const previewImg = document.getElementById('drawerPreviewImg');
-            if (!product.image && previewImg && previewImg.src) {
-              product.image = previewImg.src;
-            }
-          } catch(e){}
-
-          // add product (safe)
-          safeAddProductToCart(product);
-          showToast('Prodotto aggiunto al carrello');
-
-          // clear last scanned image to avoid reuse
+          const product = { id: (window.app && typeof app.generateId === 'function') ? app.generateId() : ('p_'+Date.now()), name, category: cat, price, priceKg, notes };
+          try { if (window.app && typeof app.getLastScannedImage === 'function') { const img = app.getLastScannedImage(); if (img) product.image = img; } } catch(e){}
+          try { const previewImg = document.getElementById('drawerPreviewImg'); if (!product.image && previewImg && previewImg.src) product.image = previewImg.src; } catch(e){}
+          safeAddProductToCart(product); showToast('Prodotto aggiunto al carrello');
           try { if (app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(null); } catch(e){}
         }
-
-        // ensure UI shows cart and updates
         document.getElementById('cartSection')?.classList.remove('hidden');
         document.getElementById('cartSection')?.removeAttribute('aria-hidden');
         cartMainPlaceholder.style.display = 'none';
         expenseForm.classList.remove('hidden');
-
         try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
-
-        // reset drawer fields and preview if not editing
         if (!drawerAddBtn.dataset.editing) {
           if (nameInput) nameInput.value = '';
           if (catInput) catInput.value = '';
@@ -685,8 +628,6 @@
           if (previewImg) previewImg.src = '';
           if (previewWrap) previewWrap.style.display = 'none';
         }
-
-        // close drawer (which will also reset editing flag)
         closeDrawer();
       });
 
@@ -711,30 +652,23 @@
         }
       });
 
-      // LISTEN for barcode-scanned event to open drawer & populate preview
+      // barcode-scanned handler (unchanged)
       document.addEventListener('app:barcode-scanned', (ev) => {
         try {
-          // open drawer if store confirmed
           if (storeChoiceCard.classList.contains('hidden')) openDrawer();
-
           const data = ev && ev.detail ? ev.detail : {};
           const product = data.product || {};
           const img = data.image || (window.app && typeof app.getLastScannedImage === 'function' ? app.getLastScannedImage() : null);
-
-          // fill fields if present
           const nameField = document.getElementById('drawerProductName');
           const notesField = document.getElementById('drawerProductNotes');
           const categoryField = document.getElementById('drawerProductCategory');
-
           const prodName = product.product_name || product.generic_name || product.brands || '';
           if (nameField && prodName) nameField.value = prodName;
-
           let noteParts = [];
           if (product.brands) noteParts.push(product.brands);
           if (product.quantity) noteParts.push(product.quantity);
           if (product.categories) noteParts.push(product.categories.split(',').slice(0,2).join(' • '));
           if (notesField && noteParts.length) notesField.value = noteParts.join(' • ');
-
           if (categoryField && Array.isArray(product.categories_tags) && product.categories_tags.length) {
             const tag = product.categories_tags[0] || '';
             const human = (product.categories || '').split(',')[0] || tag.replace('en:', '').replace(/-/g,' ');
@@ -744,8 +678,6 @@
               }
             });
           }
-
-          // show preview image
           const previewWrap = document.getElementById('drawerImagePreview');
           const previewImg = document.getElementById('drawerPreviewImg');
           if (img && previewImg) {
@@ -757,13 +689,11 @@
             if (previewImg) previewImg.style.display = 'none';
             if (previewWrap) previewWrap.style.display = 'block';
           }
-        } catch (e) {
-          console.warn('app:barcode-scanned handler error', e);
-        }
+        } catch (e) { console.warn('app:barcode-scanned handler error', e); }
       });
 
       // populate selects if user skipped (or for confirm)
-      try { app.populateAllStoreSelects(); } catch(e){}
+      try { if (window.app && typeof window.app.populateAllStoreSelects === 'function') app.populateAllStoreSelects(); } catch(e){}
 
       // when cart changed, update UI
       document.addEventListener('app:cart-changed', (ev) => {
@@ -780,8 +710,6 @@
           document.getElementById('expenseForm')?.classList.remove('hidden');
         }
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
-
-        // update table
         try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
       });
 
@@ -836,21 +764,16 @@
           ev.preventDefault();
           const store = storeSelect ? (storeSelect.value || '') : '';
           const date = expenseDate ? expenseDate.value : '';
-
           if (!store) { alert('Seleziona il supermercato prima di salvare.'); return; }
           if (!date) { alert('Seleziona la data della spesa.'); return; }
           if (!window.app || !Array.isArray(window.app.currentCart) || window.app.currentCart.length === 0) { alert('Il carrello è vuoto.'); return; }
-
           try {
             const saved = window.app.saveCartAsExpense(store, date);
             if (saved) {
               showToast('Spesa salvata con successo', 1600);
-              // ensure UI resets to empty cart state
               document.getElementById('cartMainPlaceholder').style.display = 'flex';
               document.getElementById('cartSection')?.classList.add('hidden');
               document.getElementById('expenseForm')?.classList.add('hidden');
-              // keep header but you may want to hide it; keep as chosen store summary
-              // force update displays
               document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: window.app.expenses }));
               document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart }));
               updateCartDisplay();
@@ -865,15 +788,11 @@
       }
     }); // end DOMContentLoaded
 
-    // ----------------------------------------------------
-    // updateCartDisplay: popola #cartBody, aggiorna totale, abilita pulsanti
-    // Nota: usa window.openDrawerWithProduct per aprire drawer in edit mode (esposto global)
-    // ----------------------------------------------------
+    // updateCartDisplay function (unchanged)
     function updateCartDisplay() {
       try {
         const tbody = document.getElementById('cartBody');
         if (!tbody) return;
-        // get cart from app (fallback to event detail)
         const cart = (window.app && Array.isArray(window.app.currentCart)) ? window.app.currentCart : [];
         tbody.innerHTML = '';
 
@@ -887,15 +806,12 @@
 
         cart.forEach(item => {
           const tr = document.createElement('tr');
-
-          // Product column: thumbnail + name + meta(category, notes)
           const tdProd = document.createElement('td');
           const prodWrap = document.createElement('div');
           prodWrap.style.display = 'flex';
           prodWrap.style.gap = '10px';
           prodWrap.style.alignItems = 'center';
 
-          // Thumbnail or placeholder (using FontAwesome icons inside a small salvia circle)
           if (item.image) {
             const img = document.createElement('img');
             img.src = item.image;
@@ -903,14 +819,12 @@
             img.className = 'cart-thumb';
             prodWrap.appendChild(img);
           } else {
-            // create placeholder element with FA icon
             const placeholder = document.createElement('div');
             placeholder.className = 'cart-thumb placeholder';
             const inner = document.createElement('div');
             inner.className = 'placeholder-inner';
             const iconClass = getIconClassForCategory(item.category);
             const i = document.createElement('i');
-            // split classes and add
             iconClass.split(' ').forEach(c => i.classList.add(c));
             inner.appendChild(i);
             placeholder.appendChild(inner);
@@ -934,14 +848,12 @@
           tdProd.appendChild(prodWrap);
           tr.appendChild(tdProd);
 
-          // Price column
           const tdPrice = document.createElement('td');
           tdPrice.style.whiteSpace = 'nowrap';
           const priceText = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(parseFloat(item.price || 0)) : `€${Number(item.price||0).toFixed(2)}`;
           tdPrice.textContent = priceText;
           tr.appendChild(tdPrice);
 
-          // Actions column: edit + remove
           const tdActions = document.createElement('td');
 
           const editBtn = document.createElement('button');
@@ -950,11 +862,8 @@
           editBtn.title = 'Modifica';
           editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
           editBtn.addEventListener('click', () => {
-            // use global function (exposed earlier)
             if (typeof window.openDrawerWithProduct === 'function') {
               window.openDrawerWithProduct(item);
-            } else {
-              console.warn('openDrawerWithProduct not available');
             }
           });
           tdActions.appendChild(editBtn);
@@ -973,18 +882,14 @@
                 const idx = (window.app && Array.isArray(window.app.currentCart)) ? window.app.currentCart.findIndex(p => p.id === item.id) : -1;
                 if (idx !== -1) { window.app.currentCart.splice(idx,1); document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart })); showToast('Prodotto rimosso'); }
               }
-            } catch (e) {
-              console.error('remove from cart error', e);
-            }
+            } catch (e) { console.error('remove from cart error', e); }
           });
           tdActions.appendChild(removeBtn);
 
           tr.appendChild(tdActions);
-
           tbody.appendChild(tr);
         });
 
-        // update total & enable save button
         const total = (window.app && typeof app.getCartTotal === 'function') ? app.getCartTotal() : cart.reduce((s,i)=> s + (parseFloat(i.price)||0),0);
         const totalEl = document.getElementById('cartTotal');
         if (totalEl) totalEl.textContent = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(total) : `€${total.toFixed(2)}`;
@@ -995,15 +900,8 @@
       }
     }
 
-    // initial render (in case there are items already)
-    document.addEventListener('DOMContentLoaded', () => {
-      try { updateCartDisplay(); } catch (e) { console.warn(e); }
-    });
-
-    // also listen to app:cart-changed if emitted elsewhere
-    document.addEventListener('app:cart-changed', () => {
-      try { updateCartDisplay(); } catch(e){ console.warn(e); }
-    });
+    document.addEventListener('DOMContentLoaded', () => { try { updateCartDisplay(); } catch (e) { console.warn(e); } });
+    document.addEventListener('app:cart-changed', () => { try { updateCartDisplay(); } catch(e){ console.warn(e); } });
   </script>
 </body>
 </html>
