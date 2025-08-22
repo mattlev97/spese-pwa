@@ -447,6 +447,8 @@ class ExpenseTracker {
 
 // export instance (compatibile con il markup che si aspetta `app`)
 const app = new ExpenseTracker();
+// Esponi l'istanza anche su window per garantire compatibilità cross-browser (mobile)
+window.app = app;
 
 document.addEventListener('DOMContentLoaded', () => {
   try { app.populateAllStoreSelects(); } catch (e) { console.warn(e); }
