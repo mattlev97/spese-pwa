@@ -295,6 +295,21 @@
       setTimeout(()=>{ t.style.display='none'; t.setAttribute('aria-hidden','true'); }, timeout);
     }
 
+    // Global error handlers: utile su iPhone dove non puoi aprire console
+    window.addEventListener('error', function(evt) {
+      try {
+        const msg = (evt && evt.message) ? evt.message : String(evt);
+        showToast('Errore JS: ' + msg, 4000);
+      } catch(e){}
+      // allow default behaviour
+    });
+    window.addEventListener('unhandledrejection', function(evt) {
+      try {
+        const reason = (evt && evt.reason) ? (evt.reason.message || String(evt.reason)) : 'Promise rejection';
+        showToast('Promise rejection: ' + reason, 4000);
+      } catch(e){}
+    });
+
     // Ensure window.app exists (app.js should create it)
     document.addEventListener('DOMContentLoaded', () => {
       if (!window.app && typeof ExpenseTracker !== 'undefined') window.app = new ExpenseTracker();
@@ -324,13 +339,18 @@
       const floatingAddBtn = document.getElementById('floatingAddBtn');
       const floatingCameraBtn = document.getElementById('floatingCameraBtn');
 
+      // Robust show/hide floating (guardati da errori)
       function hideFloating() {
-        if (floatingAddBtn) floatingAddBtn.classList.add('hidden');
-        if (floatingCameraBtn) floatingCameraBtn.classList.add('hidden');
+        try {
+          if (floatingAddBtn && floatingAddBtn.classList) floatingAddBtn.classList.add('hidden');
+          if (floatingCameraBtn && floatingCameraBtn.classList) floatingCameraBtn.classList.add('hidden');
+        } catch (err) { console.warn('hideFloating guard failed', err); }
       }
       function showFloating() {
-        if (floatingAddBtn) floatingAddBtn.classList.remove('hidden');
-        if (floatingCameraBtn) floatingCameraBtn.classList.remove('hidden');
+        try {
+          if (floatingAddBtn && floatingAddBtn.classList) floatingAddBtn.classList.remove('hidden');
+          if (floatingCameraBtn && floatingCameraBtn.classList) floatingCameraBtn.classList.remove('hidden');
+        } catch (err) { console.warn('showFloating guard failed', err); }
       }
 
       // start with floating hidden because storeChoiceCard is visible
@@ -423,33 +443,45 @@
       }
 
       function renderStoreCards() {
-        if (!storeListGrid) return;
-        storeListGrid.innerHTML = '';
-        noStoresMsg.style.display = 'none';
+        try {
+          if (!storeListGrid) return;
+          storeListGrid.innerHTML = '';
+          if (noStoresMsg) noStoresMsg.style.display = 'none';
 
-        // Try app.getStores first, fallback to default logoMap keys
-        const appStores = (window.app && typeof window.app.getStores === 'function') ? (window.app.getStores() || []) : [];
-        const defaultStores = Object.keys(logoMap);
-        const finalStores = (Array.isArray(appStores) && appStores.length) ? appStores : (defaultStores.length ? defaultStores : []);
+          // Try app.getStores first, fallback to default logoMap keys
+          const appStores = (window.app && typeof window.app.getStores === 'function') ? (window.app.getStores() || []) : [];
+          const defaultStores = Object.keys(logoMap);
+          const finalStores = (Array.isArray(appStores) && appStores.length) ? appStores : (defaultStores.length ? defaultStores : []);
 
-        if (!finalStores || finalStores.length === 0) {
-          noStoresMsg.style.display = 'block';
-          return;
-        }
+          if (!finalStores || finalStores.length === 0) {
+            if (noStoresMsg) noStoresMsg.style.display = 'block';
+            return;
+          }
 
-        finalStores.forEach(sName => {
+          finalStores.forEach(sName => {
+            try {
+              const card = createStoreCard(sName);
+              storeListGrid.appendChild(card);
+            } catch (e) { console.warn('renderStoreCards error for', sName, e); }
+          });
+
+          // Accessibility: ensure grid visible height for small screens
           try {
-            const card = createStoreCard(sName);
-            storeListGrid.appendChild(card);
-          } catch (e) { console.warn('renderStoreCards error for', sName, e); }
-        });
-
-        // Accessibility: ensure grid visible height for small screens
-        storeListGrid.style.minHeight = (finalStores.length ? Math.min(finalStores.length, 6) * 80 + 'px' : '120px');
+            storeListGrid.style.minHeight = (finalStores.length ? Math.min(finalStores.length, 6) * 80 + 'px' : '120px');
+            storeListGrid.style.visibility = 'visible';
+            storeListGrid.style.pointerEvents = 'auto';
+          } catch(e){}
+        } catch (err) {
+          console.error('renderStoreCards error', err);
+        }
       }
 
-      // call initially (with defensive timeout to ensure app.js had chance)
-      setTimeout(renderStoreCards, 10);
+      // Call render immediately and again delayed as a defensive measure
+      try { renderStoreCards(); } catch(e){ console.warn('initial renderStoreCards failed', e); }
+      setTimeout(() => {
+        try { renderStoreCards(); } catch(e){ console.warn('delayed renderStoreCards failed', e); }
+      }, 60);
+
       // also listen to stores-changed
       document.addEventListener('app:stores-changed', renderStoreCards);
 
@@ -469,17 +501,18 @@
         if (!storeName) return;
         const domain = logoMap[storeName] || '';
         const logoUrl = domain ? `https://logo.clearbit.com/${domain}?size=256` : placeholderSVG(storeName,64);
-        headerLogo.src = logoUrl;
-        headerLogo.alt = storeName + ' logo';
-        headerLogo.addEventListener('error', () => { headerLogo.src = placeholderSVG(storeName,64); }, { once:true });
-        headerName.textContent = storeName;
-        headerDesc.textContent = describeFor(storeName);
-        if (!expenseDate.value) {
+        if (headerLogo) {
+          headerLogo.src = logoUrl;
+          headerLogo.alt = storeName + ' logo';
+          headerLogo.addEventListener('error', () => { headerLogo.src = placeholderSVG(storeName,64); }, { once:true });
+        }
+        if (headerName) headerName.textContent = storeName;
+        if (headerDesc) headerDesc.textContent = describeFor(storeName);
+        if (expenseDate && !expenseDate.value) {
           const d = new Date(); const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); const y = d.getFullYear();
           expenseDate.value = `${y}-${mm}-${dd}`;
         }
-        headerCard.style.display = 'block';
-        headerCard.removeAttribute('aria-hidden');
+        if (headerCard) { headerCard.style.display = 'block'; headerCard.removeAttribute('aria-hidden'); }
       }
 
       // confirm selection behaviour
@@ -497,41 +530,45 @@
         }
 
         // Hide store choice card
-        storeChoiceCard.classList.add('hidden');
+        if (storeChoiceCard) storeChoiceCard.classList.add('hidden');
 
         // Show empty cart placeholder
-        cartMainPlaceholder.style.display = 'flex';
-        cartMainPlaceholder.removeAttribute('aria-hidden');
+        if (cartMainPlaceholder) { cartMainPlaceholder.style.display = 'flex'; cartMainPlaceholder.removeAttribute('aria-hidden'); }
 
         // ensure floating buttons re-appear
         showFloating();
 
         // ensure expenseForm remains hidden until the user adds a product (we'll show header)
-        expenseForm.classList.add('hidden');
+        if (expenseForm) expenseForm.classList.add('hidden');
 
         // show header card for selected store + set date
         showHeaderForStore(selectedStore);
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e){}
       });
 
       // Drawer open/close
       function openDrawer() {
-        if (!storeChoiceCard.classList.contains('hidden')) return;
-        drawerOverlay.classList.add('visible');
-        drawer.classList.remove('hidden');
-        drawer.removeAttribute('aria-hidden');
-        document.body.classList.add('no-scroll');
-        hideFloating();
+        try {
+          if (!storeChoiceCard || !storeChoiceCard.classList) return;
+          if (!storeChoiceCard.classList.contains('hidden')) return;
+          if (drawerOverlay && drawerOverlay.classList) drawerOverlay.classList.add('visible');
+          if (drawer && drawer.classList) drawer.classList.remove('hidden');
+          if (drawer) drawer.removeAttribute('aria-hidden');
+          document.body.classList.add('no-scroll');
+          hideFloating();
+        } catch(e){ console.warn('openDrawer error', e); }
       }
       function closeDrawer() {
-        drawerOverlay.classList.remove('visible');
-        drawer.classList.add('hidden');
-        drawer.setAttribute('aria-hidden','true');
-        document.body.classList.remove('no-scroll');
-        if (storeChoiceCard.classList.contains('hidden')) showFloating();
-        const addBtn = document.getElementById('drawerAddBtn');
-        if (addBtn) { delete addBtn.dataset.editing; addBtn.textContent = 'Aggiungi al carrello'; }
+        try {
+          if (drawerOverlay && drawerOverlay.classList) drawerOverlay.classList.remove('visible');
+          if (drawer && drawer.classList) drawer.classList.add('hidden');
+          if (drawer) drawer.setAttribute('aria-hidden','true');
+          document.body.classList.remove('no-scroll');
+          if (storeChoiceCard && storeChoiceCard.classList && storeChoiceCard.classList.contains('hidden')) showFloating();
+          const addBtn = document.getElementById('drawerAddBtn');
+          if (addBtn) { delete addBtn.dataset.editing; addBtn.textContent = 'Aggiungi al carrello'; }
+        } catch(e){ console.warn('closeDrawer error', e); }
       }
 
       // Expose drawer helpers
@@ -542,17 +579,19 @@
       function openDrawerWithProduct(product) {
         if (!product) return;
         openDrawer();
-        document.getElementById('drawerProductName').value = product.name || '';
-        document.getElementById('drawerProductCategory').value = product.category || '';
-        document.getElementById('drawerProductPrice').value = (product.price !== undefined) ? product.price : '';
-        document.getElementById('drawerProductPriceKg').value = (product.priceKg !== undefined && product.priceKg !== null) ? product.priceKg : '';
-        document.getElementById('drawerProductNotes').value = product.notes || '';
-        const previewWrap = document.getElementById('drawerImagePreview');
-        const previewImg = document.getElementById('drawerPreviewImg');
-        if (product.image) { previewImg.src = product.image; if (previewWrap) previewWrap.style.display = 'block'; }
-        else { if (previewWrap) previewWrap.style.display = 'none'; }
-        const addBtn = document.getElementById('drawerAddBtn');
-        if (addBtn) { addBtn.dataset.editing = product.id; addBtn.textContent = 'Salva modifica'; }
+        try {
+          document.getElementById('drawerProductName').value = product.name || '';
+          document.getElementById('drawerProductCategory').value = product.category || '';
+          document.getElementById('drawerProductPrice').value = (product.price !== undefined) ? product.price : '';
+          document.getElementById('drawerProductPriceKg').value = (product.priceKg !== undefined && product.priceKg !== null) ? product.priceKg : '';
+          document.getElementById('drawerProductNotes').value = product.notes || '';
+          const previewWrap = document.getElementById('drawerImagePreview');
+          const previewImg = document.getElementById('drawerPreviewImg');
+          if (product.image) { previewImg.src = product.image; if (previewWrap) previewWrap.style.display = 'block'; }
+          else { if (previewWrap) previewWrap.style.display = 'none'; }
+          const addBtn = document.getElementById('drawerAddBtn');
+          if (addBtn) { addBtn.dataset.editing = product.id; addBtn.textContent = 'Salva modifica'; }
+        } catch(e){ console.warn('openDrawerWithProduct error', e); }
       }
       window.openDrawerWithProduct = openDrawerWithProduct;
 
@@ -612,10 +651,12 @@
           safeAddProductToCart(product); showToast('Prodotto aggiunto al carrello');
           try { if (app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(null); } catch(e){}
         }
-        document.getElementById('cartSection')?.classList.remove('hidden');
-        document.getElementById('cartSection')?.removeAttribute('aria-hidden');
-        cartMainPlaceholder.style.display = 'none';
-        expenseForm.classList.remove('hidden');
+        if (document.getElementById('cartSection')) {
+          document.getElementById('cartSection').classList.remove('hidden');
+          document.getElementById('cartSection').removeAttribute('aria-hidden');
+        }
+        if (cartMainPlaceholder) cartMainPlaceholder.style.display = 'none';
+        if (expenseForm) expenseForm.classList.remove('hidden');
         try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
         if (!drawerAddBtn.dataset.editing) {
           if (nameInput) nameInput.value = '';
@@ -697,20 +738,22 @@
 
       // when cart changed, update UI
       document.addEventListener('app:cart-changed', (ev) => {
-        const cart = (window.app && window.app.currentCart) ? window.app.currentCart : (ev && ev.detail) ? ev.detail : [];
-        if (!cart || cart.length === 0) {
-          if (storeChoiceCard.classList.contains('hidden')) {
-            cartMainPlaceholder.style.display = 'flex';
-            document.getElementById('cartSection')?.classList.add('hidden');
-            document.getElementById('expenseForm')?.classList.add('hidden');
+        try {
+          const cart = (window.app && window.app.currentCart) ? window.app.currentCart : (ev && ev.detail) ? ev.detail : [];
+          if (!cart || cart.length === 0) {
+            if (storeChoiceCard && storeChoiceCard.classList.contains('hidden')) {
+              if (cartMainPlaceholder) cartMainPlaceholder.style.display = 'flex';
+              document.getElementById('cartSection')?.classList.add('hidden');
+              document.getElementById('expenseForm')?.classList.add('hidden');
+            }
+          } else {
+            if (cartMainPlaceholder) cartMainPlaceholder.style.display = 'none';
+            document.getElementById('cartSection')?.classList.remove('hidden');
+            document.getElementById('expenseForm')?.classList.remove('hidden');
           }
-        } else {
-          cartMainPlaceholder.style.display = 'none';
-          document.getElementById('cartSection')?.classList.remove('hidden');
-          document.getElementById('expenseForm')?.classList.remove('hidden');
-        }
-        if (storeChoiceCard.classList.contains('hidden')) showFloating();
-        try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
+          if (storeChoiceCard && storeChoiceCard.classList.contains('hidden')) showFloating();
+          try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
+        } catch(e){ console.warn('app:cart-changed handler error', e); }
       });
 
       // menu overlay open/close (side menu)
@@ -718,12 +761,18 @@
       const sideMenu = document.getElementById('sideMenu');
       const menuOverlay = document.getElementById('menuOverlay');
       function openMenu() {
-        sideMenu.classList.remove('hidden'); sideMenu.classList.add('open'); sideMenu.removeAttribute('aria-hidden');
-        menuOverlay.classList.add('visible'); document.body.classList.add('no-scroll');
+        try {
+          if (sideMenu && sideMenu.classList) { sideMenu.classList.remove('hidden'); sideMenu.classList.add('open'); sideMenu.removeAttribute('aria-hidden'); }
+          if (menuOverlay && menuOverlay.classList) menuOverlay.classList.add('visible');
+          document.body.classList.add('no-scroll');
+        } catch(e){ console.warn('openMenu error', e); }
       }
       function closeMenu() {
-        sideMenu.classList.add('hidden'); sideMenu.classList.remove('open'); sideMenu.setAttribute('aria-hidden','true');
-        menuOverlay.classList.remove('visible'); document.body.classList.remove('no-scroll');
+        try {
+          if (sideMenu && sideMenu.classList) { sideMenu.classList.add('hidden'); sideMenu.classList.remove('open'); sideMenu.setAttribute('aria-hidden','true'); }
+          if (menuOverlay && menuOverlay.classList) menuOverlay.classList.remove('visible');
+          document.body.classList.remove('no-scroll');
+        } catch(e){ console.warn('closeMenu error', e); }
       }
       menuToggle?.addEventListener('click', openMenu);
       menuOverlay?.addEventListener('click', () => { closeMenu(); closeDrawer(); });
@@ -771,12 +820,12 @@
             const saved = window.app.saveCartAsExpense(store, date);
             if (saved) {
               showToast('Spesa salvata con successo', 1600);
-              document.getElementById('cartMainPlaceholder').style.display = 'flex';
+              if (document.getElementById('cartMainPlaceholder')) document.getElementById('cartMainPlaceholder').style.display = 'flex';
               document.getElementById('cartSection')?.classList.add('hidden');
               document.getElementById('expenseForm')?.classList.add('hidden');
               document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: window.app.expenses }));
               document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart }));
-              updateCartDisplay();
+              try { updateCartDisplay(); } catch(e){}
             } else {
               alert('Errore durante il salvataggio della spesa.');
             }
