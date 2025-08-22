@@ -1305,3 +1305,23 @@ body.no-scroll main { pointer-events: auto; }
 
 /* evidenzia la storeChoiceCard per debugging (rimuovere dopo test) */
 #storeChoiceCard { outline: 2px dashed rgba(122,169,134,0.9); }
+
+/* --- Quick overlay pointer-event fix + visual debug --- */
+/* Ensure overlays don't block pointer events unless explicitly visible */
+.menu-overlay,
+#drawerOverlay {
+  pointer-events: none;
+}
+
+/* When the overlay is visible (class .visible), it should accept pointer events */
+.menu-overlay.visible,
+#drawerOverlay.visible {
+  pointer-events: auto;
+}
+
+/* Visual debugging: tint overlays slightly when visible so we can notice them on mobile */
+.menu-overlay.visible { background: rgba(255,0,0,0.10) !important; }
+#drawerOverlay.visible { background: rgba(0,0,255,0.06) !important; }
+
+/* Also ensure sideMenu open state is on top and does not get hidden by other overlays */
+#sideMenu.open { z-index: 3600 !important; }
