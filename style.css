@@ -1,6 +1,4 @@
-/* style.css - GroceryHub unified "bellissima" (AGGIORNATO)
-   Nota: contiene tutte le regole che mi hai fornito + integrazioni per placeholder/icone e selected-store panel
-*/
+/* style.css - GroceryHub unified "bellissima" */
 
 /* Palette e override per la dashboard (forzato light mode) */
 :root{
@@ -326,6 +324,9 @@ main.dashboard, main.add-expense { max-width:900px; margin:0 auto; padding:16px;
   color: var(--text-secondary);
   font-weight: 500;
 }
+
+/* Organizzazione "titoli su righe differenti" (Aggiungi -> titolo principale + sottotitolo sotto) */
+/* già supportato da .title-lines (h2 + .subtitle) */
 
 /* Modernizza label e controlli (select / input) */
 .form-group {
@@ -664,7 +665,9 @@ main.dashboard .recent-list > * {
   main.dashboard .blocks { gap:10px; }
 }
 
-/* fix selected day-pill */
+/* fine: Index card styling */
+
+/* Fix: forza lo stile "selected" dei day-pill dentro main.dashboard.calendar-wrap */
 main.dashboard .calendar-wrap .day-pill.selected,
 main.dashboard .calendar-wrap .day-pill.selected:where(*) {
   background: var(--gh-salvia) !important;
@@ -673,16 +676,24 @@ main.dashboard .calendar-wrap .day-pill.selected:where(*) {
   box-shadow: 0 10px 30px rgba(122,169,134,0.14);
   border-color: rgba(0,0,0,0.04);
 }
+
+/* Assicura che testo e numeri dentro il pill siano bianchi */
 main.dashboard .calendar-wrap .day-pill.selected .day-num,
 main.dashboard .calendar-wrap .day-pill.selected .day-name,
 main.dashboard .calendar-wrap .day-pill.selected .month {
   color: #fff !important;
 }
+
+/* Punto spesa (dot) su pill selezionato */
 main.dashboard .calendar-wrap .day-pill.selected .has-expense-dot {
   background: rgba(255,255,255,0.95) !important;
   opacity: 1 !important;
 }
+
+/* Se il box wrapper taglia l'ombra (overflow), prova a permettere overflow visibile sui bordi del pannello */
 main.dashboard .calendar-wrap { overflow: visible; }
+
+/* Se il container .panel imposta overflow:hidden (tipico), puoi limitare il cambiamento solo alla calendar-row */
 main.dashboard .calendar-wrap .calendar-row { overflow-x: auto; overflow-y: visible; }
 
 /* =============================
@@ -746,6 +757,9 @@ main.dashboard .blocks .block:nth-child(even) .value { color: var(--gh-salvia); 
 /* ensure contrast for small text inside the odd/even blocks */
 main.dashboard .blocks .block:nth-child(even) .label small,
 main.dashboard .blocks .block:nth-child(even) .label .meta { color: rgba(122,169,134,0.95); }
+
+/* If you relied on .block.max/.min colors elsewhere, these :nth-child rules will override them on index */
+/* If you need a page that should keep the old per-class colors, add a page-specific wrapper to avoid the nth-child override. */
 
 /* Accessibility: focus styles for blocks (keyboard navigation) */
 main.dashboard .blocks .block:focus { outline: 3px solid rgba(122,169,134,0.12); outline-offset: 4px; }
@@ -912,40 +926,6 @@ body.no-scroll {
   background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
 }
 
-/* style for thumbnail when image exists */
-.cart-thumb[src] {
-  display: inline-block;
-}
-
-/* placeholder variant: when no image, show a colored circle with a Font Awesome icon (white) */
-/* supports both: <img class="cart-thumb placeholder"> (will be hidden) OR <div class="cart-thumb placeholder"><i class="fa ..."></i></div> */
-.cart-thumb.placeholder {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  border-radius: 8px;
-  background: var(--gh-salvia);
-  color: #fff;
-  border: 1px solid rgba(0,0,0,0.04);
-  font-size: 18px;
-  box-shadow: 0 6px 16px rgba(122,169,134,0.12);
-}
-
-/* hide the <img> when it's used as placeholder (to avoid showing emoji/datauri) */
-.cart-thumb.placeholder[src] { visibility: hidden; width: 0; height: 0; padding: 0; margin: 0; border: none; }
-
-/* icon inside placeholder (expected <i class="fa ...">) */
-.cart-thumb.placeholder i {
-  color: #fff;
-  font-size: 18px;
-  line-height: 1;
-  display: inline-block;
-}
-
-/* cart product text */
 .cart-product-name {
   font-weight: 700;
   color: var(--text-primary);
@@ -971,34 +951,14 @@ body.no-scroll {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
 }
 .cart-remove-btn:hover {
   background: rgba(199,104,60,0.06);
-}
-.cart-remove-btn:focus { outline: 3px solid rgba(199,104,60,0.12); outline-offset: 4px; }
-
-/* edit button style */
-.cart-edit-btn {
-  background: transparent;
-  border: none;
-  color: var(--gh-text-strong);
-  cursor: pointer;
-  padding: 6px;
-  font-size: 1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 6px;
   border-radius: 8px;
 }
-.cart-edit-btn:hover {
-  background: rgba(0,0,0,0.04);
-}
-.cart-edit-btn:focus { outline: 3px solid rgba(122,169,134,0.12); outline-offset: 4px; }
 
-/* placeholder immagine quando non c'è immagine reale (legacy) */
-.cart-thumb.placeholder.legacy {
+/* placeholder immagine quando non c'è immagine reale */
+.cart-thumb.placeholder {
   display: inline-block;
   background: rgba(0,0,0,0.04);
   width: 48px;
@@ -1013,13 +973,6 @@ body.no-scroll {
   word-break: break-word;
 }
 
-/* Totale carrello: maggiore enfasi */
-.cart-total {
-  display:flex; justify-content: flex-end; align-items:center;
-  font-size:1.04rem; font-weight:700; color:var(--text-primary);
-  margin-top: 8px;
-}
-
 /* ===== Patch scanner modal & video visibility =====
    Questa sezione fa due cose:
    1) mostra il modal quando JS rimuove 'hidden' (usiamo :not(.hidden))
@@ -1028,6 +981,7 @@ body.no-scroll {
 */
 
 .modal {
+  /* non impostiamo display:none qui: lo controlliamo tramite .hidden o :not(.hidden) */
   position: fixed;
   left: 0;
   top: 0;
@@ -1080,7 +1034,7 @@ body.no-scroll {
 #scannerContainer {
   position: relative;
   width: 100% !important;
-  height: 60vh !important;
+  height: 60vh !important;      /* abbastanza alto su mobile */
   max-height: 60vh !important;
   background: #000;
   border-radius: 10px;
@@ -1140,188 +1094,3 @@ body.no-scroll {
 }
 
 /* Fine patch scanner modal */
-
-/* ===== Nuove regole specifiche per la card riassuntiva del supermercato (richiesta numero 4) =====
-   Classi create:
-    - .selected-store-panel (wrapper panel)
-    - .selected-store-logo (logo a sinistra)
-    - .selected-store-info (titolo + descrizione)
-    - .selected-store-date (data visualizzata nella card)
-*/
-
-/* wrapper card */
-.selected-store-panel {
-  display:flex;
-  gap:12px;
-  align-items:center;
-  padding:12px;
-  border-radius:12px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.04);
-  margin-bottom: 12px;
-}
-
-/* logo circle left (può essere <img> o un <div>) */
-.selected-store-logo {
-  flex: 0 0 auto;
-  width:64px;
-  height:64px;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  background: var(--gh-salvia);
-  box-shadow: 0 8px 18px rgba(122,169,134,0.12);
-  border: 1px solid rgba(0,0,0,0.04);
-}
-.selected-store-logo img {
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  background: transparent;
-}
-
-/* Right side info */
-.selected-store-info {
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  min-width:0;
-}
-.selected-store-info .title {
-  font-weight:800;
-  font-size:1.05rem;
-  color:var(--text-primary);
-}
-.selected-store-info .desc {
-  color:var(--text-secondary);
-  font-size:0.94rem;
-  line-height:1.2;
-}
-
-/* small date row inside the same card, under title/desc */
-.selected-store-date {
-  margin-top:6px;
-  color:var(--text-secondary);
-  font-size:0.92rem;
-  font-weight:600;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-.selected-store-date .icon {
-  width:36px; height:36px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:var(--gh-salvia); color:#fff; font-size:14px;
-}
-
-/* responsive adjustments for small screens */
-@media (max-width:560px) {
-  .selected-store-panel { gap:10px; padding:10px; }
-  .selected-store-logo { width:52px; height:52px; border-radius:10px; }
-  .selected-store-info .title { font-size:1rem; }
-  .selected-store-date { font-size:0.9rem; }
-}
-
-/* tiny utility: hide large textual headers (Informazioni Generali) when we show selected-store panel
-   (da attivare/rimuovere via JS aggiungendo/clonando classi o nascondendo l'elemento .form-section) */
-.hide-info-header .form-section,
-.hide-info-header #info-header {
-  display: none !important;
-}
-
-/* Fine regole selected-store panel */
-
-/* ===== Fix e rifiniture finali ===== */
-
-/* Focus dello stato selezionato su store-card (visibile per keyboard users) */
-.store-card:focus { box-shadow: 0 18px 36px rgba(122,169,134,0.10); }
-
-/* focus per i bottoni nella tabella carrello */
-#cartTable button:focus { outline: 3px solid rgba(122,169,134,0.12); outline-offset: 4px; border-radius: 8px; }
-
-/* tiny layout fix: assicurati che il corpo principale non venga nascosto quando drawer è aperto */
-body.no-scroll main { pointer-events: auto; }
-
-/* End of style.css updated */
-
-/* ===========================
-   FIX: overlay / store-list visibility patches
-   - previene che l'overlay del menu blocchi la griglia quando il sideMenu è chiuso
-   - garantisce che la griglia dei supermercati sia visibile e interattiva dopo il render
-   - non cambia lo stacking quando il menu è effettivamente aperto
-   =========================== */
-
-/* Se il sideMenu è marcato come hidden, assicurati che l'overlay non blocchi niente (for robustness) */
-#sideMenu.hidden + .menu-overlay,
-#sideMenu.hidden ~ .menu-overlay,
-.menu-overlay:not(.visible) {
-  display: none !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* Garantisce la visibilità e l'interattività della griglia supermercati (id e classe) */
-#storeListGrid,
-.store-list-grid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
-  gap: 12px !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-  position: relative;
-  /* non alziamo z-index oltre gli overlay/modal consciamente:
-     ci fidiamo della regola sopra che nasconde l'overlay quando il sideMenu è hidden */
-}
-
-/* Assicura che le singole card siano cliccabili */
-.store-card {
-  pointer-events: auto !important;
-  position: relative;
-}
-
-/* Se per qualche motivo l'overlay resta visibile erroneamente, evita che tocchi il pannello store-choice (più specifico)
-   Nota: questo solo come salvaguardia locale, non altera il comportamento previsto quando il menu è apert o drawer è visibile */
-.store-choice-card {
-  position: relative;
-  z-index: 1;
-}
-
-/* End FIX */
-
-/* TEMP FIX: assicurati che overlay non blocchi quando il sideMenu è chiuso */
-.menu-overlay {
-  pointer-events: none !important;
-  display: none !important;
-  opacity: 0 !important;
-}
-
-/* garantisci che la griglia sia in primo piano se necessario (solo per debug) */
-#storeListGrid, .store-list-grid {
-  pointer-events: auto !important;
-  visibility: visible !important;
-  z-index: 1000 !important;
-}
-
-/* evidenzia la storeChoiceCard per debugging (rimuovere dopo test) */
-#storeChoiceCard { outline: 2px dashed rgba(122,169,134,0.9); }
-
-/* --- Quick overlay pointer-event fix + visual debug --- */
-/* Ensure overlays don't block pointer events unless explicitly visible */
-.menu-overlay,
-#drawerOverlay {
-  pointer-events: none;
-}
-
-/* When the overlay is visible (class .visible), it should accept pointer events */
-.menu-overlay.visible,
-#drawerOverlay.visible {
-  pointer-events: auto;
-}
-
-/* Visual debugging: tint overlays slightly when visible so we can notice them on mobile */
-.menu-overlay.visible { background: rgba(255,0,0,0.10) !important; }
-#drawerOverlay.visible { background: rgba(0,0,255,0.06) !important; }
-
-/* Also ensure sideMenu open state is on top and does not get hidden by other overlays */
-#sideMenu.open { z-index: 3600 !important; }
