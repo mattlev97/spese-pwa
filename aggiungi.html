@@ -59,6 +59,34 @@
 
     /* minor: ensure cart total stands out */
     .cart-total { font-size:1.08rem; margin-top:8px; }
+
+    /* Defensive floating button styles (local fallback) */
+    .floating-btn {
+      position: fixed;
+      bottom: calc(var(--bottom-nav-height,72px) + 32px);
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gh-salvia);
+      color: #fff;
+      border: none;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+      cursor: pointer;
+      z-index: 3800;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .floating-left { left: 18px; }
+    .floating-right { right: 18px; }
+    /* keep hidden utility (already in style.css but reinforce) */
+    .hidden { display: none !important; pointer-events: none !important; visibility: hidden !important; }
+    /* make sure visible state wins against other rules when class removed */
+    .floating-btn:not(.hidden) { display: flex !important; pointer-events: auto !important; visibility: visible !important; }
+
+    /* small tweak for icon size */
+    .floating-btn i { font-size: 18px; line-height: 1; }
   </style>
 </head>
 <body>
@@ -185,6 +213,15 @@
     </form>
   </main>
 
+  <!-- Floating buttons: camera + add (aggiunti qui) -->
+  <button id="floatingCameraBtn" class="floating-btn floating-left hidden" aria-label="Scansiona barcode" title="Scansiona barcode" type="button">
+    <i class="fa-solid fa-camera"></i>
+  </button>
+
+  <button id="floatingAddBtn" class="floating-btn floating-right hidden" aria-label="Aggiungi prodotto" title="Aggiungi prodotto" type="button">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+
   <!-- Drawer: add product (bottom sheet) -->
   <div id="drawerOverlay" class="menu-overlay" aria-hidden="true"></div>
   <div id="addProductDrawer" class="add-product-drawer hidden" role="dialog" aria-hidden="true" aria-labelledby="drawerTitle">
@@ -301,7 +338,6 @@
         const msg = (evt && evt.message) ? evt.message : String(evt);
         showToast('Errore JS: ' + msg, 4000);
       } catch(e){}
-      // allow default behaviour
     });
     window.addEventListener('unhandledrejection', function(evt) {
       try {
@@ -335,21 +371,41 @@
       const storeSelect = document.getElementById('storeSelect');
       const noStoresMsg = document.getElementById('noStoresMsg');
 
-      // floating btns safe refs (may be defined in layout elsewhere)
-      const floatingAddBtn = document.getElementById('floatingAddBtn');
-      const floatingCameraBtn = document.getElementById('floatingCameraBtn');
-
-      // Robust show/hide floating (guardati da errori)
+      // floating btns safe refs (present in DOM now)
+      // we will re-query inside show/hide to be robust even if DOM changes
       function hideFloating() {
         try {
-          if (floatingAddBtn && floatingAddBtn.classList) floatingAddBtn.classList.add('hidden');
-          if (floatingCameraBtn && floatingCameraBtn.classList) floatingCameraBtn.classList.add('hidden');
+          const fa = document.getElementById('floatingAddBtn');
+          const fc = document.getElementById('floatingCameraBtn');
+          [fa, fc].forEach(el => {
+            if (!el) return;
+            el.classList.add('hidden');
+            el.setAttribute('aria-hidden', 'true');
+            // force inline styles with priority to overcome stylesheet rules if needed
+            try {
+              el.style.setProperty('display', 'none', 'important');
+              el.style.setProperty('pointer-events', 'none', 'important');
+              el.style.setProperty('z-index', '0', 'important');
+              el.style.visibility = 'hidden';
+            } catch (e) { /* ignore */ }
+          });
         } catch (err) { console.warn('hideFloating guard failed', err); }
       }
       function showFloating() {
         try {
-          if (floatingAddBtn && floatingAddBtn.classList) floatingAddBtn.classList.remove('hidden');
-          if (floatingCameraBtn && floatingCameraBtn.classList) floatingCameraBtn.classList.remove('hidden');
+          const fa = document.getElementById('floatingAddBtn');
+          const fc = document.getElementById('floatingCameraBtn');
+          [fa, fc].forEach(el => {
+            if (!el) return;
+            el.classList.remove('hidden');
+            el.removeAttribute('aria-hidden');
+            try {
+              el.style.setProperty('display', 'flex', 'important');
+              el.style.setProperty('pointer-events', 'auto', 'important');
+              el.style.setProperty('z-index', '3800', 'important');
+              el.style.visibility = 'visible';
+            } catch (e) { /* ignore */ }
+          });
         } catch (err) { console.warn('showFloating guard failed', err); }
       }
 
