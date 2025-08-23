@@ -18,58 +18,101 @@
   <!-- Stili unificati -->
   <link rel="stylesheet" href="style.css?v=20250816" />
 
-  <!-- Stili specifici per aggiungi.html -->
+  <!-- Stili specifici per store-choice e nuove regole -->
   <style>
-    /* essentials */
-    .store-list-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; margin-top:12px; }
-    .store-card { display:flex; gap:12px; align-items:center; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--panel); cursor:pointer; transition:transform .12s ease,box-shadow .14s ease; }
-    .store-card.selected { background:var(--gh-salvia); color:#fff; box-shadow:0 12px 38px rgba(122,169,134,0.14); }
-    .store-card .store-logo { width:64px; height:64px; object-fit:contain; border-radius:8px; flex:0 0 64px; }
+    /* (ho lasciato i tuoi stili - solo quelli essenziali sono qui per brevità) */
+    /* Grid store cards */
+    .store-list-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .store-card {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: var(--panel);
+      cursor: pointer;
+      text-align:left;
+      transition: transform .12s ease, box-shadow .14s ease, background .12s ease;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+      width:100%;
+    }
+    .store-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.06); }
+    .store-card.selected {
+      background: var(--gh-salvia);
+      color: #fff;
+      border-color: rgba(0,0,0,0.04);
+      box-shadow: 0 12px 38px rgba(122,169,134,0.14);
+    }
+    .store-card .store-logo {
+      width:64px; height:64px; object-fit:contain; border-radius:8px; background:transparent;
+      flex:0 0 64px;
+      border: none;
+    }
     .store-card .store-card-body { flex:1; min-width:0; }
-    .store-card .store-card-title { font-weight:700; }
+    .store-card .store-card-title { font-weight:700; color:var(--gh-text-strong); }
+    .store-card.selected .store-card-title { color: #fff; }
     .store-card .store-card-desc { color:var(--gh-muted); font-size:0.92rem; margin-top:4px; }
+    .store-card.selected .store-card-desc { color: rgba(255,255,255,0.9); }
 
-    #cartMainPlaceholder { display:none; gap:12px; align-items:center; padding:18px; border-radius:12px; border:1px solid var(--border); background:var(--panel); box-shadow:0 12px 28px rgba(0,0,0,0.04); margin-bottom:16px; }
-    .cart-icon-circle { width:56px; height:56px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--gh-salvia); color:#fff; flex:0 0 56px; }
+    /* cart empty placeholder after confirming store */
+    #cartMainPlaceholder {
+      display:none;
+      gap:12px;
+      align-items:center;
+      padding:18px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--panel);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.04);
+      margin-bottom:16px;
+    }
+    #cartMainPlaceholder .title-row {
+      display:flex; align-items:center; gap:12px;
+    }
+    .cart-icon-circle {
+      width:56px; height:56px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--gh-salvia); color:#fff; flex:0 0 56px;
+    }
+    .cart-empty-note { color:var(--gh-muted); font-style:italic; margin-top:8px; }
 
-    .add-product-drawer { position:fixed !important; left:50% !important; transform:translateX(-50%) !important; bottom:16px !important; width:calc(100% - 32px) !important; max-width:720px !important; border-top-left-radius:12px !important; border-top-right-radius:12px !important; padding:12px !important; max-height:78vh !important; overflow:auto !important; z-index:3600 !important; background:var(--panel); }
+    /* Drawer bottom-sheet centrato e responsive */
+    .add-product-drawer {
+      position:fixed !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      bottom: 16px !important;
+      width: calc(100% - 32px) !important;
+      max-width: 720px !important;
+      border-top-left-radius: 12px !important;
+      border-top-right-radius: 12px !important;
+      box-shadow: 0 -12px 40px rgba(0,0,0,0.12) !important;
+      padding: 12px !important;
+      max-height: 78vh !important;
+      overflow: auto !important;
+      z-index: 3600 !important;
+      pointer-events: auto !important;
+      background: var(--panel);
+    }
     .add-product-drawer .drawer-header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 6px 12px 6px; }
+    .add-product-drawer .drawer-body { padding:4px 6px 12px 6px; }
     .menu-overlay.visible { display:block; opacity:1; }
 
-    /* cart table tweaks */
+    /* small table tweaks */
     #cartTable td, #cartTable th { padding:10px 8px; vertical-align:middle; }
     .cart-product-name { font-weight:600; }
     .cart-product-meta { color:var(--gh-muted); font-size:0.9rem; }
     .cart-remove-btn { background:transparent; border:none; color:var(--gh-terracotta); cursor:pointer; font-size:1rem; padding:6px; }
     .cart-edit-btn { background:transparent; border:none; color:var(--gh-text-strong); cursor:pointer; font-size:1rem; padding:6px; margin-right:6px; }
+    .cart-thumb { width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid rgba(0,0,0,0.04); }
 
-    /* thumbnail placeholder using fontawesome inside circle */
-    .cart-thumb-placeholder {
-      width:48px; height:48px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex:0 0 48px;
-      background:var(--gh-salvia); color:#fff; font-size:18px; box-shadow:0 1px 0 rgba(0,0,0,0.04); margin-right:10px;
-    }
-    .cart-thumb { width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid rgba(0,0,0,0.04); margin-right:10px; flex:0 0 48px; }
-
-    /* drawer preview container (can contain img or placeholder) */
+    /* drawer image preview */
     #drawerImagePreview { display:none; margin-bottom:8px; }
-    #drawerImagePreview .preview-img { width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid rgba(0,0,0,0.06); }
-    #drawerImagePreview .preview-placeholder { width:64px; height:64px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:var(--gh-salvia); color:#fff; font-size:20px; }
-
-    /* store header card (white) */
-    #storeHeaderCard { display:none; padding:12px; border-radius:10px; background:#fff; box-shadow:0 6px 18px rgba(0,0,0,0.04); margin-bottom:12px; align-items:center; gap:12px; }
-    #storeHeaderCard .store-logo-large { width:72px; height:72px; object-fit:contain; border-radius:10px; flex:0 0 72px; background:transparent; }
-    #storeHeaderCard .store-header-body { flex:1; }
-    #storeHeaderCard .store-header-title { font-weight:800; margin-bottom:4px; }
-    #storeHeaderCard .store-header-desc { color:var(--gh-muted); font-size:0.95rem; }
-
-    /* small responsive tweaks */
-    @media (max-width:520px) {
-      #storeHeaderCard { flex-direction:column; align-items:flex-start; }
-      #storeHeaderCard .store-logo-large { margin-bottom:8px; }
-    }
-
-    /* toast */
-    .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:84px; background:rgba(0,0,0,0.8); color:#fff; padding:10px 14px; border-radius:8px; display:none; z-index:9999; }
+    #drawerImagePreview img { width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid rgba(0,0,0,0.06); }
   </style>
 </head>
 <body>
@@ -87,13 +130,29 @@
     </div>
   </header>
 
-  <!-- Side menu -->
-  <nav id="sideMenu" class="hidden" aria-hidden="true"> ... </nav>
+  <!-- Reduced side menu (niente supermercati/versione) -->
+  <nav id="sideMenu" class="hidden" aria-hidden="true">
+    <div class="menu-header">
+      <div class="menu-logo">GH</div>
+      <div>
+        <div style="font-weight:800;">GroceryHub</div>
+        <div style="font-size:0.9rem;color:var(--gh-muted)">La tua gestione spese</div>
+      </div>
+    </div>
 
-  <!-- overlay -->
+    <div class="menu-section">
+      <div style="font-size:0.95rem;font-weight:700;margin-bottom:8px;">Navigazione</div>
+      <a href="index.html"><i class="fa-solid fa-house" style="width:18px;margin-right:8px;"></i> Dashboard</a>
+      <a href="aggiungi.html"><i class="fa-solid fa-plus" style="width:18px;margin-right:8px;"></i> Aggiungi spesa</a>
+      <a href="archivio.html"><i class="fa-solid fa-archive" style="width:18px;margin-right:8px;"></i> Archivio</a>
+      <a href="impostazioni.html"><i class="fa-solid fa-gear" style="width:18px;margin-right:8px;"></i> Impostazioni</a>
+    </div>
+  </nav>
+
+  <!-- overlay for side menu & drawer -->
   <div id="menuOverlay" class="menu-overlay" tabindex="-1" aria-hidden="true"></div>
 
-  <main class="dashboard add-expense" role="main" aria-live="polite" style="padding:18px;">
+  <main class="dashboard add-expense" role="main" aria-live="polite">
     <!-- STORE CHOICE CARD -->
     <section id="storeChoiceCard" class="panel store-choice-card" aria-labelledby="storeChoiceTitle">
       <div class="section-header">
@@ -104,27 +163,16 @@
         </div>
       </div>
 
-      <div id="storeListGrid" class="store-list-grid" role="list" aria-label="Elenco supermercati"></div>
+      <div id="storeListGrid" class="store-list-grid" role="list" aria-label="Elenco supermercati">
+        <!-- JS popola le store-card qui -->
+      </div>
 
       <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px;">
         <button id="confirmStoreBtn" class="btn" disabled aria-disabled="true">✔️ Conferma</button>
       </div>
     </section>
 
-    <!-- Store header card (after confirm) -->
-    <section id="storeHeaderCard" class="panel" aria-hidden="true" style="display:none; margin-top:12px; display:flex;">
-      <img id="selectedStoreLogo" class="store-logo-large" src="" alt="Logo supermercato" />
-      <div class="store-header-body">
-        <div class="store-header-title" id="selectedStoreTitle"></div>
-        <div class="store-header-desc" id="selectedStoreDesc"></div>
-        <div style="margin-top:8px;">
-          <label style="font-size:0.9rem;color:var(--gh-muted);margin-bottom:4px;display:block;">Data spesa</label>
-          <input type="date" id="expenseDateHeader" />
-        </div>
-      </div>
-    </section>
-
-    <!-- After confirm: empty cart placeholder -->
+    <!-- After confirm: empty cart placeholder (visible only after confirm and when cart empty) -->
     <section id="cartMainPlaceholder" aria-hidden="true">
       <div class="title-row">
         <div class="cart-icon-circle" aria-hidden="true"><i class="fa-solid fa-cart-shopping" style="font-size:20px"></i></div>
@@ -135,10 +183,38 @@
       </div>
     </section>
 
-    <!-- Hidden original form and cart (cartSection shown when items exist) -->
+    <!-- Hidden original form and cart (will appear when user adds product) -->
     <form id="expenseForm" class="expense-form hidden" novalidate>
-      <section id="cartSection" class="cart-section panel hidden" aria-hidden="true" style="margin-top:12px;">
+      <!-- detailed form as before (kept hidden until products exist) -->
+      <section class="form-section panel" aria-labelledby="info-header">
+        <div class="section-header" id="info-header">
+          <span class="icon-circle" aria-hidden="true"><i class="fa-solid fa-store"></i></span>
+          <div class="title-lines">
+            <h2>Informazioni Generali</h2>
+            <div class="subtitle">Dati della spesa</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="storeSelect">Supermercato</label>
+          <select id="storeSelect" class="store-select" required></select>
+        </div>
+
+        <div class="form-group" id="customStoreGroup" aria-hidden="true" hidden>
+          <label for="customStore">Nome supermercato</label>
+          <input type="text" id="customStore" placeholder="Inserisci nome supermercato" />
+        </div>
+
+        <div class="form-group">
+          <label for="expenseDate">Data</label>
+          <input type="date" id="expenseDate" required />
+        </div>
+      </section>
+
+      <!-- product area (we will show cartSection separately) -->
+      <section class="cart-section panel hidden" id="cartSection" aria-hidden="true">
         <div class="section-header">
+          <span style="width:44px;"></span>
           <div class="title-lines">
             <h2>Carrello</h2>
             <div class="subtitle">Riepilogo dei prodotti</div>
@@ -146,9 +222,9 @@
         </div>
 
         <div class="cart-table-container">
-          <table id="cartTable" style="width:100%;">
+          <table id="cartTable">
             <thead>
-              <tr><th style="text-align:left">Prodotto</th><th style="width:120px">Prezzo</th><th style="width:110px">Azioni</th></tr>
+              <tr><th>Prodotto</th><th>Prezzo</th><th>Azioni</th></tr>
             </thead>
             <tbody id="cartBody"></tbody>
           </table>
@@ -163,7 +239,7 @@
     </form>
   </main>
 
-  <!-- Drawer: add/edit product (bottom sheet) -->
+  <!-- Drawer: add product (bottom sheet) -->
   <div id="drawerOverlay" class="menu-overlay" aria-hidden="true"></div>
   <div id="addProductDrawer" class="add-product-drawer hidden" role="dialog" aria-hidden="true" aria-labelledby="drawerTitle">
     <div class="drawer-header">
@@ -171,9 +247,9 @@
       <button id="closeDrawerBtn" class="btn btn-secondary" aria-label="Chiudi">Chiudi</button>
     </div>
     <div class="drawer-body">
-      <!-- preview can contain img or placeholder -->
+      <!-- image preview area (aggiunto) -->
       <div id="drawerImagePreview" aria-hidden="true">
-        <div id="drawerPreviewContainer"></div>
+        <img id="drawerPreviewImg" src="" alt="Anteprima prodotto" />
       </div>
 
       <div class="form-group">
@@ -188,7 +264,7 @@
           <option>Latticini</option><option>Pane</option><option>Bevande</option><option>Altro</option>
         </select>
       </div>
-      <div class="form-row" style="display:flex;gap:10px;">
+      <div class="form-row">
         <div class="form-group" style="flex:1">
           <label for="drawerProductPrice">Prezzo (€)</label>
           <input id="drawerProductPrice" type="number" step="0.01" inputmode="decimal" />
@@ -208,23 +284,289 @@
     </div>
   </div>
 
-  <!-- Scanner modal, toast, bottom nav, floating buttons (kept as before) -->
-  <div id="scannerModal" class="modal hidden" aria-hidden="true"> ... </div>
+  <!-- Scanner modal -->
+  <div id="scannerModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
+      <h3>📷 Scansione Codice a Barre</h3>
+      <p class="scanner-instructions">Inquadra il codice a barre con la fotocamera. L'app proverà a recuperare i dati da Open Food Facts.</p>
+
+      <div id="scannerContainer" aria-live="polite">
+        <video id="scannerVideo" autoplay playsinline muted></video>
+        <div id="scannerOverlay" aria-hidden="true">
+          <div class="scan-line" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <a class="openfood-link" href="https://world.openfoodfacts.org" target="_blank" rel="noopener">🔎 Cerca manualmente su Open Food Facts</a>
+
+      <div class="scanner-actions">
+        <div class="left">
+          <div id="deviceLabel" class="device-label" aria-live="polite"></div>
+        </div>
+        <div class="right">
+          <button id="switchCameraBtn" class="btn btn-secondary small-btn">🔁 Cambia Camera</button>
+          <button id="scannerCancelBtn" class="btn btn-secondary">Annulla</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" aria-hidden="true"></div>
-
-  <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione"> ... </nav>
-
-  <button id="floatingCameraBtn" class="floating-btn floating-left" aria-label="Apri fotocamera"><i class="fa-solid fa-camera"></i></button>
-  <button id="floatingAddBtn" class="floating-btn floating-right" aria-label="Aggiungi prodotto"><i class="fa-solid fa-plus"></i></button>
 
   <!-- app core -->
   <script src="app.js"></script>
-  <!-- ZXing -->
+  <!-- ZXing (scanner lib) -->
   <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
 
-  <!-- Behaviour script -->
+  <!-- Minimal ZXing wrapper: openScannerModal / closeScannerModal / switchCamera (robust) -->
   <script>
-    // small helpers
+  (function(){
+    let codeReader = null;
+    let availableVideoDevices = [];
+    let currentDeviceIndex = -1;
+    let isScannerOpen = false;
+    let barcodeHandled = false;
+
+    // find the correct global for ZXing Browser class
+    function getZXingNamespace() {
+      if (window.ZXingBrowser) return window.ZXingBrowser;
+      if (window.ZXing) return window.ZXing;
+      // UMD sometimes exposes BrowserMultiFormatReader directly
+      if (window.BrowserMultiFormatReader) return { BrowserMultiFormatReader: window.BrowserMultiFormatReader };
+      return null;
+    }
+
+    function updateDeviceLabel(text) {
+      const lab = document.getElementById('deviceLabel');
+      if (lab) lab.textContent = text || '';
+    }
+
+    async function stopScanner() {
+      if (codeReader && typeof codeReader.reset === 'function') {
+        try { await codeReader.reset(); } catch(e){ /* ignore */ }
+      }
+      const v = document.getElementById('scannerVideo');
+      if (v && v.srcObject) {
+        try {
+          v.srcObject.getTracks().forEach(t => { try{ t.stop(); }catch(e){} });
+        } catch(e){}
+        v.srcObject = null;
+      }
+      try { if (v) v.pause(); } catch(e){}
+      codeReader = null;
+      isScannerOpen = false;
+      barcodeHandled = false;
+      updateDeviceLabel('');
+    }
+
+    async function prepareDevicesAndChoosePreferred() {
+      // Try to request permission to populate device labels
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
+          .then(s => { s.getTracks().forEach(t => t.stop()); })
+          .catch(()=>{});
+      } catch(e){}
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      availableVideoDevices = devices.filter(d => d.kind === 'videoinput').map(d => ({ deviceId: d.deviceId, label: d.label || 'Camera' }));
+      let idx = availableVideoDevices.findIndex(d => /back|rear|environment|posteriore/gi.test(d.label));
+      if (idx === -1) idx = (availableVideoDevices.length > 0 ? 0 : -1);
+      currentDeviceIndex = idx;
+      return currentDeviceIndex;
+    }
+
+    async function openScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      if (modal) { modal.classList.remove('hidden'); modal.removeAttribute('aria-hidden'); }
+      isScannerOpen = true;
+      barcodeHandled = false;
+
+      const ns = getZXingNamespace();
+      if (!ns || !ns.BrowserMultiFormatReader) {
+        console.error('ZXing library not found');
+        alert('Scanner non disponibile (libreria mancante).');
+        closeScannerModal();
+        return;
+      }
+
+      try {
+        codeReader = new ns.BrowserMultiFormatReader();
+      } catch (e) {
+        console.error('ZXing init error', e);
+        alert('Scanner non disponibile in questo dispositivo.');
+        closeScannerModal();
+        return;
+      }
+
+      try {
+        const chosenIndex = await prepareDevicesAndChoosePreferred();
+        if (chosenIndex === -1) { alert('Nessuna videocamera disponibile.'); closeScannerModal(); return; }
+        const chosen = availableVideoDevices[chosenIndex];
+        updateDeviceLabel('Camera: ' + (chosen.label || 'Sconosciuta'));
+
+        const videoElem = document.getElementById('scannerVideo');
+        await codeReader.decodeFromVideoDevice(chosen.deviceId, videoElem, (result, err) => {
+          if (result && result.getText) {
+            const code = (result.getText ? result.getText() : (result.text || '')).trim();
+            handleBarcodeFound(code);
+          }
+        });
+      } catch (err) {
+        console.error('Camera/Scanner error', err);
+        alert('Impossibile avviare lo scanner. Controlla i permessi o riprova.');
+        closeScannerModal();
+      }
+    }
+
+    async function closeScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      try { await stopScanner(); } catch(e){}
+      if (modal) { modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); }
+    }
+
+    async function switchCamera() {
+      if (!isScannerOpen) return;
+      if (!availableVideoDevices || availableVideoDevices.length <= 1) {
+        alert('Nessun altra camera disponibile.');
+        return;
+      }
+      try { await stopScanner(); } catch(e){}
+      currentDeviceIndex = (currentDeviceIndex + 1) % availableVideoDevices.length;
+      const chosen = availableVideoDevices[currentDeviceIndex];
+      updateDeviceLabel('Camera: ' + (chosen.label || 'Sconosciuta'));
+      try {
+        const ns = getZXingNamespace();
+        if (!ns || !ns.BrowserMultiFormatReader) { alert('Errore con la libreria scanner.'); return; }
+        codeReader = new ns.BrowserMultiFormatReader();
+        const videoElem = document.getElementById('scannerVideo');
+        await codeReader.decodeFromVideoDevice(chosen.deviceId, videoElem, (result, err) => {
+          if (result && result.getText) {
+            const code = (result.getText ? result.getText() : (result.text || '')).trim();
+            handleBarcodeFound(code);
+          }
+        });
+      } catch (err) {
+        console.error('Errore switching camera', err);
+        alert('Errore cambio camera.');
+        await stopScanner();
+      }
+    }
+
+    async function handleBarcodeFound(barcode) {
+      if (!barcode || barcodeHandled) return;
+      barcodeHandled = true;
+      const toast = document.getElementById('toast');
+      if (toast) { toast.textContent = 'Codice rilevato: ' + barcode; toast.style.display = 'block'; setTimeout(()=>toast.style.display='none',1400); }
+
+      try { if (window.app && typeof app.setLastScannedBarcode === 'function') app.setLastScannedBarcode(barcode); } catch(e){}
+
+      try {
+        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(barcode)}.json`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.status === 1 && json.product) {
+            const p = json.product;
+            const nameField = document.getElementById('drawerProductName') || document.getElementById('productName');
+            const notesField = document.getElementById('drawerProductNotes') || document.getElementById('productNotes');
+            const categoryField = document.getElementById('drawerProductCategory') || document.getElementById('productCategory');
+
+            const prodName = p.product_name || p.generic_name || p.brands || '';
+            if (nameField && prodName) nameField.value = prodName;
+
+            let noteParts = [];
+            if (p.brands) noteParts.push(p.brands);
+            if (p.quantity) noteParts.push(p.quantity);
+            if (p.categories) noteParts.push(p.categories.split(',').slice(0,2).join(' • '));
+            if (notesField && noteParts.length) notesField.value = noteParts.join(' • ');
+
+            if (categoryField && Array.isArray(p.categories_tags) && p.categories_tags.length) {
+              const tag = p.categories_tags[0] || '';
+              const human = (p.categories || '').split(',')[0] || tag.replace('en:', '').replace(/-/g,' ');
+              Array.from(categoryField.options).forEach(o => {
+                if (human && o.value && o.value.toLowerCase().includes(human.toLowerCase())) {
+                  categoryField.value = o.value;
+                }
+              });
+            }
+
+            const imageCandidates = [p.image_front_small_url, p.image_front_thumb_url, p.image_small_url, p.image_url, p.image_front_url].filter(Boolean);
+            const chosenImage = imageCandidates.length ? imageCandidates[0] : null;
+            try {
+              if (chosenImage && window.app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(chosenImage);
+            } catch(e){}
+
+            // DISPATCH EVENT so the page (behavior script) can open the drawer and populate UI
+            try {
+              document.dispatchEvent(new CustomEvent('app:barcode-scanned', { detail: { barcode: barcode, product: p, image: chosenImage } }));
+            } catch(e){ console.warn('dispatch barcode-scanned failed', e); }
+          }
+        }
+      } catch (err) {
+        console.warn('OFF fetch error', err);
+      } finally {
+        // close scanner after a short delay to let UI show toast
+        setTimeout(async ()=> { await closeScannerModal(); barcodeHandled = false; }, 700);
+      }
+    }
+
+    // export globals
+    window.openScannerModal = openScannerModal;
+    window.closeScannerModal = closeScannerModal;
+    window.switchCamera = switchCamera;
+  })();
+  </script>
+
+  <!-- bottom navigation -->
+  <nav class="bottom-nav" role="navigation" aria-label="Barra di navigazione">
+    <a class="nav-item" href="index.html" aria-label="Dashboard">
+      <span class="icon-wrap"><i class="fa-solid fa-chart-pie"></i></span>
+      <span class="label">Dashboard</span>
+    </a>
+    <a class="nav-item nav-active" href="aggiungi.html" aria-label="Aggiungi">
+      <span class="icon-wrap"><i class="fa-solid fa-plus-circle"></i></span>
+      <span class="label">Aggiungi</span>
+    </a>
+    <a class="nav-item" href="archivio.html" aria-label="Archivio">
+      <span class="icon-wrap"><i class="fa-solid fa-box-archive"></i></span>
+      <span class="label">Archivio</span>
+    </a>
+    <a class="nav-item" href="impostazioni.html" aria-label="Impostazioni">
+      <span class="icon-wrap"><i class="fa-solid fa-gear"></i></span>
+      <span class="label">Impostazioni</span>
+    </a>
+  </nav>
+
+  <!-- floating action buttons -->
+  <button id="floatingCameraBtn" class="floating-btn floating-left" aria-label="Apri fotocamera"><i class="fa-solid fa-camera"></i></button>
+  <button id="floatingAddBtn" class="floating-btn floating-right" aria-label="Aggiungi prodotto"><i class="fa-solid fa-plus"></i></button>
+
+  <!-- Script: behavior -->
+  <script>
+    // helper escape
+    function escapeHtml(txt){ const d = document.createElement('div'); d.textContent = txt || ''; return d.innerHTML; }
+
+    // create category placeholder (SVG data url) containing an emoji/icon on grey bg
+    function categoryPlaceholderSVG(category, diameter=48) {
+      const map = {
+        'Latticini': '🧀',
+        'Verdura': '🥬',
+        'Frutta': '🍎',
+        'Carne': '🥩',
+        'Pesce': '🐟',
+        'Pane': '🥖',
+        'Bevande': '🥤',
+        'Altro': '🧾'
+      };
+      const icon = map[category] || '🛒';
+      const bg = '#cfcfcf';
+      const fg = '#ffffff';
+      const fontSize = Math.round(diameter * 0.6);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
+        <rect width="100%" height="100%" rx="6" fill="${bg}"/>
+        <text x="50%" y="50%" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" fill="${fg}" dominant-baseline="middle" text-anchor="middle">${icon}</text>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
     function showToast(msg, timeout = 1400) {
       const t = document.getElementById('toast');
       if (!t) return;
@@ -233,104 +575,39 @@
       t.setAttribute('aria-hidden','false');
       setTimeout(()=>{ t.style.display='none'; t.setAttribute('aria-hidden','true'); }, timeout);
     }
-    function escapeHtml(txt){ const d = document.createElement('div'); d.textContent = txt || ''; return d.innerHTML; }
 
-    // mapping category -> font-awesome icon class (white icon inside salvia circle)
-    function categoryFaIcon(category) {
-      const map = {
-        'Latticini': 'fa-cheese',
-        'Verdura': 'fa-leaf',
-        'Frutta': 'fa-apple-whole',
-        'Carne': 'fa-drumstick-bite',
-        'Pesce': 'fa-fish',
-        'Pane': 'fa-bread-slice',
-        'Bevande': 'fa-wine-glass',
-        'Altro': 'fa-box-open'
-      };
-      return map[category] || 'fa-cart-shopping';
-    }
-
-    // Create thumbnail element: <img> if image, else placeholder div with icon
-    function createThumbnailElement(itemOrSrc, category) {
-      if (typeof itemOrSrc === 'string' && itemOrSrc) {
-        const img = document.createElement('img');
-        img.className = 'cart-thumb';
-        img.src = itemOrSrc;
-        img.alt = '';
-        return img;
-      }
-      // if object with .image
-      if (itemOrSrc && itemOrSrc.image) {
-        const img = document.createElement('img');
-        img.className = 'cart-thumb';
-        img.src = itemOrSrc.image;
-        img.alt = itemOrSrc.name || '';
-        return img;
-      }
-      // placeholder
-      const wrap = document.createElement('div');
-      wrap.className = 'cart-thumb-placeholder';
-      const i = document.createElement('i');
-      i.className = 'fa-solid ' + categoryFaIcon(category);
-      i.setAttribute('aria-hidden','true');
-      wrap.appendChild(i);
-      return wrap;
-    }
-
-    // drawer preview render (either image or placeholder)
-    function setDrawerPreview(imgSrc, category) {
-      const previewWrap = document.getElementById('drawerImagePreview');
-      const container = document.getElementById('drawerPreviewContainer');
-      container.innerHTML = '';
-      if (imgSrc) {
-        const im = document.createElement('img');
-        im.className = 'preview-img';
-        im.src = imgSrc;
-        container.appendChild(im);
-        previewWrap.style.display = 'block';
-      } else {
-        const ph = document.createElement('div');
-        ph.className = 'preview-placeholder';
-        const ico = document.createElement('i');
-        ico.className = 'fa-solid ' + categoryFaIcon(category);
-        ph.appendChild(ico);
-        container.appendChild(ph);
-        previewWrap.style.display = 'block';
-      }
-    }
-
-    // read current preview image (if any)
-    function getDrawerPreviewImage() {
-      const container = document.getElementById('drawerPreviewContainer');
-      if (!container) return null;
-      const img = container.querySelector('img.preview-img');
-      return img ? img.src : null;
-    }
-
-    // Make sure app exists and expose updateProductInCart if missing
+    // Ensure window.app exists (app.js should create it)
     document.addEventListener('DOMContentLoaded', () => {
       if (!window.app) window.app = new ExpenseTracker();
 
-      // safe fallback (only if not provided by app.js)
+      // Add helper updateProductInCart if not present on app
       if (!window.app.updateProductInCart) {
         window.app.updateProductInCart = function(updatedProduct) {
           try {
             if (!this.currentCart) this.currentCart = [];
             const idx = this.currentCart.findIndex(p => p.id === updatedProduct.id);
-            if (idx === -1) { this.currentCart.push(updatedProduct); }
-            else { this.currentCart[idx] = { ...this.currentCart[idx], ...updatedProduct }; }
+            if (idx === -1) {
+              // add if not exist
+              this.currentCart.push(updatedProduct);
+            } else {
+              this.currentCart[idx] = { ...this.currentCart[idx], ...updatedProduct };
+            }
             document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: this.currentCart }));
             return true;
-          } catch (e) { console.error(e); return false; }
+          } catch (e) {
+            console.error('updateProductInCart error', e);
+            return false;
+          }
         };
       }
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      // elements
+      // Elements
       const storeListGrid = document.getElementById('storeListGrid');
       const confirmBtn = document.getElementById('confirmStoreBtn');
       const storeChoiceCard = document.getElementById('storeChoiceCard');
+      const expenseForm = document.getElementById('expenseForm');
       const cartMainPlaceholder = document.getElementById('cartMainPlaceholder');
       const floatingAddBtn = document.getElementById('floatingAddBtn');
       const floatingCameraBtn = document.getElementById('floatingCameraBtn');
@@ -339,17 +616,16 @@
       const closeDrawerBtn = document.getElementById('closeDrawerBtn');
       const drawerAddBtn = document.getElementById('drawerAddBtn');
 
-      const selectedStoreLogo = document.getElementById('selectedStoreLogo');
-      const selectedStoreTitle = document.getElementById('selectedStoreTitle');
-      const selectedStoreDesc = document.getElementById('selectedStoreDesc');
-      const storeHeaderCard = document.getElementById('storeHeaderCard');
-      const expenseDateHeader = document.getElementById('expenseDateHeader');
-      const expenseForm = document.getElementById('expenseForm');
+      function hideFloating() {
+        floatingAddBtn.classList.add('hidden');
+        floatingCameraBtn.classList.add('hidden');
+      }
+      function showFloating() {
+        floatingAddBtn.classList.remove('hidden');
+        floatingCameraBtn.classList.remove('hidden');
+      }
 
-      function hideFloating() { floatingAddBtn.classList.add('hidden'); floatingCameraBtn.classList.add('hidden'); }
-      function showFloating() { floatingAddBtn.classList.remove('hidden'); floatingCameraBtn.classList.remove('hidden'); }
-
-      // start
+      // start with floating hidden because storeChoiceCard is visible
       hideFloating();
 
       const logoMap = {
@@ -364,17 +640,18 @@
         "Simply": "simplymarket.it",
         "Iper": "iper.it"
       };
+
       const descriptions = {
-        "Conad":"Catena presente capillarmente in Italia, ideale per prodotti freschi e offerte locali.",
-        "Coop":"Coop punta su qualità e sostenibilità, con un'ampia selezione di prodotti biologici.",
-        "Esselunga":"Esselunga offre grandi reparti freschi e numerose promozioni settimanali.",
-        "Eurospin":"Discount concentrato sul prezzo: ottime offerte su prodotti essenziali.",
-        "Carrefour":"Supermercati e ipermercati con vasta scelta e marchi internazionali.",
-        "Lidl":"Discount europeo con prodotti a marchio e offerte settimanali competitive.",
-        "MD":"Catena discount con assortimento conveniente e offerte locali frequenti.",
-        "Pam":"Supermercati focalizzati su freschi e prodotti regionali, utile per la spesa quotidiana.",
-        "Simply":"Punto vendita con offerta pratica per la spesa di tutti i giorni.",
-        "Iper":"Ipermercati con grande assortimento e reparti specializzati."
+        "Conad": "Catena presente capillarmente in Italia, ideale per prodotti freschi e offerte locali.",
+        "Coop": "Coop punta su qualità e sostenibilità, con un'ampia selezione di prodotti biologici.",
+        "Esselunga": "Esselunga offre grandi reparti freschi e numerose promozioni settimanali.",
+        "Eurospin": "Discount concentrato sul prezzo: ottime offerte su prodotti essenziali.",
+        "Carrefour": "Supermercati e ipermercati con vasta scelta e marchi internazionali.",
+        "Lidl": "Discount europeo con prodotti a marchio e offerte settimanali competitive.",
+        "MD": "Catena discount con assortimento conveniente e offerte locali frequenti.",
+        "Pam": "Supermercati focalizzati su freschi e prodotti regionali, utile per la spesa quotidiana.",
+        "Simply": "Punto vendita con offerta pratica per la spesa di tutti i giorni.",
+        "Iper": "Ipermercati con grande assortimento e reparti specializzati."
       };
 
       let selectedStore = null;
@@ -385,6 +662,10 @@
         const fg = '#fff';
         const svg = encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}"><rect width="100%" height="100%" rx="10" fill="${bg}"/><text x="50%" y="50%" font-family="Arial, Helvetica, sans-serif" font-size="${Math.round(diameter/2.6)}" fill="${fg}" dominant-baseline="middle" text-anchor="middle">${initials}</text></svg>`);
         return `data:image/svg+xml;utf8,${svg}`;
+      }
+
+      function describeFor(name) {
+        return descriptions[name] || `Ampia scelta di prodotti e offerte presso ${name}.`;
       }
 
       function renderStoreCards() {
@@ -408,12 +689,14 @@
             </div>
             <div class="store-card-body">
               <div class="store-card-title">${escapeHtml(sName)}</div>
-              <div class="store-card-desc"><em>${escapeHtml(descriptions[sName] || '')}</em></div>
+              <div class="store-card-desc"><em>${escapeHtml(describeFor(sName))}</em></div>
             </div>
           `;
 
           const imgEl = card.querySelector('img.store-logo');
-          if (imgEl) { imgEl.addEventListener('error', ()=> imgEl.src = placeholderSVG(sName,64)); }
+          if (imgEl) {
+            imgEl.addEventListener('error', () => { imgEl.src = placeholderSVG(sName,64); });
+          }
 
           card.addEventListener('click', () => {
             document.querySelectorAll('.store-card.selected').forEach(el => el.classList.remove('selected'));
@@ -427,9 +710,11 @@
         });
       }
 
+      // call initially
       renderStoreCards();
       document.addEventListener('app:stores-changed', renderStoreCards);
 
+      // ensure confirm starts disabled
       confirmBtn.disabled = true;
       confirmBtn.setAttribute('aria-disabled','true');
 
@@ -438,15 +723,14 @@
           if (confirmBtn.disabled) confirmBtn.setAttribute('aria-disabled','true');
           else confirmBtn.removeAttribute('aria-disabled');
         });
-        mo.observe(confirmBtn, { attributes:true, attributeFilter:['disabled'] });
+        mo.observe(confirmBtn, { attributes: true, attributeFilter: ['disabled'] });
+        if (confirmBtn.disabled) confirmBtn.setAttribute('aria-disabled','true');
       }
 
-      // Confirm store
+      // confirm selection behaviour
       confirmBtn?.addEventListener('click', () => {
         if (!selectedStore) return;
         try { app.populateAllStoreSelects(); } catch(e){}
-
-        // ensure storeSelect contains selected store
         const storeSel = document.getElementById('storeSelect');
         if (storeSel) {
           const exists = Array.from(storeSel.options).some(o => o.value === selectedStore);
@@ -458,33 +742,17 @@
           storeSel.dispatchEvent(new Event('change', { bubbles:true }));
         }
 
-        // populate and show store header card
-        const domain = logoMap[selectedStore] || '';
-        const clearbitUrl = domain ? `https://logo.clearbit.com/${domain}?size=128` : '';
-        selectedStoreLogo.src = clearbitUrl || placeholderSVG(selectedStore,72);
-        selectedStoreLogo.addEventListener('error', ()=> selectedStoreLogo.src = placeholderSVG(selectedStore,72));
-        selectedStoreTitle.textContent = selectedStore;
-        selectedStoreDesc.textContent = descriptions[selectedStore] || `Ampia scelta di prodotti e offerte presso ${selectedStore}.`;
-
-        // prefill date to today (YYYY-MM-DD) both in header and hidden expenseDate (keep storeSelect & hidden inputs in sync)
-        const today = new Date();
-        const y = today.getFullYear(); const m = String(today.getMonth()+1).padStart(2,'0'); const d = String(today.getDate()).padStart(2,'0');
-        const iso = `${y}-${m}-${d}`;
-        expenseDateHeader.value = iso;
-        const hiddenDateInput = document.getElementById('expenseDate');
-        if (hiddenDateInput) hiddenDateInput.value = iso;
-
-        // show header card
-        storeHeaderCard.style.display = 'flex';
-        storeHeaderCard.removeAttribute('aria-hidden');
-
-        // Hide store choice card & show placeholder cart
+        // Hide store choice card
         storeChoiceCard.classList.add('hidden');
+
+        // Show empty cart placeholder
         cartMainPlaceholder.style.display = 'flex';
         cartMainPlaceholder.removeAttribute('aria-hidden');
 
+        // ensure floating buttons re-appear
         showFloating();
-        // expenseForm remains hidden until products exist
+
+        // ensure expenseForm remains hidden until the user adds a product
         expenseForm.classList.add('hidden');
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -497,6 +765,8 @@
         drawer.classList.remove('hidden');
         drawer.removeAttribute('aria-hidden');
         document.body.classList.add('no-scroll');
+
+        // hide floating buttons to avoid overlap
         hideFloating();
       }
       function closeDrawer() {
@@ -505,13 +775,18 @@
         drawer.setAttribute('aria-hidden','true');
         document.body.classList.remove('no-scroll');
 
-        // reset edit flag
-        const addBtn = document.getElementById('drawerAddBtn');
-        if (addBtn) { delete addBtn.dataset.editing; addBtn.textContent = 'Aggiungi al carrello'; }
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
+
+        // reset any edit mode
+        const addBtn = document.getElementById('drawerAddBtn');
+        if (addBtn) {
+          delete addBtn.dataset.editing;
+          addBtn.textContent = 'Aggiungi al carrello';
+        }
       }
 
       function openDrawerWithProduct(product) {
+        // populate fields and open drawer in edit mode
         if (!product) return;
         openDrawer();
         document.getElementById('drawerProductName').value = product.name || '';
@@ -520,23 +795,51 @@
         document.getElementById('drawerProductPriceKg').value = (product.priceKg !== undefined && product.priceKg !== null) ? product.priceKg : '';
         document.getElementById('drawerProductNotes').value = product.notes || '';
 
-        const img = product.image || null;
-        setDrawerPreview(img, product.category || 'Altro');
+        const previewWrap = document.getElementById('drawerImagePreview');
+        const previewImg = document.getElementById('drawerPreviewImg');
+        if (product.image) {
+          previewImg.src = product.image;
+          previewWrap.style.display = 'block';
+        } else {
+          previewImg.src = categoryPlaceholderSVG(product.category || 'Altro', 64);
+          previewWrap.style.display = 'block';
+        }
 
         const addBtn = document.getElementById('drawerAddBtn');
         addBtn.dataset.editing = product.id;
         addBtn.textContent = 'Salva modifica';
       }
 
-      document.getElementById('floatingAddBtn')?.addEventListener('click', (e) => { e.preventDefault(); openDrawer(); });
+      document.getElementById('floatingAddBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        openDrawer();
+      });
       closeDrawerBtn?.addEventListener('click', closeDrawer);
       drawerOverlay?.addEventListener('click', closeDrawer);
 
-      // add/edit product
-      function normalizeDecimalString(s) { return (s||'').toString().trim().replace(',', '.'); }
+      // ---- Robust: single place to add product to cart (uses app if available) ----
+      function safeAddProductToCart(product) {
+        if (!product) return;
+        // use app API if present
+        try {
+          if (window.app && typeof window.app.addProductToCart === 'function') {
+            return window.app.addProductToCart(product);
+          }
+        } catch(e) {
+          console.warn('app.addProductToCart failed', e);
+        }
+        // fallback manual push + event
+        if (!window.app) window.app = {};
+        if (!Array.isArray(window.app.currentCart)) window.app.currentCart = [];
+        window.app.currentCart.push(product);
+        document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart }));
+        return product;
+      }
 
+      // Drawer: add product to cart (replaced with robust version)
       drawerAddBtn?.addEventListener('click', (e) => {
         e.preventDefault();
+
         const nameInput = document.getElementById('drawerProductName');
         const catInput = document.getElementById('drawerProductCategory');
         const priceInput = document.getElementById('drawerProductPrice');
@@ -549,8 +852,11 @@
         const priceKgRaw = (priceKgInput?.value || '').trim();
         const notes = (notesInput?.value || '').trim();
 
-        const price = parseFloat(normalizeDecimalString(priceRaw)) || 0;
-        const priceKg = priceKgRaw ? (parseFloat(normalizeDecimalString(priceKgRaw)) || null) : null;
+        // normalize decimals (comma -> dot)
+        const normalize = s => (s||'').toString().trim().replace(',', '.');
+
+        const price = parseFloat(normalize(priceRaw)) || 0;
+        const priceKg = priceKgRaw ? (parseFloat(normalize(priceKgRaw)) || null) : null;
 
         if (!name || !cat || !price || isNaN(price) || price <= 0) {
           alert('Compila nome, categoria e prezzo correttamente.');
@@ -559,12 +865,13 @@
 
         const editingId = drawerAddBtn.dataset.editing;
         if (editingId) {
+          // update existing product in cart (use app.updateProductInCart if available)
           const updated = { id: editingId, name, category: cat, price, priceKg, notes };
           if (window.app && typeof window.app.updateProductInCart === 'function') {
             window.app.updateProductInCart(updated);
             showToast('Prodotto aggiornato');
           } else {
-            // fallback
+            // fallback: replace in currentCart
             if (!window.app.currentCart) window.app.currentCart = [];
             const idx = window.app.currentCart.findIndex(p => p.id === editingId);
             if (idx !== -1) {
@@ -580,7 +887,7 @@
             name, category: cat, price, priceKg, notes
           };
 
-          // attach scanned image if any (app.getLastScannedImage) or drawer preview image
+          // attach scanned image if any (prefer app.getLastScannedImage)
           try {
             if (window.app && typeof app.getLastScannedImage === 'function') {
               const img = app.getLastScannedImage();
@@ -588,44 +895,51 @@
             }
           } catch(e){}
 
-          const previewImg = getDrawerPreviewImage();
-          if (!product.image && previewImg) product.image = previewImg;
+          // also check drawer preview if available
+          try {
+            const previewImg = document.getElementById('drawerPreviewImg');
+            if (!product.image && previewImg && previewImg.src) {
+              product.image = previewImg.src;
+            }
+          } catch(e){}
 
-          // add via app
-          if (window.app && typeof app.addProductToCart === 'function') {
-            window.app.addProductToCart(product);
-          } else {
-            if (!window.app.currentCart) window.app.currentCart = [];
-            window.app.currentCart.push(product);
-            document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart }));
-          }
-
+          // add product (safe)
+          safeAddProductToCart(product);
           showToast('Prodotto aggiunto al carrello');
-          // clear last scanned
+
+          // clear last scanned image to avoid reuse
           try { if (app && typeof app.setLastScannedImage === 'function') app.setLastScannedImage(null); } catch(e){}
         }
 
-        // show cart UI
+        // ensure UI shows cart and updates
         document.getElementById('cartSection')?.classList.remove('hidden');
         document.getElementById('cartSection')?.removeAttribute('aria-hidden');
         cartMainPlaceholder.style.display = 'none';
         expenseForm.classList.remove('hidden');
 
-        // update
-        try { updateCartDisplay(); } catch(e){ console.warn(e); }
+        try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
 
-        // clear if not editing
-        if (!editingId) {
-          nameInput.value = ''; catInput.value = ''; priceInput.value = ''; priceKgInput.value = ''; notesInput.value = '';
-          const previewWrap = document.getElementById('drawerImagePreview');
-          previewWrap.style.display = 'none';
-          document.getElementById('drawerPreviewContainer').innerHTML = '';
+        // reset drawer fields and preview
+        if (!drawerAddBtn.dataset.editing) { // if not editing, clear
+          if (nameInput) nameInput.value = '';
+          if (catInput) catInput.value = '';
+          if (priceInput) priceInput.value = '';
+          if (priceKgInput) priceKgInput.value = '';
+          if (notesInput) notesInput.value = '';
         }
 
+        const previewWrap = document.getElementById('drawerImagePreview');
+        const previewImg = document.getElementById('drawerPreviewImg');
+        if (!drawerAddBtn.dataset.editing) {
+          if (previewImg) previewImg.src = '';
+          if (previewWrap) previewWrap.style.display = 'none';
+        }
+
+        // close drawer (which will also reset editing flag)
         closeDrawer();
       });
 
-      // floating camera button (kept)
+      // Floating camera button opens scanner
       document.getElementById('floatingCameraBtn')?.addEventListener('click', async (e) => {
         e.preventDefault();
         if (!storeChoiceCard.classList.contains('hidden')) return;
@@ -636,14 +950,27 @@
         }
       });
 
-      // handle barcode event (open drawer & populate)
+      // wire scanner buttons inside modal
+      document.getElementById('scannerCancelBtn')?.addEventListener('click', () => {
+        if (typeof closeScannerModal === 'function') closeScannerModal();
+      });
+      document.getElementById('switchCameraBtn')?.addEventListener('click', async () => {
+        if (typeof switchCamera === 'function') {
+          try { await switchCamera(); } catch(e) { console.warn(e); }
+        }
+      });
+
+      // LISTEN for barcode-scanned event to open drawer & populate preview
       document.addEventListener('app:barcode-scanned', (ev) => {
         try {
+          // open drawer if store confirmed
           if (storeChoiceCard.classList.contains('hidden')) openDrawer();
+
           const data = ev && ev.detail ? ev.detail : {};
           const product = data.product || {};
           const img = data.image || (window.app && typeof app.getLastScannedImage === 'function' ? app.getLastScannedImage() : null);
 
+          // fill fields if present
           const nameField = document.getElementById('drawerProductName');
           const notesField = document.getElementById('drawerProductNotes');
           const categoryField = document.getElementById('drawerProductCategory');
@@ -667,30 +994,68 @@
             });
           }
 
-          setDrawerPreview(img, (product.categories || '').split(',')[0] || 'Altro');
-        } catch (e) { console.warn('app:barcode-scanned handler error', e); }
+          // show preview image
+          const previewWrap = document.getElementById('drawerImagePreview');
+          const previewImg = document.getElementById('drawerPreviewImg');
+          if (img && previewImg) {
+            previewImg.src = img;
+            if (previewWrap) previewWrap.style.display = 'block';
+          } else {
+            if (previewImg) previewImg.src = '';
+            if (previewWrap) previewWrap.style.display = 'none';
+          }
+        } catch (e) {
+          console.warn('app:barcode-scanned handler error', e);
+        }
       });
 
-      // populate store selects
+      // populate selects if user skipped (or for confirm)
       try { app.populateAllStoreSelects(); } catch(e){}
 
-      // when cart changes (update UI)
+      // when cart changed, update UI
       document.addEventListener('app:cart-changed', (ev) => {
         const cart = (window.app && window.app.currentCart) ? window.app.currentCart : (ev && ev.detail) ? ev.detail : [];
         if (!cart || cart.length === 0) {
           if (storeChoiceCard.classList.contains('hidden')) {
             cartMainPlaceholder.style.display = 'flex';
             document.getElementById('cartSection')?.classList.add('hidden');
-            expenseForm.classList.add('hidden');
+            document.getElementById('expenseForm')?.classList.add('hidden');
           }
         } else {
           cartMainPlaceholder.style.display = 'none';
           document.getElementById('cartSection')?.classList.remove('hidden');
-          expenseForm.classList.remove('hidden');
+          document.getElementById('expenseForm')?.classList.remove('hidden');
         }
         if (storeChoiceCard.classList.contains('hidden')) showFloating();
-        try { updateCartDisplay(); } catch(e){ console.warn(e); }
+
+        // update table
+        try { if (typeof updateCartDisplay === 'function') updateCartDisplay(); } catch(e){ console.warn(e); }
       });
+
+      // menu overlay open/close (side menu)
+      const menuToggle = document.getElementById('menuToggle');
+      const sideMenu = document.getElementById('sideMenu');
+      const menuOverlay = document.getElementById('menuOverlay');
+      function openMenu() {
+        sideMenu.classList.remove('hidden'); sideMenu.classList.add('open'); sideMenu.removeAttribute('aria-hidden');
+        menuOverlay.classList.add('visible'); document.body.classList.add('no-scroll');
+      }
+      function closeMenu() {
+        sideMenu.classList.add('hidden'); sideMenu.classList.remove('open'); sideMenu.setAttribute('aria-hidden','true');
+        menuOverlay.classList.remove('visible'); document.body.classList.remove('no-scroll');
+      }
+      menuToggle?.addEventListener('click', openMenu);
+      menuOverlay?.addEventListener('click', () => { closeMenu(); closeDrawer(); });
+
+      // Keep bottom padding for bottom-nav
+      const bottomNav = document.querySelector('.bottom-nav');
+      const main = document.querySelector('main');
+      if (bottomNav && main) {
+        const navH = bottomNav.offsetHeight || 0;
+        const extra = 28;
+        main.style.paddingBottom = (navH + extra) + 'px';
+        document.body.style.paddingBottom = (navH + extra) + 'px';
+      }
 
       // clear cart button
       const clearCartBtn = document.getElementById('clearCartBtn');
@@ -711,16 +1076,15 @@
         });
       }
 
-      // save expense button (reads date from header input)
+      // save expense button
       const saveExpenseBtn = document.getElementById('saveExpenseBtn');
       if (saveExpenseBtn) {
         saveExpenseBtn.addEventListener('click', (ev) => {
           ev.preventDefault();
-          // read store and date
           const storeSelect = document.getElementById('storeSelect');
+          const dateInput = document.getElementById('expenseDate');
           const store = storeSelect ? (storeSelect.value || '') : '';
-          const dateInputHidden = document.getElementById('expenseDate');
-          const date = (expenseDateHeader && expenseDateHeader.value) ? expenseDateHeader.value : (dateInputHidden ? dateInputHidden.value : '');
+          const date = dateInput ? dateInput.value : '';
 
           if (!store) { alert('Seleziona il supermercato prima di salvare.'); return; }
           if (!date) { alert('Seleziona la data della spesa.'); return; }
@@ -730,11 +1094,11 @@
             const saved = window.app.saveCartAsExpense(store, date);
             if (saved) {
               showToast('Spesa salvata con successo', 1600);
-              // UI reset
+              // ensure UI resets to empty cart state
               document.getElementById('cartMainPlaceholder').style.display = 'flex';
               document.getElementById('cartSection')?.classList.add('hidden');
               document.getElementById('expenseForm')?.classList.add('hidden');
-              // dispatch events so index/archivio can update
+              // force update displays
               document.dispatchEvent(new CustomEvent('app:expenses-changed', { detail: window.app.expenses }));
               document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart }));
               updateCartDisplay();
@@ -747,23 +1111,16 @@
           }
         });
       }
-
-      // bottom padding for nav
-      const bottomNav = document.querySelector('.bottom-nav');
-      const main = document.querySelector('main');
-      if (bottomNav && main) {
-        const navH = bottomNav.offsetHeight || 0; const extra = 28;
-        main.style.paddingBottom = (navH + extra) + 'px'; document.body.style.paddingBottom = (navH + extra) + 'px';
-      }
-    }); // DOMContentLoaded
+    }); // end DOMContentLoaded
   </script>
 
-  <!-- updateCartDisplay: populate #cartBody, update total, enable buttons -->
+  <!-- updateCartDisplay: popola #cartBody, aggiorna totale, abilita pulsanti -->
   <script>
     function updateCartDisplay() {
       try {
         const tbody = document.getElementById('cartBody');
         if (!tbody) return;
+        // get cart from app (fallback to event detail)
         const cart = (window.app && Array.isArray(window.app.currentCart)) ? window.app.currentCart : [];
         tbody.innerHTML = '';
 
@@ -776,97 +1133,106 @@
         cart.forEach(item => {
           const tr = document.createElement('tr');
 
-          // product column
+          // Product column: thumbnail + name + meta(category, notes)
           const tdProd = document.createElement('td');
-          const prodWrap = document.createElement('div'); prodWrap.style.display='flex'; prodWrap.style.alignItems='center';
+          const prodWrap = document.createElement('div');
+          prodWrap.style.display = 'flex';
+          prodWrap.style.gap = '10px';
+          prodWrap.style.alignItems = 'center';
 
-          // thumbnail (img or placeholder)
-          const thumb = (function(){
-            if (item.image) {
-              const img = document.createElement('img'); img.className='cart-thumb'; img.src = item.image; img.alt = item.name || ''; return img;
-            } else {
-              const wrap = document.createElement('div'); wrap.className='cart-thumb-placeholder';
-              const i = document.createElement('i'); i.className = 'fa-solid ' + (function(c){ const map = { 'Latticini':'fa-cheese','Verdura':'fa-leaf','Frutta':'fa-apple-whole','Carne':'fa-drumstick-bite','Pesce':'fa-fish','Pane':'fa-bread-slice','Bevande':'fa-wine-glass','Altro':'fa-box-open'}; return map[c]||'fa-cart-shopping'; })(item.category);
-              wrap.appendChild(i);
-              return wrap;
-            }
-          })();
-          prodWrap.appendChild(thumb);
+          const img = document.createElement('img');
+          img.className = 'cart-thumb';
+          if (item.image) {
+            img.src = item.image;
+            img.alt = item.name || 'img';
+          } else {
+            img.src = categoryPlaceholderSVG(item.category || 'Altro', 48);
+            img.alt = item.name || '';
+          }
+          prodWrap.appendChild(img);
 
           const info = document.createElement('div');
-          const nameEl = document.createElement('div'); nameEl.className='cart-product-name'; nameEl.textContent = item.name || '';
-          const metaEl = document.createElement('div'); metaEl.className='cart-product-meta';
-          const cat = item.category? item.category : '';
+          const nameEl = document.createElement('div');
+          nameEl.className = 'cart-product-name';
+          nameEl.textContent = item.name || '';
+
+          const metaEl = document.createElement('div');
+          metaEl.className = 'cart-product-meta';
+          const cat = item.category ? item.category : '';
           const notes = item.notes ? (' — ' + item.notes) : '';
           metaEl.textContent = cat + (item.priceKg ? (` • ${item.priceKg} €/kg`) : '') + (notes ? notes : '');
-          info.appendChild(nameEl); info.appendChild(metaEl);
 
+          info.appendChild(nameEl);
+          info.appendChild(metaEl);
           prodWrap.appendChild(info);
           tdProd.appendChild(prodWrap);
           tr.appendChild(tdProd);
 
-          // price column
-          const tdPrice = document.createElement('td'); tdPrice.style.whiteSpace='nowrap';
-          const priceNum = (item.price !== undefined && item.price !== null) ? parseFloat(item.price) : 0;
-          const priceText = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(priceNum) : `€${(priceNum||0).toFixed(2)}`;
+          // Price column
+          const tdPrice = document.createElement('td');
+          tdPrice.style.whiteSpace = 'nowrap';
+          const priceText = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(parseFloat(item.price || 0)) : `€${Number(item.price||0).toFixed(2)}`;
           tdPrice.textContent = priceText;
           tr.appendChild(tdPrice);
 
-          // actions column
+          // Actions column: edit + remove
           const tdActions = document.createElement('td');
 
           const editBtn = document.createElement('button');
-          editBtn.className = 'cart-edit-btn'; editBtn.type='button'; editBtn.title='Modifica'; editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
-          editBtn.addEventListener('click', ()=> { openDrawerWithProduct(item); });
+          editBtn.className = 'cart-edit-btn';
+          editBtn.type = 'button';
+          editBtn.title = 'Modifica';
+          editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+          editBtn.addEventListener('click', () => {
+            // open drawer with data and set edit mode
+            openDrawerWithProduct(item);
+          });
           tdActions.appendChild(editBtn);
 
           const removeBtn = document.createElement('button');
-          removeBtn.className = 'cart-remove-btn'; removeBtn.type='button'; removeBtn.title='Rimuovi'; removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-          removeBtn.addEventListener('click', ()=> {
+          removeBtn.className = 'cart-remove-btn';
+          removeBtn.type = 'button';
+          removeBtn.title = 'Rimuovi';
+          removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+          removeBtn.addEventListener('click', () => {
             try {
               if (window.app && typeof app.removeProductFromCart === 'function') {
-                app.removeProductFromCart(item.id);
+                window.app.removeProductFromCart(item.id);
                 showToast('Prodotto rimosso');
               } else {
                 const idx = (window.app && Array.isArray(window.app.currentCart)) ? window.app.currentCart.findIndex(p => p.id === item.id) : -1;
                 if (idx !== -1) { window.app.currentCart.splice(idx,1); document.dispatchEvent(new CustomEvent('app:cart-changed', { detail: window.app.currentCart })); showToast('Prodotto rimosso'); }
               }
-            } catch (e) { console.error('remove from cart error', e); }
+            } catch (e) {
+              console.error('remove from cart error', e);
+            }
           });
           tdActions.appendChild(removeBtn);
 
           tr.appendChild(tdActions);
+
           tbody.appendChild(tr);
         });
 
+        // update total & enable save button
         const total = (window.app && typeof app.getCartTotal === 'function') ? app.getCartTotal() : cart.reduce((s,i)=> s + (parseFloat(i.price)||0),0);
         document.getElementById('cartTotal').textContent = (window.app && typeof app.formatCurrency === 'function') ? app.formatCurrency(total) : `€${total.toFixed(2)}`;
-        const saveBtn = document.getElementById('saveExpenseBtn'); if (saveBtn) saveBtn.disabled = !(cart && cart.length > 0);
-      } catch (err) { console.error('updateCartDisplay error', err); }
+        const saveBtn = document.getElementById('saveExpenseBtn');
+        if (saveBtn) saveBtn.disabled = !(cart && cart.length > 0);
+
+      } catch (err) {
+        console.error('updateCartDisplay error', err);
+      }
     }
 
-    // init render
-    document.addEventListener('DOMContentLoaded', () => { try { updateCartDisplay(); } catch(e){ console.warn(e); } });
-    document.addEventListener('app:cart-changed', () => { try { updateCartDisplay(); } catch(e){ console.warn(e); } });
+    // initial render (in case there are items already)
+    document.addEventListener('DOMContentLoaded', () => {
+      try { updateCartDisplay(); } catch (e) { console.warn(e); }
+    });
 
-    // Expose helper used by updateCartDisplay
-    function openDrawerWithProduct(product) {
-      // delegated to behaviour script; keep function global for usage in updateCartDisplay event handlers
-      const evt = new CustomEvent('app:open-drawer-with-product', { detail: product });
-      document.dispatchEvent(evt);
-    }
-
-    // Listen and forward to real openDrawerWithProduct inside behaviour script
-    document.addEventListener('app:open-drawer-with-product', (ev) => {
-      try {
-        // actual handler is defined in behaviour; find it and call - we rely on the function declared there
-        if (typeof window.openDrawerWithProduct === 'function') {
-          window.openDrawerWithProduct(ev.detail);
-        } else {
-          // fallback: dispatch a DOM event that behaviour code listens to (it already uses global openDrawerWithProduct by closure)
-          // no-op if not available
-        }
-      } catch (e) { /* ignore */ }
+    // also listen to app:cart-changed if emitted elsewhere
+    document.addEventListener('app:cart-changed', () => {
+      try { updateCartDisplay(); } catch(e){ console.warn(e); }
     });
   </script>
 </body>
